@@ -1,6 +1,7 @@
 .idea/*
 .idea/**/
 **/build/
+logs/
 
 cordapps/**
 
