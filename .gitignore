@@ -1,0 +1,7 @@
+.idea/*
+.idea/**/
+**/build/
+
+cordapps/**
+
+.DS_Store
