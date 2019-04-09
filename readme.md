@@ -2,7 +2,7 @@ Corda Logic App Connector
 =========================
 
 Logic App Connectors ‘provide quick access to events, data, and actions across services, protocols, and platforms’.
-The Corda Logic App Connector will support two _Actions_: 
+The Corda Logic App Connector will support the following _Actions_: 
 
  1. Create a new Instance of a Contract (M1)
  2. Execute a Function on a Contract (M1)
