@@ -207,16 +207,9 @@ This format is equally modelled after a message format [established earlier](htt
 
 ```json
 {
+  "requestId": "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
   "messageName": "ContractMessage",
-  "additionalInformation": {
-    "outputStates": [
-      {
-        "name": "net.corda.workbench.refrigeratedTransportation.Shipment",
-        "id": "130ff635-355a-45fa-a8aa-f2f8a574c8ca",
-        "isNewState": true
-      }
-    ]
-  },
+  "additionalInformation": {},
   "contractLedgerIdentifier": "f1a27656-3b1a-4469-8e37-04d9e2764bf6",
   "contractProperties": [
     {
@@ -235,12 +228,12 @@ This format is equally modelled after a message format [established earlier](htt
 
 Here, the following concepts are used to provide outcomes of the flow invocation:
 
+ - `requestId`: A simple correlation ID, generated in the ingress message.
  - `messageName`: Always `ContractMessage`
- - `additionalInformation`.`outputStates`: An array of size 0 or 1 where the only element contains the canonical class name of the output state, the linear id of the output state and whether the _transaction_ had any input states.
- - `contractLedgerIdentifier`: The _transaction ID_ of the signed transaction returned by this flow logic. Returning a signed transaction is imperative for this adapter (see caveats).
+ - `contractLedgerIdentifier`: The _linear ID_ of the input and output state (if a transaction has both an input and an output). The _linear ID_ of the input _or_ output state if the transaction has only one.
  - `contractProperties`: A flattened serialisation of the parameters of the output state of the transaction or the empty array if the transaction did not have outputs. Flattening is to follow the rules JSON property access notation using dots for named properties and bracket for array positions.
  - `messageSchemaVersion`: Always `1.0.0`
- - `isNewContract`: Whether the transaction had any input states
+ - `isNewContract`: `true` if this transaction had no input states.
  
 This format is formally specified in [`flow-invocation-response.schema.json`](src/main/resources/schemata/flow-invocation-response.schema.json).
  
@@ -264,21 +257,17 @@ Caveats
 -------
 
 To support the query requirements stated, only transactions that evolve single states linearly (sharing a common linearId, i.e. `LinearStates`) are supported in the adapter.
-
-Flows supported by this adapter are strictly required to return `SignedTransaction`.
-Flows that do not return `SignedTransaction` cannot be invoked or observed using this adapter.
+All flows invoked must have up to one linear state as input and up to one linear state as output and must not take any other inputs or outputs.
 
 The same limitations that apply to the interactive shell apply to inputs to the Logic App connector.
 Specifically, around the serialisation rules and types of flow that are supported. 
 
 In addition to the limitation of having to be `LinearStates`, any output states used have to be JSON serializable.   
-Some types may not be JSON serializable using the underlying Jackson serializer. 
+Some types may not be JSON serializable using the underlying Jackson serializer.
+Those are not supported.
 
 The RPC Invoker will treat a message as delivered whenever a flow response has been received.
 This introduces a problematic ‘at-least-once delivered’ behaviour for the RPC Invoker.
 While this only applies in an edge case—i.e. in a scenario where the invoker crashes during flow invocation—this should be targeted in a future release by holding state for correlation IDs received in persistent storage and allowing to query the node for whether the flow has been invoked properly.
 
-The transaction observer is not durable, i.e. messages will not be listened to while the listener is shut down.
-
-The message format is designed to be as simple as possible. 
-Future—potentially breaking—changes to the message format might be delivered in quick succession to address some of the limitations of the underlying technology (i.e. lack of type information to support polymorphism). 
+The transaction observer is not durable, i.e. messages will not be listened to while the listener is shut down. 
