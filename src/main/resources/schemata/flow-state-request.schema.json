@@ -1,0 +1,36 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/corda/corda-logicapp-connector/blob/master/src/main/resources/schemata/flow-state-request.schema.json",
+  "type": "object",
+  "required": [
+    "messageName",
+    "requestId",
+    "contractLedgerIdentifier",
+    "messageSchemaVersion"
+  ],
+  "properties": {
+    "messageName": {
+      "$id": "#/properties/messageName",
+      "type": "string",
+      "enum": [
+        "ReadContractRequest"
+      ]
+    },
+    "requestId": {
+      "$id": "#/properties/requestId",
+      "type": "string",
+      "description": "A simple correlation ID, generated at the source, opaque to the key components."
+    },
+    "contractLedgerIdentifier": {
+      "$id": "#/properties/contractLedgerIdentifier",
+      "type": "string",
+      "description": "The linear ID of an unconsumed state."
+    },
+    "messageSchemaVersion": {
+      "$id": "#/properties/messageSchemaVersion",
+      "type": "string",
+      "pattern": "^d+.d+.d+$"
+    }
+  }
+}

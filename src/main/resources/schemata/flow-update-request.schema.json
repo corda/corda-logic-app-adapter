@@ -1,12 +1,12 @@
 {
   "definitions": {},
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/corda/corda-logicapp-connector/blob/master/src/main/resources/schemata/flow-invocation-request.schema.json",
+  "$id": "https://github.com/corda/corda-logicapp-connector/blob/master/src/main/resources/schemata/flow-update-request.schema.json",
   "type": "object",
   "required": [
     "messageName",
     "requestId",
-    "workflowName",
+    "contractLedgerIdentifier",
     "parameters",
     "messageSchemaVersion"
   ],
@@ -15,25 +15,18 @@
       "$id": "#/properties/messageName",
       "type": "string",
       "enum": [
-        "CreateContractRequest"
+        "CreateContractActionRequest"
       ]
     },
     "requestId": {
       "$id": "#/properties/requestId",
       "type": "string",
-      "description": "A simple correlation ID, generated at the source, opaque to the key components.",
-      "examples": [
-        "f37c65a6-d69a-4fec-a5c0-e699f8d0ed08"
-      ]
+      "description": "A simple correlation ID, generated at the source, opaque to the key components."
     },
-    "workflowName": {
-      "$id": "#/properties/workflowName",
+    "contractLedgerIdentifier": {
+      "$id": "#/properties/contractLedgerIdentifier",
       "type": "string",
-      "description": "The name of the flow to be invoked. Preferably in fully qualified form, i.e. containing the relevant package name.",
-      "examples": [
-        "net.corda.workbench.refrigeratedTransportation.flow.CreateFlow"
-      ],
-      "pattern": "(?:^w+|w+.w+)+$"
+      "description": "The linear ID of the input state. This will be used to populate the linearId parameter of the flow to be invoked."
     },
     "parameters": {
       "$id": "#/properties/parameters",

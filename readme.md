@@ -128,19 +128,18 @@ This means, new messages will only be consumed off the bus once a flow invocatio
 Message Formats
 ---------------
 
+All formats are informed by work done during the development of the [Corda Blockchain Dev Kit](https://github.com/Azure-Samples/blockchain-devkit/blob/ec4c0500927c5b4c94173c72abdb0d576e291b73/accelerators/corda/service-bus-integration/service-bus-listener/src/test/resources/datasets/refrigeratedTransportation/happyPath/ingress/01-create.json).  
+Note the caveats that apply to the type of transactions that can be invoked outlined later.
+
 ### Create a new Instance of a Contract
 
-#### Service Bus Ingress Format
+#### Service Bus Ingress Format (`CreateContractRequest`)
 
-This is the format the messages consumed will have. 
-The format is informed by work done during the development of the [Corda Blockchain Dev Kit](https://github.com/Azure-Samples/blockchain-devkit/blob/ec4c0500927c5b4c94173c72abdb0d576e291b73/accelerators/corda/service-bus-integration/service-bus-listener/src/test/resources/datasets/refrigeratedTransportation/happyPath/ingress/01-create.json). 
-To ease development on caller side, the ingress format will be closely aligned with this format even though some of the properties present are irrelevant for the underlying RPC call: 
-
-Note the caveats that apply to the type of transactions that can be invoked outlined later.
+This message is sent to invoke a flow that has no input states—a ‘new contract’—in Workbench terminology.
 
 ```json
 {
-  "messageName": "ContractMessage",
+  "messageName": "CreateContractRequest",
   "requestId": "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
   "workflowName": "net.corda.workbench.refrigeratedTransportation.flow.CreateFlow",
   "parameters": [
@@ -191,15 +190,15 @@ Note the caveats that apply to the type of transactions that can be invoked outl
 
 The previous example of a message to be consumed from the bus highlights how some of the key concepts are communicated:
 
- - `messageName`: Always `ContractMessage`
+ - `messageName`: Always `CreateContractRequest`
  - `requestId`: A simple correlation ID, generated at the source, opaque to the key components.
  - `workflowName`: The name of the flow to be invoked. Preferably in fully qualified form, i.e. containing the relevant package name.
- - `parameters`: An flat array of objects representing key-value pairs. The name is expected to equal the flow invocation parameter name. The value provided represents the value to be passed to the flow invocation logic. Note that—in the current implementation—the type of value chosen is irrelevant. All flows will be invoked using strings in line with Corda's `InteractiveShell.runFlowFromString` method.
+ - `parameters`: A flat array of objects representing key-value pairs. The name is expected to equal the flow invocation parameter name. The value provided represents the value to be passed to the flow invocation logic. Note that—in the current implementation—the type of value chosen is irrelevant. All flows will be invoked using strings in line with Corda's `InteractiveShell.runFlowFromString` method.
  - `messageSchemaVersion`: Always `1.0.0`
 
 This format is formally specified in [`flow-invocation-request.schema.json`](src/main/resources/schemata/flow-invocation-request.schema.json).
 
-#### Service Bus Egress Format
+#### Service Bus Egress Format (`ContractMessage`)
 
 Normally, each transaction in Corda is a proposal to mark zero or more existing states as historic (the inputs), while creating zero or more new states (the outputs). 
 In case flows compatible with this adapter, a more strict model has to apply in which at most one state is used as input/output.
@@ -239,25 +238,83 @@ This format is formally specified in [`flow-invocation-response.schema.json`](sr
  
 ### Execute a Function on a Contract
 
-_To be defined_
-  
-### Read State from a contract
+#### Service Bus Ingress Format (`CreateContractActionRequest`)
 
-_To be defined_
+This message is sent to invoke a flow that has one input state—an ‘existing contract’—in Workbench terminology.
+Note that there are certain requirements on the constructor parameters for this type of flow.
 
-### Deploy a new Contract
+```json
+{
+    "messageName": "CreateContractActionRequest",
+    "requestId": "5a2b34a6-5fa0-4400-b1f5-686a7c212d52",
+    "contractLedgerIdentifier": "f2ef3c6f-4e1a-4375-bb3c-f622c29ec3b6",
+    "parameters": [
+        {
+            "name": "newCounterparty",
+            "value": "NorthwindTraders"
+        }
+    ],
+    "messageSchemaVersion": "1.0.0"
+}
+```
 
-_To be defined_
+ - `messageName`: Always `CreateContractActionRequest`
+ - `requestId`: A simple correlation ID, generated at the source, opaque to the key components
+ - `contractLedgerIdentifier`: The _linear ID_ of the input state. This will be used to populate the `linearId` parameter of the flow to be invoked.
+ - `parameters`: A flat array of objects representing key-value pairs. The name is expected to equal the flow invocation parameter name. The value provided represents the value to be passed to the flow invocation logic. Note that—in the current implementation—the type of value chosen is irrelevant. All flows will be invoked using strings in line with Corda's `InteractiveShell.runFlowFromString` method.
+ - `messageSchemaVersion`: Always `1.0.0`
+ 
+This format is formally specified in [`flow-update-request.schema.json`](src/main/resources/schemata/flow-update-request.schema.json).
 
-### An Event Occurs
+#### Service Bus Egress Format (`ContractMessage`)
 
-_To be defined_
+The response generated by the previous message is structurally identical to the  [`flow-invocation-response.schema.json`](src/main/resources/schemata/flow-invocation-response.schema.json) describe above.
+
+### *Proposal*: Read State from a contract
+
+This message format is not part of the original set of [Azure Workbench Messages](https://docs.microsoft.com/en-us/azure/blockchain/workbench/messages-overview).
+The format—including the message name—is a proposal.
+
+#### Service Bus Ingress Format (`ReadContractRequest`)
+
+```json
+{
+    "messageName": "ReadContractRequest",
+    "requestId": "9c2e532f-15bb-4eb8-ae58-34722c5776f4",
+    "contractLedgerIdentifier": "3aa6120b-b809-4cdc-9a19-81546482b313",
+    "messageSchemaVersion": "1.0.0"
+}
+```
+
+ - `messageName`: Always `ReadContractRequest`
+ - `requestId`: A simple correlation ID, generated at the source, opaque to the key components
+ - `contractLedgerIdentifier`: The linear ID of an unconsumed state
+ - `messageSchemaVersion`: Always `1.0.0`
+ 
+ This format is formally specified in [`flow-state-request.schema.json`](src/main/resources/schemata/flow-state-request.schema.json).
+
+#### Service Bus Egress Format (`ContractMessage`)
+
+The response generated by the previous message is structurally identical to the  [`flow-invocation-response.schema.json`](src/main/resources/schemata/flow-invocation-response.schema.json) describe above.
+
+### ~~Deploy a new Contract~~
+
+Out of scope for M1.
+
+### ~~An Event Occurs~~
+
+Out of scope for M1.
 
 Caveats
 -------
 
+### Transactions
+
 To support the query requirements stated, only transactions that evolve single states linearly (sharing a common linearId, i.e. `LinearStates`) are supported in the adapter.
 All flows invoked must have up to one linear state as input and up to one linear state as output and must not take any other inputs or outputs.
+Flows that take a linear state as input need to specify `linearState` as constructor parameter. 
+
+### Serialisation/Deserialisation
 
 The same limitations that apply to the interactive shell apply to inputs to the Logic App connector.
 Specifically, around the serialisation rules and types of flow that are supported. 
@@ -265,6 +322,8 @@ Specifically, around the serialisation rules and types of flow that are supporte
 In addition to the limitation of having to be `LinearStates`, any output states used have to be JSON serializable.   
 Some types may not be JSON serializable using the underlying Jackson serializer.
 Those are not supported.
+
+### Durability and Delivery Guarantees
 
 The RPC Invoker will treat a message as delivered whenever a flow response has been received.
 This introduces a problematic ‘at-least-once delivered’ behaviour for the RPC Invoker.
