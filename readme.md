@@ -140,8 +140,8 @@ Note the caveats that apply to the type of transactions that can be invoked outl
 
 ```json
 {
+  "messageName": "ContractMessage",
   "requestId": "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
-  "userChainIdentifier": "Bob",
   "workflowName": "net.corda.workbench.refrigeratedTransportation.flow.CreateFlow",
   "parameters": [
     {
@@ -187,15 +187,15 @@ Note the caveats that apply to the type of transactions that can be invoked outl
   ],
   "messageSchemaVersion": "1.0.0"
 }
-``` 
+```
 
 The previous example of a message to be consumed from the bus highlights how some of the key concepts are communicated:
 
+ - `messageName`: Always `ContractMessage`
  - `requestId`: A simple correlation ID, generated at the source, opaque to the key components.
- - `userChainIdentifier`: A _hint_ as to which RPC user is to be used to when the RPC call is made. Note that credentials for this user have to be made available to the key components at construction time not via this call.
  - `workflowName`: The name of the flow to be invoked. Preferably in fully qualified form, i.e. containing the relevant package name.
  - `parameters`: An flat array of objects representing key-value pairs. The name is expected to equal the flow invocation parameter name. The value provided represents the value to be passed to the flow invocation logic. Note that—in the current implementation—the type of value chosen is irrelevant. All flows will be invoked using strings in line with Corda's `InteractiveShell.runFlowFromString` method.
- - `messageSchemaVersion`: 1.0.0 is expected for all messages
+ - `messageSchemaVersion`: Always `1.0.0`
 
 This format is formally specified in [`flow-invocation-request.schema.json`](src/main/resources/schemata/flow-invocation-request.schema.json).
 
@@ -207,8 +207,8 @@ This format is equally modelled after a message format [established earlier](htt
 
 ```json
 {
-  "requestId": "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
   "messageName": "ContractMessage",
+  "requestId": "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
   "additionalInformation": {},
   "contractLedgerIdentifier": "f1a27656-3b1a-4469-8e37-04d9e2764bf6",
   "contractProperties": [
@@ -228,8 +228,8 @@ This format is equally modelled after a message format [established earlier](htt
 
 Here, the following concepts are used to provide outcomes of the flow invocation:
 
- - `requestId`: A simple correlation ID, generated in the ingress message.
  - `messageName`: Always `ContractMessage`
+ - `requestId`: A simple correlation ID, generated in the ingress message.
  - `contractLedgerIdentifier`: The _linear ID_ of the input and output state (if a transaction has both an input and an output). The _linear ID_ of the input _or_ output state if the transaction has only one.
  - `contractProperties`: A flattened serialisation of the parameters of the output state of the transaction or the empty array if the transaction did not have outputs. Flattening is to follow the rules JSON property access notation using dots for named properties and bracket for array positions.
  - `messageSchemaVersion`: Always `1.0.0`

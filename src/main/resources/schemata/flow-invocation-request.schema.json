@@ -1,46 +1,44 @@
 {
   "definitions": {},
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://bitbucket.org/mplattr3/corda-logicapp-format/src/master/invoking-a-flow.schema.json",
+  "$id": "https://github.com/corda/corda-logicapp-connector/blob/master/src/main/resources/schemata/flow-invocation-request.schema.json",
   "type": "object",
-  "title": "Flow Invocation Schema",
-  "description": "This is the format messages received from the service bus have.",
   "required": [
+    "messageName",
     "requestId",
-    "userChainIdentifier",
     "workflowName",
     "parameters",
     "messageSchemaVersion"
   ],
   "properties": {
+    "messageName": {
+      "$id": "#/properties/messageName",
+      "type": "string",
+      "enum": [
+        "ContractMessage"
+      ]
+    },
     "requestId": {
       "$id": "#/properties/requestId",
       "type": "string",
       "description": "A simple correlation ID, generated at the source, opaque to the key components.",
       "examples": [
-        "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d"
+        "f37c65a6-d69a-4fec-a5c0-e699f8d0ed08"
       ]
-    },
-    "userChainIdentifier": {
-      "$id": "#/properties/userChainIdentifier",
-      "type": "string",
-      "description": "A hint which RPC user is to be used to when the RPC call is made. Note that credentials for this user have to be made available to the key components at construction time not via this call.",
-      "pattern": "^\\w*$"
     },
     "workflowName": {
       "$id": "#/properties/workflowName",
       "type": "string",
       "description": "The name of the flow to be invoked. Preferably in fully qualified form, i.e. containing the relevant package name.",
-      "default": "",
       "examples": [
         "net.corda.workbench.refrigeratedTransportation.flow.CreateFlow"
       ],
-      "pattern": "(?:^\\w+|\\w+\\.\\w+)+$"
+      "pattern": "(?:^w+|w+.w+)+$"
     },
     "parameters": {
       "$id": "#/properties/parameters",
       "type": "array",
-      "description": "An array of objects representing key-value pairs. The name is expected to equal the flow invocation parameter name. The value provided represents the value to be passed to the flow invocation logic.",
+      "description": "An flat array of objects representing key-value pairs. The name is expected to equal the flow invocation parameter name. The value provided represents the value to be passed to the flow invocation log",
       "items": {
         "$id": "#/properties/parameters/items",
         "type": "object",
@@ -63,8 +61,7 @@
     "messageSchemaVersion": {
       "$id": "#/properties/messageSchemaVersion",
       "type": "string",
-      "default": "1.0.0",
-      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+      "pattern": "^d+.d+.d+$"
     }
   }
 }
