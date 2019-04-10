@@ -8,10 +8,12 @@ import com.fasterxml.jackson.databind.node.TextNode
 import com.r3.logicapps.RPCRequest
 import com.r3.logicapps.RPCRequest.FlowInvocationRequest
 import com.r3.logicapps.RPCRequest.InvokeFlowWithInputStates
+import com.r3.logicapps.RPCRequest.QueryFlowState
 import com.r3.logicapps.RPCResponse
 import com.r3.logicapps.RPCResponse.FlowOutput
 import com.r3.logicapps.servicebus.ServicebusMessage
 import com.r3.logicapps.workbench.WorkbenchSchema.FlowInvocationRequestSchema
+import com.r3.logicapps.workbench.WorkbenchSchema.FlowStateRequestSchema
 import com.r3.logicapps.workbench.WorkbenchSchema.FlowUpdateRequestSchema
 import net.corda.core.contracts.UniqueIdentifier
 import org.everit.json.schema.ValidationException
@@ -31,7 +33,10 @@ class ValidatingWorkbenchAdapter : WorkbenchAdapter {
                     FlowUpdateRequestSchema.validate(message)
                     transformFlowUpdateRequest(json)
                 }
-                "ReadContractRequest"         -> TODO("do it!")
+                "ReadContractRequest"         -> {
+                    FlowStateRequestSchema.validate(message)
+                    transformFlowStateRequest(json)
+                }
                 else                          -> throw IllegalArgumentException("Unknown message name")
             }
         }
@@ -57,6 +62,12 @@ class ValidatingWorkbenchAdapter : WorkbenchAdapter {
         val workflowName = json.extractWorkflowName("workflowFunctionName")
         val parameters = json.extractParameters("parameters")
         return InvokeFlowWithInputStates(requestId, linearId, workflowName, parameters)
+    }
+
+    private fun transformFlowStateRequest(json: JsonNode): QueryFlowState {
+        val requestId = json.extractRequestId("requestId")
+        val linearId = UniqueIdentifier.fromString(json.extractLinearId("contractLedgerIdentifier"))
+        return QueryFlowState(requestId, linearId)
     }
 
     private fun JsonNode.extractRequestId(name: String) = (get(name) as? TextNode)?.textValue()

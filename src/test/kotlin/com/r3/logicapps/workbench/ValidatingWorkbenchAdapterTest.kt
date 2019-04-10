@@ -7,6 +7,7 @@ import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.throws
 import com.r3.logicapps.RPCRequest.FlowInvocationRequest
 import com.r3.logicapps.RPCRequest.InvokeFlowWithInputStates
+import com.r3.logicapps.RPCRequest.QueryFlowState
 import net.corda.core.contracts.UniqueIdentifier
 import org.junit.Test
 
@@ -165,6 +166,46 @@ class ValidatingWorkbenchAdapterTest {
 
         @Suppress("RemoveExplicitTypeArguments")
         assertThat(actual, isA<InvokeFlowWithInputStates>(equalTo(expected)))
+    }
+
+    @Test
+    fun `transforming an invalid "ReadContractRequest" fails`() {
+        val json = """{
+        |  "messageName": "ReadContractRequest",
+        |  "hocus" : "pocus"
+        |}""".trimMargin()
+
+        assertThat(
+            { ValidatingWorkbenchAdapter().transformIngress(json) },
+            throws(
+                isA<IllegalArgumentException>(
+                    has(
+                        Exception::message,
+                        equalTo("Not a valid message for schema class com.r3.logicapps.workbench.WorkbenchSchema\$FlowStateRequestSchema: #: 3 schema violations found")
+                    )
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `transforms a valid "ReadContractRequest"`() {
+        val json = """{
+        |    "messageName": "ReadContractRequest",
+        |    "requestId": "9c2e532f-15bb-4eb8-ae58-34722c5776f4",
+        |    "contractLedgerIdentifier": "3aa6120b-b809-4cdc-9a19-81546482b313",
+        |    "messageSchemaVersion": "1.0.0"
+        |}""".trimMargin()
+
+        val actual = ValidatingWorkbenchAdapter().transformIngress(json)
+
+        val expected = QueryFlowState(
+            requestId = "9c2e532f-15bb-4eb8-ae58-34722c5776f4",
+            linearId = UniqueIdentifier.fromString("3aa6120b-b809-4cdc-9a19-81546482b313")
+        )
+
+        @Suppress("RemoveExplicitTypeArguments")
+        assertThat(actual, isA<QueryFlowState>(equalTo(expected)))
     }
 
 }
