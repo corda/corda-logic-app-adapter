@@ -229,7 +229,7 @@ Here, the following concepts are used to provide outcomes of the flow invocation
 
  - `messageName`: Always `ContractMessage`
  - `requestId`: A simple correlation ID, generated in the ingress message.
- - `contractLedgerIdentifier`: The _linear ID_ of the input and output state (if a transaction has both an input and an output). The _linear ID_ of the input _or_ output state if the transaction has only one.
+ - `contractLedgerIdentifier`: The _linear ID_ of the output state of the flow invoked
  - `contractProperties`: A flattened serialisation of the parameters of the output state of the transaction or the empty array if the transaction did not have outputs. Flattening is to follow the rules JSON property access notation using dots for named properties and bracket for array positions.
  - `messageSchemaVersion`: Always `1.0.0`
  - `isNewContract`: `true` if this transaction had no input states.
