@@ -12,9 +12,9 @@ sealed class RPCRequest : Correlatable {
      */
     data class FlowInvocationRequest(
         override val requestId: String,
-        val workflowName: String,
+        override val workflowName: String,
         override val parameters: Map<String, String>
-    ) : RPCRequest(), Parametrised
+    ) : RPCRequest(), Parametrised, Associated
 
     /**
      * "CreateContractActionRequest"
@@ -25,10 +25,10 @@ sealed class RPCRequest : Correlatable {
     data class InvokeFlowWithInputStates(
         override val requestId: String,
         override val linearId: UniqueIdentifier,
+        override val workflowName: String,
         override val parameters: Map<String, String>
-    ) : RPCRequest(), Parametrised, Identifiable
+    ) : RPCRequest(), Parametrised, Identifiable, Associated
 
-    //
     /**
      * "ReadContractRequest"
      * @param requestId A simple correlation ID, generated at the source, opaque to the key components
@@ -54,6 +54,13 @@ sealed class RPCResponse : Correlatable {
         override val parameters: Map<String, String>,
         val isNewContract: Boolean
     ) : RPCResponse(), Identifiable, Parametrised
+}
+
+/**
+ * Is associated with a workflow ID
+ */
+private interface Associated {
+    val workflowName: String
 }
 
 /**

@@ -248,6 +248,7 @@ Note that there are certain requirements on the constructor parameters for this 
     "messageName": "CreateContractActionRequest",
     "requestId": "5a2b34a6-5fa0-4400-b1f5-686a7c212d52",
     "contractLedgerIdentifier": "f2ef3c6f-4e1a-4375-bb3c-f622c29ec3b6",
+    "workflowFunctionName": "net.corda.workbench.refrigeratedTransportation.flow.CreateFlow",
     "parameters": [
         {
             "name": "newCounterparty",
@@ -261,6 +262,7 @@ Note that there are certain requirements on the constructor parameters for this 
  - `messageName`: Always `CreateContractActionRequest`
  - `requestId`: A simple correlation ID, generated at the source, opaque to the key components
  - `contractLedgerIdentifier`: The _linear ID_ of the input state. This will be used to populate the `linearId` parameter of the flow to be invoked.
+ - `workflowFunctionName`: The name of the flow to be invoked. Preferably in fully qualified form, i.e. containing the relevant package name.
  - `parameters`: A flat array of objects representing key-value pairs. The name is expected to equal the flow invocation parameter name. The value provided represents the value to be passed to the flow invocation logic. Note that—in the current implementation—the type of value chosen is irrelevant. All flows will be invoked using strings in line with Corda's `InteractiveShell.runFlowFromString` method.
  - `messageSchemaVersion`: Always `1.0.0`
  

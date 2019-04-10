@@ -6,6 +6,8 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.throws
 import com.r3.logicapps.RPCRequest.FlowInvocationRequest
+import com.r3.logicapps.RPCRequest.InvokeFlowWithInputStates
+import net.corda.core.contracts.UniqueIdentifier
 import org.junit.Test
 
 class ValidatingWorkbenchAdapterTest {
@@ -35,7 +37,7 @@ class ValidatingWorkbenchAdapterTest {
                 isA<IllegalArgumentException>(
                     has(
                         Exception::message,
-                        equalTo("Flow invocation message: #: 4 schema violations found")
+                        equalTo("Not a valid message for schema class com.r3.logicapps.workbench.WorkbenchSchema\$FlowInvocationRequestSchema: #: 4 schema violations found")
                     )
                 )
             )
@@ -96,9 +98,9 @@ class ValidatingWorkbenchAdapterTest {
         val actual = ValidatingWorkbenchAdapter().transformIngress(json)
 
         val expected = FlowInvocationRequest(
-            "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
-            "net.corda.workbench.refrigeratedTransportation.flow.CreateFlow",
-            mapOf(
+            requestId = "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
+            workflowName = "net.corda.workbench.refrigeratedTransportation.flow.CreateFlow",
+            parameters = mapOf(
                 "state" to "Created",
                 "owner" to "O=Alice Ltd., L=Shanghai, C=CN",
                 "initiatingCounterparty" to "O=Bob Ltd., L=Beijing, C=CN",
@@ -115,4 +117,54 @@ class ValidatingWorkbenchAdapterTest {
         @Suppress("RemoveExplicitTypeArguments")
         assertThat(actual, isA<FlowInvocationRequest>(equalTo(expected)))
     }
+
+    @Test
+    fun `transforming an invalid "CreateContractActionRequest" fails`() {
+        val json = """{
+        |  "messageName": "CreateContractActionRequest",
+        |  "hocus" : "pocus"
+        |}""".trimMargin()
+
+        assertThat(
+            { ValidatingWorkbenchAdapter().transformIngress(json) },
+            throws(
+                isA<IllegalArgumentException>(
+                    has(
+                        Exception::message,
+                        equalTo("Not a valid message for schema class com.r3.logicapps.workbench.WorkbenchSchema\$FlowUpdateRequestSchema: #: 5 schema violations found")
+                    )
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `transforms a valid "CreateContractActionRequest"`() {
+        val json = """{
+        |    "messageName": "CreateContractActionRequest",
+        |    "requestId": "5a2b34a6-5fa0-4400-b1f5-686a7c212d52",
+        |    "contractLedgerIdentifier": "f2ef3c6f-4e1a-4375-bb3c-f622c29ec3b6",
+        |    "workflowFunctionName": "net.corda.workbench.refrigeratedTransportation.flow.CreateFlow",
+        |    "parameters": [
+        |        {
+        |            "name": "newCounterparty",
+        |            "value": "NorthwindTraders"
+        |        }
+        |    ],
+        |    "messageSchemaVersion": "1.0.0"
+        |}""".trimMargin()
+
+        val actual = ValidatingWorkbenchAdapter().transformIngress(json)
+
+        val expected = InvokeFlowWithInputStates(
+            requestId = "5a2b34a6-5fa0-4400-b1f5-686a7c212d52",
+            linearId = UniqueIdentifier.fromString("f2ef3c6f-4e1a-4375-bb3c-f622c29ec3b6"),
+            workflowName = "net.corda.workbench.refrigeratedTransportation.flow.CreateFlow",
+            parameters = mapOf("newCounterparty" to "NorthwindTraders")
+        )
+
+        @Suppress("RemoveExplicitTypeArguments")
+        assertThat(actual, isA<InvokeFlowWithInputStates>(equalTo(expected)))
+    }
+
 }

@@ -7,10 +7,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.r3.logicapps.RPCRequest
 import com.r3.logicapps.RPCRequest.FlowInvocationRequest
+import com.r3.logicapps.RPCRequest.InvokeFlowWithInputStates
 import com.r3.logicapps.RPCResponse
 import com.r3.logicapps.RPCResponse.FlowOutput
 import com.r3.logicapps.servicebus.ServicebusMessage
 import com.r3.logicapps.workbench.WorkbenchSchema.FlowInvocationRequestSchema
+import com.r3.logicapps.workbench.WorkbenchSchema.FlowUpdateRequestSchema
+import net.corda.core.contracts.UniqueIdentifier
 import org.everit.json.schema.ValidationException
 import org.json.JSONObject
 
@@ -21,44 +24,62 @@ class ValidatingWorkbenchAdapter : WorkbenchAdapter {
         ObjectMapper().readTree(message).let { json ->
             when (json.messageName()) {
                 "CreateContractRequest"       -> {
-                    validateFlowInvocationRequest(message)
+                    FlowInvocationRequestSchema.validate(message)
                     transformFlowInvocationRequest(json)
                 }
-                "CreateContractActionRequest" -> TODO("do it!")
+                "CreateContractActionRequest" -> {
+                    FlowUpdateRequestSchema.validate(message)
+                    transformFlowUpdateRequest(json)
+                }
                 "ReadContractRequest"         -> TODO("do it!")
                 else                          -> throw IllegalArgumentException("Unknown message name")
             }
         }
 
-    private fun validateFlowInvocationRequest(message: String) {
+    private fun WorkbenchSchema.validate(message: String) {
         try {
-            FlowInvocationRequestSchema.underlying.validate(JSONObject(message))
+            underlying.validate(JSONObject(message))
         } catch (exception: ValidationException) {
-            throw IllegalArgumentException("Flow invocation message: " + exception.message)
+            throw IllegalArgumentException("Not a valid message for schema ${this::class.java}: ${exception.message}")
         }
     }
 
-    private fun transformFlowInvocationRequest(root: JsonNode): FlowInvocationRequest {
-        val requestId = (root.get("requestId") as? TextNode)?.textValue()
-            ?: throw IllegalArgumentException("Invalid request ID provided")
-
-        val workflowName = (root.get("workflowName") as? TextNode)?.textValue()
-            ?: throw IllegalArgumentException("Invalid workflow name provided")
-
-        val parameters =
-            (root.get("parameters") as? ArrayNode ?: throw IllegalArgumentException("No parameters provided")).map {
-                (it as? ObjectNode)?.let { parameter ->
-                    val key = (parameter.get("name") as? TextNode)?.textValue()
-                        ?: throw IllegalArgumentException("Malformed Key")
-
-                    val value = (parameter.get("value") as? TextNode)?.textValue()
-                        ?: throw IllegalArgumentException("Malformed Value")
-
-                    key to value
-                } ?: throw IllegalArgumentException("Malformed Parameter")
-            }.toMap()
-
+    private fun transformFlowInvocationRequest(json: JsonNode): FlowInvocationRequest {
+        val requestId = json.extractRequestId("requestId")
+        val workflowName = json.extractWorkflowName("workflowName")
+        val parameters = json.extractParameters("parameters")
         return FlowInvocationRequest(requestId, workflowName, parameters)
+    }
+
+    private fun transformFlowUpdateRequest(json: JsonNode): InvokeFlowWithInputStates {
+        val requestId = json.extractRequestId("requestId")
+        val linearId = UniqueIdentifier.fromString(json.extractLinearId("contractLedgerIdentifier"))
+        val workflowName = json.extractWorkflowName("workflowFunctionName")
+        val parameters = json.extractParameters("parameters")
+        return InvokeFlowWithInputStates(requestId, linearId, workflowName, parameters)
+    }
+
+    private fun JsonNode.extractRequestId(name: String) = (get(name) as? TextNode)?.textValue()
+        ?: throw IllegalArgumentException("Invalid request ID provided")
+
+    private fun JsonNode.extractLinearId(name: String) = (get(name) as? TextNode)?.textValue()
+        ?: throw IllegalArgumentException("Invalid linear ID provided")
+
+    private fun JsonNode.extractWorkflowName(name: String) = (get(name) as? TextNode)?.textValue()
+        ?: throw IllegalArgumentException("Invalid workflow name provided")
+
+    private fun JsonNode.extractParameters(name: String): Map<String, String> {
+        return (get(name) as? ArrayNode ?: throw IllegalArgumentException("No parameters provided")).map {
+            (it as? ObjectNode)?.let { parameter ->
+                val key = (parameter.get("name") as? TextNode)?.textValue()
+                    ?: throw IllegalArgumentException("Malformed Key")
+
+                val value = (parameter.get("value") as? TextNode)?.textValue()
+                    ?: throw IllegalArgumentException("Malformed Value")
+
+                key to value
+            } ?: throw IllegalArgumentException("Malformed Parameter")
+        }.toMap()
     }
 
     @Throws(IllegalArgumentException::class)
