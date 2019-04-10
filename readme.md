@@ -191,11 +191,11 @@ Note the caveats that apply to the type of transactions that can be invoked outl
 
 The previous example of a message to be consumed from the bus highlights how some of the key concepts are communicated:
 
- – `requestId`: A simple correlation ID, generated at the source, opaque to the key components.
- – `userChainIdentifier`: A _hint_ as to which RPC user is to be used to when the RPC call is made. Note that credentials for this user have to be made available to the key components at construction time not via this call.
- – `workflowName`: The name of the flow to be invoked. Preferably in fully qualified form, i.e. containing the relevant package name.
- – `parameters`: An flat array of objects representing key-value pairs. The name is expected to equal the flow invocation parameter name. The value provided represents the value to be passed to the flow invocation logic. Note that—in the current implementation—the type of value chosen is irrelevant. All flows will be invoked using strings in line with Corda's `InteractiveShell.runFlowFromString` method.
- – `messageSchemaVersion`: 1.0.0 is expected for all messages
+ - `requestId`: A simple correlation ID, generated at the source, opaque to the key components.
+ - `userChainIdentifier`: A _hint_ as to which RPC user is to be used to when the RPC call is made. Note that credentials for this user have to be made available to the key components at construction time not via this call.
+ - `workflowName`: The name of the flow to be invoked. Preferably in fully qualified form, i.e. containing the relevant package name.
+ - `parameters`: An flat array of objects representing key-value pairs. The name is expected to equal the flow invocation parameter name. The value provided represents the value to be passed to the flow invocation logic. Note that—in the current implementation—the type of value chosen is irrelevant. All flows will be invoked using strings in line with Corda's `InteractiveShell.runFlowFromString` method.
+ - `messageSchemaVersion`: 1.0.0 is expected for all messages
 
 This format is formally specified in [`flow-invocation-request.schema.json`](src/main/resources/schemata/flow-invocation-request.schema.json).
 
