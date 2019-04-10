@@ -6,6 +6,7 @@
   "required": [
     "messageName",
     "requestId",
+    "workflowFunctionName",
     "contractLedgerIdentifier",
     "parameters",
     "messageSchemaVersion"
@@ -22,6 +23,15 @@
       "$id": "#/properties/requestId",
       "type": "string",
       "description": "A simple correlation ID, generated at the source, opaque to the key components."
+    },
+    "workflowFunctionName": {
+      "$id": "#/properties/workflowFunctionName",
+      "type": "string",
+      "description": "The name of the flow to be invoked. Preferably in fully qualified form, i.e. containing the relevant package name.",
+      "examples": [
+        "net.corda.workbench.refrigeratedTransportation.flow.TransferResponsibilityFlow"
+      ],
+      "pattern": "(?:^\\w+|\\w+.\\w+)+$"
     },
     "contractLedgerIdentifier": {
       "$id": "#/properties/contractLedgerIdentifier",
@@ -54,7 +64,7 @@
     "messageSchemaVersion": {
       "$id": "#/properties/messageSchemaVersion",
       "type": "string",
-      "pattern": "^d+.d+.d+$"
+      "pattern": "^\\d+.\\d+.\\d+$"
     }
   }
 }
