@@ -13,6 +13,7 @@ buildscript {
         quasar_version = '0.7.10'
         slf4j_version = '1.7.25'
         log4j_version = '2.11.2'
+        azure_servicebus_version = '2.0.0'
     }
 
     repositories {
@@ -79,6 +80,8 @@ dependencies {
     cordaCompile "org.apache.logging.log4j:log4j-web:${log4j_version}"
     cordaCompile "org.slf4j:jul-to-slf4j:$slf4j_version"
 
+    cordaCompile "com.microsoft.azure:azure-servicebus:$azure_servicebus_version"
+    
     testCompile "junit:junit:$junit_version"
 }
 
