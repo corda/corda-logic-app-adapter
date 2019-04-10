@@ -33,7 +33,7 @@
       "examples": [
         "net.corda.workbench.refrigeratedTransportation.flow.CreateFlow"
       ],
-      "pattern": "(?:^w+|w+.w+)+$"
+      "pattern": "(?:^\\w+|\\w+.\\w+)+$"
     },
     "parameters": {
       "$id": "#/properties/parameters",
@@ -61,7 +61,7 @@
     "messageSchemaVersion": {
       "$id": "#/properties/messageSchemaVersion",
       "type": "string",
-      "pattern": "^d+.d+.d+$"
+      "pattern": "^\\d+.\\d+.\\d+$"
     }
   }
 }

@@ -54,7 +54,7 @@
     "messageSchemaVersion": {
       "$id": "#/properties/messageSchemaVersion",
       "type": "string",
-      "pattern": "^d+.d+.d+$"
+      "pattern": "^\\d+.\\d+.\\d+$"
     }
   }
 }
