@@ -48,13 +48,6 @@ class ServicebusClientTests {
     }
 
     @Test
-    fun `test client fails to connect`() {
-        val client = ServicebusClientImpl(SERVICE_BUS, inboundQueue = QUEUE1, outboundQueue = QUEUE2)
-        client.start()
-        while(true) {}
-    }
-
-    @Test
     fun `test blocking consumer`() {
         val clientA = ServicebusClientImpl(SERVICE_BUS, inboundQueue = QUEUE1, outboundQueue = QUEUE2)
         val clientB = ServicebusClientImpl(SERVICE_BUS, inboundQueue = QUEUE2, outboundQueue = QUEUE1)
