@@ -94,6 +94,7 @@ class ValidatingWorkbenchAdapter : WorkbenchAdapter {
         when (message) {
             is FlowOutput -> TODO("do it!")
         }
+        TODO()
     }
 
     private fun JsonNode.messageName(): String? = (get("messageName") as? TextNode)?.textValue()

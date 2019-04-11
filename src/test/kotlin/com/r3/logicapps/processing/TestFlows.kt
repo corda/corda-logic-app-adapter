@@ -7,3 +7,8 @@ import net.corda.core.flows.StartableByService
 class SimpleFlow : FlowLogic<SimpleFlow>() {
     override fun call(): SimpleFlow = this
 }
+
+@StartableByService
+class SimpleFlowWithInput(val a: String, val b: Int, val c: Float, val d: Boolean) : FlowLogic<SimpleFlowWithInput>() {
+    override fun call(): SimpleFlowWithInput = this
+}

@@ -9,6 +9,13 @@ class MessageProcessorTest : TestBase() {
     private val partyB = "PartyB".toIdentity()
 
     @Test
+    fun `can invoke simple flow without parameters`() {
+        val messageProcessor = MessageProcessorImpl { flowLogic ->
+            flowLogic
+        }
+    }
+
+    @Test
     fun `node test`() = withDriver {
         val (partyAHandle, partyBHandle) = startNodes(partyA, partyB)
         assertEquals(partyB.name, partyAHandle.resolveName(partyB.name))

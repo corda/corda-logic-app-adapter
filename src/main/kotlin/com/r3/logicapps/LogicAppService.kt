@@ -8,6 +8,7 @@ import net.corda.core.internal.uncheckedCast
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
 import net.corda.core.serialization.SingletonSerializeAsToken
+import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.loggerFor
 
 @CordaService
@@ -16,7 +17,10 @@ class LogicAppService(
 ) : SingletonSerializeAsToken() {
 
     private val messageProcessor: MessageProcessor = MessageProcessorImpl(
-        startFlowDelegate = { flowLogic -> appServiceHub.startTrackedFlow(flowLogic) }
+        startFlowDelegate = { flowLogic ->
+            val handle = appServiceHub.startFlow(flowLogic)
+            handle.returnValue.getOrThrow()
+        }
     )
 
     private lateinit var serviceBusClient: ServicebusClient

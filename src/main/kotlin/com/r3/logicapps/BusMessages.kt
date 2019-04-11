@@ -1,6 +1,7 @@
 package com.r3.logicapps
 
 import net.corda.core.contracts.UniqueIdentifier
+import kotlin.reflect.KClass
 
 // A message in a format suitable for message processing
 sealed class BusRequest : Correlatable {
@@ -14,7 +15,7 @@ sealed class BusRequest : Correlatable {
         override val requestId: String,
         override val workflowName: String,
         override val parameters: Map<String, String>
-    ) : BusRequest(), Parametrised, Associated
+    ) : BusRequest(), Parameterised, Associated
 
     /**
      * "CreateContractActionRequest"
@@ -27,7 +28,7 @@ sealed class BusRequest : Correlatable {
         override val linearId: UniqueIdentifier,
         override val workflowName: String,
         override val parameters: Map<String, String>
-    ) : BusRequest(), Parametrised, Identifiable, Associated
+    ) : BusRequest(), Parameterised, Identifiable, Associated
 
     /**
      * "ReadContractRequest"
@@ -43,17 +44,31 @@ sealed class BusRequest : Correlatable {
 sealed class BusResponse : Correlatable {
     /**
      * "ContractMessage"
+     * @param ingressType The type of the [BusRequest] that triggered the invocation generating this response.
      * @param requestId A simple correlation ID, generated in the ingress message
      * @param linearId The linear ID of the output state of the flow invoked
-     * @param parameters A flattened serialisation of the parameters of the output state of the transaction or the empty array if the transaction did not have outputs. Flattening is to follow the rules JSON property access notation using dots for named properties and bracket for array positions.
+     * @param fields A flattened serialisation of the fields of the output state of the transaction or an empty array if the transaction did not have outputs. Flattening is to follow the rules JSON property access notation using dots for named properties and bracket for array positions.
      * @param isNewContract `true` if the transaction had no input states
      */
     data class FlowOutput(
+        override val ingressType: KClass<*>,
         override val requestId: String,
         override val linearId: UniqueIdentifier,
-        override val parameters: Map<String, String>,
+        override val fields: Map<String, String>,
         val isNewContract: Boolean
-    ) : BusResponse(), Identifiable, Parametrised
+    ) : BusResponse(), Identifiable, WithIngressType, WithOutput
+
+    /**
+     * "ContractMessage"
+     * @param ingressType The type of the [BusRequest] that triggered the invocation generating this response.
+     * @param requestId A simple correlation ID, generated in the ingress message
+     * @param exception The exception that was thrown during the processing of the [BusRequest].
+     */
+    data class FlowError(
+        override val ingressType: KClass<*>,
+        override val requestId: String,
+        val exception: Throwable
+    ) : BusResponse(), WithIngressType
 }
 
 /**
@@ -71,15 +86,29 @@ private interface Correlatable {
 }
 
 /**
- * Holds a parameter map
- */
-private interface Parametrised {
-    val parameters: Map<String, String>
-}
-
-/**
  * Identified by a linear ID
  */
 private interface Identifiable {
     val linearId: UniqueIdentifier
+}
+
+/**
+ * Holds a parameter map
+ */
+private interface Parameterised {
+    val parameters: Map<String, String>
+}
+
+/**
+ * Holds a field map
+ */
+private interface WithOutput {
+    val fields: Map<String, String>
+}
+
+/**
+ * Holds the type of the request
+ */
+private interface WithIngressType {
+    val ingressType: KClass<*>
 }

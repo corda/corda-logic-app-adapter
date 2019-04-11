@@ -6,3 +6,4 @@ logs/
 cordapps/**
 
 .DS_Store
+.gradle/

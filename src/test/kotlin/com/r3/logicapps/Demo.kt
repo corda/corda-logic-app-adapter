@@ -24,11 +24,12 @@ object Demo {
     }
 
     val dummyMessageProcessor = object : MessageProcessor {
-        override fun invoke(message: BusRequest): BusResponse? {
+        override fun invoke(message: BusRequest): BusResponse {
             // call corda with request
             // transform reponse to message format
             val transformed = dummyAdapter.transformEgress(
                 FlowOutput(
+                    message::class,
                     "id",
                     UniqueIdentifier.fromString(UUID.randomUUID().toString()),
                     mapOf(),
@@ -37,7 +38,7 @@ object Demo {
             )
             // put response on bus
             dummyProducer.handleMessage(transformed)
-            return null
+            TODO()
         }
     }
 
