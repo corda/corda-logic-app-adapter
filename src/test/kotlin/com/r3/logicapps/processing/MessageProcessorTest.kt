@@ -1,10 +1,10 @@
-package com.r3.logicapps.rpc
+package com.r3.logicapps.processing
 
 import com.r3.logicapps.TestBase
 import org.junit.Test
 import kotlin.test.assertEquals
 
-class RPCInvokerTest : TestBase() {
+class MessageProcessorTest : TestBase() {
     private val partyA = "PartyA".toIdentity()
     private val partyB = "PartyB".toIdentity()
 

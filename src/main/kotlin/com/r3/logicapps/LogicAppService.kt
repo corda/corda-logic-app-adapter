@@ -1,7 +1,7 @@
 package com.r3.logicapps
 
-import com.r3.logicapps.rpc.RPCInvoker
-import com.r3.logicapps.rpc.RPCInvokerImpl
+import com.r3.logicapps.processing.MessageProcessor
+import com.r3.logicapps.processing.MessageProcessorImpl
 import com.r3.logicapps.servicebus.ServicebusClient
 import com.r3.logicapps.servicebus.ServicebusClientImpl
 import net.corda.core.internal.uncheckedCast
@@ -15,7 +15,7 @@ class LogicAppService(
     private val appServiceHub: AppServiceHub
 ) : SingletonSerializeAsToken() {
 
-    private val rpcInvoker: RPCInvoker = RPCInvokerImpl(
+    private val messageProcessor: MessageProcessor = MessageProcessorImpl(
         startFlowDelegate = { flowLogic -> appServiceHub.startTrackedFlow(flowLogic) }
     )
 
@@ -23,6 +23,8 @@ class LogicAppService(
 
     init {
         initializeService()
+
+        // Note that the shutdown handler is not guaranteed to be called as the node process may crash or get killed.
         appServiceHub.registerUnloadHandler(::unloadService)
     }
 

@@ -5,14 +5,16 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.throws
-import com.r3.logicapps.RPCRequest.*
+import com.r3.logicapps.BusRequest.InvokeFlowWithInputStates
+import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
+import com.r3.logicapps.BusRequest.QueryFlowState
 import net.corda.core.contracts.UniqueIdentifier
 import org.junit.Test
 
 class ValidatingWorkbenchAdapterTest {
 
     @Test
-    fun `transforming unknown messages fails`() {
+    fun `transforming an unknown message fails`() {
         val json = """{
             |   "messageName" : "NonSensicalRequest"
             |}""".trimMargin()
@@ -24,7 +26,7 @@ class ValidatingWorkbenchAdapterTest {
     }
 
     @Test
-    fun `transforming an invalid "CreateContractRequest" fails`() {
+    fun `transforming an invalid CreateContractRequest fails`() {
         val json = """{
         |  "messageName": "CreateContractRequest",
         |  "hocus" : "pocus"
@@ -44,7 +46,7 @@ class ValidatingWorkbenchAdapterTest {
     }
 
     @Test
-    fun `transforms a valid "CreateContractRequest"`() {
+    fun `transforms a valid CreateContractRequest`() {
         val json = """{
         |  "messageName": "CreateContractRequest",
         |  "requestId": "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
@@ -118,7 +120,7 @@ class ValidatingWorkbenchAdapterTest {
     }
 
     @Test
-    fun `transforming an invalid "CreateContractActionRequest" fails`() {
+    fun `transforming an invalid CreateContractActionRequest fails`() {
         val json = """{
         |  "messageName": "CreateContractActionRequest",
         |  "hocus" : "pocus"
@@ -138,7 +140,7 @@ class ValidatingWorkbenchAdapterTest {
     }
 
     @Test
-    fun `transforms a valid "CreateContractActionRequest"`() {
+    fun `transforms a valid CreateContractActionRequest`() {
         val json = """{
         |    "messageName": "CreateContractActionRequest",
         |    "requestId": "5a2b34a6-5fa0-4400-b1f5-686a7c212d52",
@@ -167,7 +169,7 @@ class ValidatingWorkbenchAdapterTest {
     }
 
     @Test
-    fun `transforming an invalid "ReadContractRequest" fails`() {
+    fun `transforming an invalid ReadContractRequest fails`() {
         val json = """{
         |  "messageName": "ReadContractRequest",
         |  "hocus" : "pocus"
@@ -187,7 +189,7 @@ class ValidatingWorkbenchAdapterTest {
     }
 
     @Test
-    fun `transforms a valid "ReadContractRequest"`() {
+    fun `transforms a valid ReadContractRequest`() {
         val json = """{
         |    "messageName": "ReadContractRequest",
         |    "requestId": "9c2e532f-15bb-4eb8-ae58-34722c5776f4",
@@ -205,5 +207,4 @@ class ValidatingWorkbenchAdapterTest {
         @Suppress("RemoveExplicitTypeArguments")
         assertThat(actual, isA<QueryFlowState>(equalTo(expected)))
     }
-
 }

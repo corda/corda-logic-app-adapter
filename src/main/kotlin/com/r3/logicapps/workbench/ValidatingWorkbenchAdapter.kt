@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
-import com.r3.logicapps.RPCRequest
-import com.r3.logicapps.RPCRequest.*
-import com.r3.logicapps.RPCResponse
-import com.r3.logicapps.RPCResponse.FlowOutput
+import com.r3.logicapps.BusRequest
+import com.r3.logicapps.BusRequest.*
+import com.r3.logicapps.BusResponse
+import com.r3.logicapps.BusResponse.FlowOutput
 import com.r3.logicapps.servicebus.ServicebusMessage
 import com.r3.logicapps.workbench.WorkbenchSchema.*
 import net.corda.core.contracts.UniqueIdentifier
@@ -18,7 +18,7 @@ import org.json.JSONObject
 class ValidatingWorkbenchAdapter : WorkbenchAdapter {
 
     @Throws(IllegalArgumentException::class)
-    override fun transformIngress(message: ServicebusMessage): RPCRequest =
+    override fun transformIngress(message: ServicebusMessage): BusRequest =
         ObjectMapper().readTree(message).let { json ->
             when (json.messageName()) {
                 "CreateContractRequest"       -> {
@@ -90,7 +90,7 @@ class ValidatingWorkbenchAdapter : WorkbenchAdapter {
     }
 
     @Throws(IllegalArgumentException::class)
-    override fun transformEgress(message: RPCResponse): ServicebusMessage {
+    override fun transformEgress(message: BusResponse): ServicebusMessage {
         when (message) {
             is FlowOutput -> TODO("do it!")
         }
