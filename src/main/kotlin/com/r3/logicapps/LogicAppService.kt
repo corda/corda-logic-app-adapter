@@ -1,14 +1,13 @@
 package com.r3.logicapps
 
 import com.r3.logicapps.processing.MessageProcessor
-import com.r3.logicapps.processing.MessageProcessorImpl
+import com.r3.logicapps.processing.ServiceDrivenMessageProcessor
 import com.r3.logicapps.servicebus.ServicebusClient
 import com.r3.logicapps.servicebus.ServicebusClientImpl
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
 import net.corda.core.serialization.SingletonSerializeAsToken
-import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.loggerFor
 
 @CordaService
@@ -16,12 +15,7 @@ class LogicAppService(
     private val appServiceHub: AppServiceHub
 ) : SingletonSerializeAsToken() {
 
-    private val messageProcessor: MessageProcessor = MessageProcessorImpl(
-        startFlowDelegate = { flowLogic ->
-            val handle = appServiceHub.startFlow(flowLogic)
-            handle.returnValue.getOrThrow()
-        }
-    )
+    private val messageProcessor: MessageProcessor = ServiceDrivenMessageProcessor(appServiceHub)
 
     private lateinit var serviceBusClient: ServicebusClient
 

@@ -15,7 +15,7 @@ sealed class BusRequest : Correlatable {
         override val requestId: String,
         override val workflowName: String,
         override val parameters: Map<String, String>
-    ) : BusRequest(), Parameterised, Associated
+    ) : BusRequest(), Invocable
 
     /**
      * "CreateContractActionRequest"
@@ -28,7 +28,7 @@ sealed class BusRequest : Correlatable {
         override val linearId: UniqueIdentifier,
         override val workflowName: String,
         override val parameters: Map<String, String>
-    ) : BusRequest(), Parameterised, Identifiable, Associated
+    ) : BusRequest(), Invocable, Identifiable
 
     /**
      * "ReadContractRequest"
@@ -67,6 +67,7 @@ sealed class BusResponse : Correlatable {
     data class FlowError(
         override val ingressType: KClass<*>,
         override val requestId: String,
+        val linearId: UniqueIdentifier?,
         val exception: Throwable
     ) : BusResponse(), WithIngressType
 }
@@ -74,9 +75,21 @@ sealed class BusResponse : Correlatable {
 /**
  * Is associated with a workflow ID
  */
-private interface Associated {
+interface Associated {
     val workflowName: String
 }
+
+/**
+ * Holds a parameter map
+ */
+interface Parameterised {
+    val parameters: Map<String, String>
+}
+
+/**
+ * Is associated with a workflow ID and holds a parameter map
+ */
+interface Invocable : Associated, Parameterised
 
 /**
  * Can be correlated using a message ID
@@ -90,13 +103,6 @@ private interface Correlatable {
  */
 private interface Identifiable {
     val linearId: UniqueIdentifier
-}
-
-/**
- * Holds a parameter map
- */
-private interface Parameterised {
-    val parameters: Map<String, String>
 }
 
 /**
