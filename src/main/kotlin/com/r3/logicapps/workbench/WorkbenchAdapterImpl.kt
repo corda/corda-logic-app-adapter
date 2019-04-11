@@ -20,6 +20,7 @@ import com.r3.logicapps.workbench.WorkbenchSchema.FlowUpdateRequestSchema
 import net.corda.core.contracts.UniqueIdentifier
 import org.everit.json.schema.ValidationException
 import org.json.JSONObject
+import kotlin.reflect.KClass
 
 object WorkbenchAdapterImpl : WorkbenchAdapter {
 
@@ -46,7 +47,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
     @Throws(IllegalArgumentException::class)
     override fun transformEgress(message: BusResponse): ServicebusMessage = when (message) {
         is FlowOutput -> transformFlowOutputResponse(message)
-        is FlowError  -> TODO()
+        is FlowError  -> transformFlowErrorResponse(message)
     }
 
     private fun WorkbenchSchema.validate(message: String) {
@@ -73,6 +74,22 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             }
             put("messageSchemaVersion", "1.0.0")
             put("isNewContract", flowOutput.isNewContract)
+        }
+        return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
+    }
+
+    private fun transformFlowErrorResponse(flowError: FlowError): ServicebusMessage {
+        val node = JsonNodeFactory.instance.objectNode().apply {
+            put("messageName", flowError.ingressType.toWorkbenchName())
+            put("requestId", flowError.requestId)
+            putObject("additionalInformation").apply {
+                put("errorMessage", flowError.exception.message ?: "")
+            }
+            flowError.linearId?.let {
+                put("contractLedgerIdentifier", it.toString())
+            }
+            put("status", "Failure")
+            put("messageSchemaVersion", "1.0.0")
         }
         return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
     }
@@ -122,4 +139,11 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
     }
 
     private fun JsonNode.messageName(): String? = (get("messageName") as? TextNode)?.textValue()
+
+    private fun KClass<*>.toWorkbenchName() = when (this) {
+        InvokeFlowWithoutInputStates::class -> "CreateContractRequest"
+        InvokeFlowWithInputStates::class    -> "CreateContractActionRequest"
+        QueryFlowState::class               -> "ReadContractRequest"
+        else                                -> throw IllegalArgumentException("Unknown bus request type ${this.simpleName}")
+    }
 }

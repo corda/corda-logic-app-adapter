@@ -8,8 +8,10 @@ import com.natpryce.hamkrest.throws
 import com.r3.logicapps.BusRequest.InvokeFlowWithInputStates
 import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
 import com.r3.logicapps.BusRequest.QueryFlowState
+import com.r3.logicapps.BusResponse.FlowError
 import com.r3.logicapps.BusResponse.FlowOutput
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.contracts.UniqueIdentifier.Companion
 import org.json.JSONObject
 import org.junit.Test
 
@@ -264,4 +266,47 @@ class WorkbenchAdapterTests {
         // no assertion needed, validator will throw if invalid
         WorkbenchSchema.FlowInvocationResponseSchema.underlying.validate(JSONObject(json))
     }
+
+    @Test
+    fun `generates a valid service bus message for error output`() {
+        val expected = """{
+        |  "messageName" : "CreateContractRequest",
+        |  "requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
+        |  "additionalInformation" : {
+        |    "errorMessage" : "Boooom!"
+        |  },
+        |  "contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
+        |  "status" : "Failure",
+        |  "messageSchemaVersion" : "1.0.0"
+        |}""".trimMargin()
+
+        val actual = WorkbenchAdapterImpl.transformEgress(
+            FlowError(
+                ingressType = InvokeFlowWithoutInputStates::class,
+                requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
+                linearId = Companion.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21"),
+                exception = IllegalStateException("Boooom!")
+            )
+        )
+
+        assertThat(actual, equalTo(expected))
+    }
+
+    @Test
+    fun `a reasonable service bus message for a flow error conforms to the schema`() {
+        // TODO moritzplatt 2019-04-11 -- should this be done in the adapter, too?
+
+        val json = WorkbenchAdapterImpl.transformEgress(
+            FlowError(
+                ingressType = InvokeFlowWithoutInputStates::class,
+                requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
+                linearId = Companion.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21"),
+                exception = IllegalStateException("Boooom!")
+            )
+        )
+
+        // no assertion needed, validator will throw if invalid
+        WorkbenchSchema.FlowErrorResponseSchema.underlying.validate(JSONObject(json))
+    }
+
 }
