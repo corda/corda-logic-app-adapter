@@ -1,6 +1,6 @@
 package com.r3.logicapps
 
-import com.r3.logicapps.RPCRequest.FlowInvocationRequest
+import com.r3.logicapps.RPCRequest.InvokeFlowWithoutInputStates
 import com.r3.logicapps.RPCResponse.FlowOutput
 import com.r3.logicapps.rpc.RPCInvoker
 import com.r3.logicapps.servicebus.ServicebusMessage
@@ -8,13 +8,13 @@ import com.r3.logicapps.servicebus.consumer.ServicebusConsumer
 import com.r3.logicapps.servicebus.producer.ServicebusProducer
 import com.r3.logicapps.workbench.WorkbenchAdapter
 import net.corda.core.contracts.UniqueIdentifier
-import java.util.UUID
+import java.util.*
 
 object Demo {
     val dummyAdapter = object : WorkbenchAdapter {
         override fun transformIngress(message: ServicebusMessage): RPCRequest {
             // determine type and convert to RPCRequest object
-            return FlowInvocationRequest("id", "name", mapOf("par" to "ams"))
+            return InvokeFlowWithoutInputStates("id", "name", mapOf("par" to "ams"))
         }
 
         override fun transformEgress(message: RPCResponse): ServicebusMessage {
@@ -24,7 +24,7 @@ object Demo {
     }
 
     val dummyRPCInvoker = object : RPCInvoker {
-        override fun invoke(message: RPCRequest) {
+        override fun invoke(message: RPCRequest): RPCResponse? {
             // call corda with request
             // transform reponse to message format
             val transformed = dummyAdapter.transformEgress(
@@ -37,6 +37,7 @@ object Demo {
             )
             // put response on bus
             dummyProducer.handleMessage(transformed)
+            return null
         }
     }
 

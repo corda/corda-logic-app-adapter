@@ -6,15 +6,11 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.r3.logicapps.RPCRequest
-import com.r3.logicapps.RPCRequest.FlowInvocationRequest
-import com.r3.logicapps.RPCRequest.InvokeFlowWithInputStates
-import com.r3.logicapps.RPCRequest.QueryFlowState
+import com.r3.logicapps.RPCRequest.*
 import com.r3.logicapps.RPCResponse
 import com.r3.logicapps.RPCResponse.FlowOutput
 import com.r3.logicapps.servicebus.ServicebusMessage
-import com.r3.logicapps.workbench.WorkbenchSchema.FlowInvocationRequestSchema
-import com.r3.logicapps.workbench.WorkbenchSchema.FlowStateRequestSchema
-import com.r3.logicapps.workbench.WorkbenchSchema.FlowUpdateRequestSchema
+import com.r3.logicapps.workbench.WorkbenchSchema.*
 import net.corda.core.contracts.UniqueIdentifier
 import org.everit.json.schema.ValidationException
 import org.json.JSONObject
@@ -49,11 +45,11 @@ class ValidatingWorkbenchAdapter : WorkbenchAdapter {
         }
     }
 
-    private fun transformFlowInvocationRequest(json: JsonNode): FlowInvocationRequest {
+    private fun transformFlowInvocationRequest(json: JsonNode): InvokeFlowWithoutInputStates {
         val requestId = json.extractRequestId("requestId")
         val workflowName = json.extractWorkflowName("workflowName")
         val parameters = json.extractParameters("parameters")
-        return FlowInvocationRequest(requestId, workflowName, parameters)
+        return InvokeFlowWithoutInputStates(requestId, workflowName, parameters)
     }
 
     private fun transformFlowUpdateRequest(json: JsonNode): InvokeFlowWithInputStates {

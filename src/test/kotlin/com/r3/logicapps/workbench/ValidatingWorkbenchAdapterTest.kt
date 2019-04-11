@@ -5,9 +5,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.throws
-import com.r3.logicapps.RPCRequest.FlowInvocationRequest
-import com.r3.logicapps.RPCRequest.InvokeFlowWithInputStates
-import com.r3.logicapps.RPCRequest.QueryFlowState
+import com.r3.logicapps.RPCRequest.*
 import net.corda.core.contracts.UniqueIdentifier
 import org.junit.Test
 
@@ -98,7 +96,7 @@ class ValidatingWorkbenchAdapterTest {
 
         val actual = ValidatingWorkbenchAdapter().transformIngress(json)
 
-        val expected = FlowInvocationRequest(
+        val expected = InvokeFlowWithoutInputStates(
             requestId = "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
             workflowName = "net.corda.workbench.refrigeratedTransportation.flow.CreateFlow",
             parameters = mapOf(
@@ -116,7 +114,7 @@ class ValidatingWorkbenchAdapterTest {
         )
 
         @Suppress("RemoveExplicitTypeArguments")
-        assertThat(actual, isA<FlowInvocationRequest>(equalTo(expected)))
+        assertThat(actual, isA<InvokeFlowWithoutInputStates>(equalTo(expected)))
     }
 
     @Test

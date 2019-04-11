@@ -10,7 +10,7 @@ sealed class RPCRequest : Correlatable {
      * @param workflowName The name of the flow to be invoked. Preferably in fully qualified form, i.e. containing the relevant package name.
      * @param parameters A flat array of objects representing key-value pairs. The name is expected to equal the flow invocation parameter name. The value provided represents the value to be passed to the flow invocation logic. Note that—in the current implementation—the type of value chosen is irrelevant. All flows will be invoked using strings in line with Corda's `InteractiveShell.runFlowFromString` method
      */
-    data class FlowInvocationRequest(
+    data class InvokeFlowWithoutInputStates(
         override val requestId: String,
         override val workflowName: String,
         override val parameters: Map<String, String>

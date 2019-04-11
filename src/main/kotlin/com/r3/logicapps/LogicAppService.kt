@@ -5,8 +5,31 @@ import com.r3.logicapps.rpc.RPCInvokerImpl
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
 import net.corda.core.serialization.SingletonSerializeAsToken
+import net.corda.core.utilities.loggerFor
 
 @CordaService
-class LogicAppService(appServiceHub: AppServiceHub): SingletonSerializeAsToken() {
-    private val rpcInvoker: RPCInvoker = RPCInvokerImpl(appServiceHub)
+class LogicAppService(
+    private val appServiceHub: AppServiceHub
+) : SingletonSerializeAsToken() {
+
+    private val rpcInvoker: RPCInvoker = RPCInvokerImpl(
+        startFlowDelegate = { flowLogic -> appServiceHub.startTrackedFlow(flowLogic) }
+    )
+
+    init {
+        initializeService()
+        appServiceHub.registerUnloadHandler(::unloadService)
+    }
+
+    private fun initializeService() {
+        log.info("Starting service")
+    }
+
+    private fun unloadService() {
+        log.info("Stopping service")
+    }
+
+    companion object {
+        private val log = loggerFor<LogicAppService>()
+    }
 }
