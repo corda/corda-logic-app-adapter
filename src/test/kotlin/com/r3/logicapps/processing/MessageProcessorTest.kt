@@ -4,14 +4,10 @@ import com.r3.logicapps.BusRequest
 import com.r3.logicapps.BusResponse
 import com.r3.logicapps.TestBase
 import net.corda.core.contracts.UniqueIdentifier
-import org.junit.Ignore
 import org.junit.Test
 import kotlin.test.assertEquals
 
 class MessageProcessorTest : TestBase() {
-    private val partyA = "PartyA".toIdentity()
-    private val partyB = "PartyB".toIdentity()
-
     @Test
     fun `fails if referencing non-existent class`() {
         val requestId = "1234"
@@ -62,13 +58,5 @@ class MessageProcessorTest : TestBase() {
         assertEquals(0, response.fields.size)
         assertEquals(linearId, response.linearId)
         assertEquals(true, response.isNewContract)
-    }
-
-    @Test
-    @Ignore
-    fun `node test`() = withDriver {
-        val (partyAHandle, partyBHandle) = startNodes(partyA, partyB)
-        assertEquals(partyB.name, partyAHandle.resolveName(partyB.name))
-        assertEquals(partyA.name, partyBHandle.resolveName(partyA.name))
     }
 }
