@@ -18,6 +18,8 @@ class LogicAppService(
 
     init {
         initializeService()
+
+        // Note that the shutdown handler is not guaranteed to be called as the node process may crash or get killed.
         appServiceHub.registerUnloadHandler(::unloadService)
     }
 
