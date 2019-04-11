@@ -11,12 +11,7 @@ open class MessageProcessorImpl(
 ) : MessageProcessor {
     override fun invoke(message: BusRequest): BusResponse = when (message) {
         is BusRequest.InvokeFlowWithoutInputStates -> processInvocationMessage(message.requestId, null, message, true)
-        is BusRequest.InvokeFlowWithInputStates -> processInvocationMessage(
-            message.requestId,
-            message.linearId,
-            message,
-            false
-        )
+        is BusRequest.InvokeFlowWithInputStates -> processInvocationMessage(message.requestId, message.linearId, message, false)
         is BusRequest.QueryFlowState -> {
             TODO("Handler for QueryFlowState not implemented")
         }
@@ -39,12 +34,7 @@ open class MessageProcessorImpl(
                 isNewContract = isNew
             )
         } catch (exception: Throwable) {
-            BusResponse.FlowError(
-                ingressType = invocable::class,
-                requestId = requestId,
-                linearId = linearID,
-                exception = exception
-            )
+            BusResponse.FlowError(invocable::class, requestId, linearID, exception)
         }
     }
 
