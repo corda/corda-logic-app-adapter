@@ -21,7 +21,7 @@ import net.corda.core.contracts.UniqueIdentifier
 import org.everit.json.schema.ValidationException
 import org.json.JSONObject
 
-class WorkbenchAdapterImpl : WorkbenchAdapter {
+object WorkbenchAdapterImpl : WorkbenchAdapter {
 
     @Throws(IllegalArgumentException::class)
     override fun transformIngress(message: ServicebusMessage): BusRequest =

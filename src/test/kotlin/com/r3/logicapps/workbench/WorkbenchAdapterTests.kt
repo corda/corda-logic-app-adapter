@@ -21,7 +21,7 @@ class WorkbenchAdapterTests {
             |}""".trimMargin()
 
         assertThat(
-            { WorkbenchAdapterImpl().transformIngress(json) },
+            { WorkbenchAdapterImpl.transformIngress(json) },
             throws(isA<IllegalArgumentException>(has(Exception::message, equalTo("Unknown message name"))))
         )
     }
@@ -34,7 +34,7 @@ class WorkbenchAdapterTests {
         |}""".trimMargin()
 
         assertThat(
-            { WorkbenchAdapterImpl().transformIngress(json) },
+            { WorkbenchAdapterImpl.transformIngress(json) },
             throws(
                 isA<IllegalArgumentException>(
                     has(
@@ -97,7 +97,7 @@ class WorkbenchAdapterTests {
         |  "messageSchemaVersion": "1.0.0"
         |}""".trimMargin()
 
-        val actual = WorkbenchAdapterImpl().transformIngress(json)
+        val actual = WorkbenchAdapterImpl.transformIngress(json)
 
         val expected = InvokeFlowWithoutInputStates(
             requestId = "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
@@ -128,7 +128,7 @@ class WorkbenchAdapterTests {
         |}""".trimMargin()
 
         assertThat(
-            { WorkbenchAdapterImpl().transformIngress(json) },
+            { WorkbenchAdapterImpl.transformIngress(json) },
             throws(
                 isA<IllegalArgumentException>(
                     has(
@@ -156,7 +156,7 @@ class WorkbenchAdapterTests {
         |    "messageSchemaVersion": "1.0.0"
         |}""".trimMargin()
 
-        val actual = WorkbenchAdapterImpl().transformIngress(json)
+        val actual = WorkbenchAdapterImpl.transformIngress(json)
 
         val expected = InvokeFlowWithInputStates(
             requestId = "5a2b34a6-5fa0-4400-b1f5-686a7c212d52",
@@ -177,7 +177,7 @@ class WorkbenchAdapterTests {
         |}""".trimMargin()
 
         assertThat(
-            { WorkbenchAdapterImpl().transformIngress(json) },
+            { WorkbenchAdapterImpl.transformIngress(json) },
             throws(
                 isA<IllegalArgumentException>(
                     has(
@@ -198,7 +198,7 @@ class WorkbenchAdapterTests {
         |    "messageSchemaVersion": "1.0.0"
         |}""".trimMargin()
 
-        val actual = WorkbenchAdapterImpl().transformIngress(json)
+        val actual = WorkbenchAdapterImpl.transformIngress(json)
 
         val expected = QueryFlowState(
             requestId = "9c2e532f-15bb-4eb8-ae58-34722c5776f4",
@@ -227,7 +227,7 @@ class WorkbenchAdapterTests {
         |  "isNewContract" : false
         |}""".trimMargin()
 
-        val actual = WorkbenchAdapterImpl().transformEgress(
+        val actual = WorkbenchAdapterImpl.transformEgress(
             FlowOutput(
                 InvokeFlowWithoutInputStates::class,
                 "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
