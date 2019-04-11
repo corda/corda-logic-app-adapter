@@ -50,7 +50,13 @@ open class MessageProcessorImpl(
             throw ClassNotFoundException("Unable to find '$flowName' on the class path")
         }
         val flowLogic = clazz.asSubclass(FlowLogic::class.java) ?: error("$flowName is not a subclass of FlowLogic")
-        val ctor = flowLogic.constructors.firstOrNull() ?: error("No viable constructor found for $flowName")
-        return ctor.newInstance() as? FlowLogic<*> ?: error("Unable to instantiate new $flowName with provided arguments")
+        val statement = FlowInvoker.getFlowStatementFromString(flowLogic, parameters)
+        if (statement.errors.isNotEmpty()) {
+            throw IllegalStateException(statement.errors.joinToString("; "))
+        }
+        val ctor = statement.ctor ?: error("Unable to derive applicable constructor for $flowName")
+        val arguments = statement.arguments ?: error("Unable to derive arguments for $flowName")
+        return ctor.newInstance(*arguments) as? FlowLogic<*>
+            ?: error("Unable to instantiate $flowName with provided arguments")
     }
 }
