@@ -56,6 +56,7 @@ class ServicebusClientImpl(private val connectionString: String,
         log.info("Message sent")
     }
 
+    //TODO: return IMessage to be able to call complete() on it once it's processed?
     override fun receive(): String {
         require(started.get()) { "Service bus client should be started before calling receive()" }
         val msg = blockingReceiver!!.receive()

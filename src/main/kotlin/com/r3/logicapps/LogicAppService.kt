@@ -34,8 +34,7 @@ class LogicAppService(
         val outboundQueue: String = if (config.exists("outboundQueue")) { uncheckedCast(config.get("outboundQueue")) } else { "" }
         serviceBusClient = ServicebusClientImpl(connectionString, inboundQueue, outboundQueue)
         serviceBusClient.start()
-
-        // TODO: add message handler to client or do blocking receive()
+        serviceBusClient.registerReceivedMessageHandler(BusMessageHandler(serviceBusClient, messageProcessor))
     }
 
     private fun unloadService() {
