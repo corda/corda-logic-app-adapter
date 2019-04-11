@@ -10,16 +10,17 @@ open class MessageProcessorImpl(
     private val startFlowDelegate: (FlowLogic<*>) -> FlowInvocationResult
 ) : MessageProcessor {
     override fun invoke(message: BusRequest): BusResponse = when (message) {
-        is BusRequest.InvokeFlowWithoutInputStates -> processInvocationMessage(message.requestId, null, message, true)
-        is BusRequest.InvokeFlowWithInputStates -> processInvocationMessage(message.requestId, message.linearId, message, false)
-        is BusRequest.QueryFlowState -> {
-            TODO("Handler for QueryFlowState not implemented")
-        }
+        is BusRequest.InvokeFlowWithoutInputStates ->
+            processInvocationMessage(message.requestId, null, message, true)
+        is BusRequest.InvokeFlowWithInputStates ->
+            processInvocationMessage(message.requestId, message.linearId, message, false)
+        is BusRequest.QueryFlowState ->
+            processQueryMessage(message.requestId, message.linearId)
     }
 
     private fun processInvocationMessage(
         requestId: String,
-        linearID: UniqueIdentifier?,
+        linearId: UniqueIdentifier?,
         invocable: Invocable,
         isNew: Boolean
     ): BusResponse {
@@ -29,13 +30,17 @@ open class MessageProcessorImpl(
             BusResponse.FlowOutput(
                 ingressType = invocable::class,
                 requestId = requestId,
-                linearId = result.linearId ?: linearID ?: error("Unable to derive linear ID after flow invocation"),
+                linearId = result.linearId ?: linearId ?: error("Unable to derive linear ID after flow invocation"),
                 fields = result.fields,
                 isNewContract = isNew
             )
         } catch (exception: Throwable) {
-            BusResponse.FlowError(invocable::class, requestId, linearID, exception)
+            BusResponse.FlowError(invocable::class, requestId, linearId, exception)
         }
+    }
+
+    private fun processQueryMessage(requestId: String, linearId: UniqueIdentifier?): BusResponse {
+        TODO("Handler for QueryFlowState not implemented")
     }
 
     private fun deriveFlowLogic(flowName: String, parameters: Map<String, String>): FlowLogic<*> {
