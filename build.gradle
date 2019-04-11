@@ -14,7 +14,7 @@ buildscript {
         quasar_version = '0.7.10'
         slf4j_version = '1.7.25'
         log4j_version = '2.11.2'
-        azure_servicebus_version = '2.0.0'
+        azure_servicebus_version = '1.2.8'
     }
 
     repositories {
@@ -84,9 +84,11 @@ dependencies {
     cordaCompile "org.apache.logging.log4j:log4j-web:${log4j_version}"
     cordaCompile "org.slf4j:jul-to-slf4j:$slf4j_version"
 
-    cordaCompile "com.github.everit-org.json-schema:org.everit.json.schema:1.11.1"
+    compile "com.github.everit-org.json-schema:org.everit.json.schema:1.11.1"
 
-    compile "com.microsoft.azure:azure-servicebus:$azure_servicebus_version"
+    compile("com.microsoft.azure:azure-servicebus:$azure_servicebus_version") {
+//        exclude group: 'org.apache.qpid'
+    }
     
     testCompile "junit:junit:$junit_version"
     testCompile "com.natpryce:hamkrest:1.7.0.0"

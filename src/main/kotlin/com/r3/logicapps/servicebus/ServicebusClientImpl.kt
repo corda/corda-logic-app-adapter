@@ -61,7 +61,8 @@ class ServicebusClientImpl(private val connectionString: String,
         require(started.get()) { "Service bus client should be started before calling receive()" }
         val msg = blockingReceiver!!.receive()
         blockingReceiver!!.complete(msg.lockToken)
-        return String(msg.messageBody.binaryData.first(), UTF_8)
+//        return String(msg.messageBody.binaryData.first(), UTF_8)
+        return String(msg.body, UTF_8)
     }
 
     override fun registerReceivedMessageHandler(handler: IMessageHandler) {

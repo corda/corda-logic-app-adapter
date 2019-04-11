@@ -70,55 +70,54 @@ class ServicebusClientTests : TestBase() {
 
     @Test(timeout = 60000)
     fun `node consumes and replies`() = withDriver {
-        //produce a message
         val message = "{\n" +
-                "  \"messageName\": \"CreateContractRequest\",\n" +
-                "  \"requestId\": \"81a87eb0-b5aa-4d53-a39f-a6ed0742d90d\",\n" +
-                "  \"workflowName\": \"net.corda.workbench.refrigeratedTransportation.flow.CreateFlow\",\n" +
-                "  \"parameters\": [\n" +
-                "    {\n" +
-                "      \"name\": \"state\",\n" +
-                "      \"value\": \"Created\"\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"name\": \"owner\",\n" +
-                "      \"value\": \"O=Alice Ltd., L=Shanghai, C=CN\"\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"name\": \"initiatingCounterparty\",\n" +
-                "      \"value\": \"O=Bob Ltd., L=Beijing, C=CN\"\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"name\": \"device\",\n" +
-                "      \"value\": \"O=Charly GmbH, OU=Device01, L=Berlin, C=DE\"\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"name\": \"supplyChainOwner\",\n" +
-                "      \"value\": \"O=Denise SARL, L=Marseille, C=FR\"\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"name\": \"supplyChainObserver\",\n" +
-                "      \"value\": \"O=Denise SARL, L=Marseille, C=FR\"\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"name\": \"minHumidity\",\n" +
-                "      \"value\": \"12\"\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"name\": \"maxHumidity\",\n" +
-                "      \"value\": \"45\"\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"name\": \"minTemperature\",\n" +
-                "      \"value\": \"-20\"\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"name\": \"maxTemperature\",\n" +
-                "      \"value\": \"-7\"\n" +
-                "    }\n" +
-                "  ],\n" +
-                "  \"messageSchemaVersion\": \"1.0.0\"\n" +
-                "}"
+                "          \"messageName\": \"CreateContractRequest\",\n" +
+                "          \"requestId\": \"81a87eb0-b5aa-4d53-a39f-a6ed0742d90d\",\n" +
+                "          \"workflowName\": \"net.corda.workbench.refrigeratedTransportation.flow.CreateFlow\",\n" +
+                "          \"parameters\": [\n" +
+                "            {\n" +
+                "              \"name\": \"state\",\n" +
+                "              \"value\": \"Created\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"name\": \"owner\",\n" +
+                "              \"value\": \"O=Alice Ltd., L=Shanghai, C=CN\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"name\": \"initiatingCounterparty\",\n" +
+                "              \"value\": \"O=Bob Ltd., L=Beijing, C=CN\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"name\": \"device\",\n" +
+                "              \"value\": \"O=Charly GmbH, OU=Device01, L=Berlin, C=DE\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"name\": \"supplyChainOwner\",\n" +
+                "              \"value\": \"O=Denise SARL, L=Marseille, C=FR\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"name\": \"supplyChainObserver\",\n" +
+                "              \"value\": \"O=Denise SARL, L=Marseille, C=FR\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"name\": \"minHumidity\",\n" +
+                "              \"value\": \"12\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"name\": \"maxHumidity\",\n" +
+                "              \"value\": \"45\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"name\": \"minTemperature\",\n" +
+                "              \"value\": \"-20\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"name\": \"maxTemperature\",\n" +
+                "              \"value\": \"-7\"\n" +
+                "            }\n" +
+                "          ],\n" +
+                "          \"messageSchemaVersion\": \"1.0.0\"\n" +
+                "        }"
         //TODO: update once implementation of message processor is finished
         val expected = "{\n" +
                 "  \"messageName\" : \"CreateContractRequest\",\n" +
@@ -143,7 +142,8 @@ class ServicebusClientTests : TestBase() {
             count.set(count.get() + 1)
             if (count.get() <= 10) {
                 println("Client $id sending message with count ${count.get()}")
-                client.send(String(message!!.messageBody.binaryData.first(), UTF_8))
+//                client.send(String(message!!.messageBody.binaryData.first(), UTF_8))
+                client.send(String(message!!.body, UTF_8))
             }
             return CompletableFuture.completedFuture(null)
         }

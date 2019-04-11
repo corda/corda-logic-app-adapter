@@ -16,9 +16,9 @@ class BusMessageHandler(private val busClient: ServicebusClient,
         val log = contextLogger()
     }
     override fun onMessageAsync(message: IMessage?): CompletableFuture<Void> {
-        val payload = String(message!!.messageBody.binaryData.first(), StandardCharsets.UTF_8)
+//        val payload = String(message!!.messageBody.binaryData.first(), StandardCharsets.UTF_8)
+        val payload = String(message!!.body, StandardCharsets.UTF_8)
         log.info("Received message: $payload")
-
         val busRequest = WorkbenchAdapterImpl.transformIngress(payload)
         val response = WorkbenchAdapterImpl.transformEgress(messageProcessor.invoke(busRequest))
 
