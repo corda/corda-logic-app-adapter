@@ -1,20 +1,22 @@
 package com.r3.logicapps.processing
 
 import com.r3.logicapps.BusRequest
+import com.r3.logicapps.BusRequest.QueryFlowState
 import com.r3.logicapps.BusResponse
 import com.r3.logicapps.Invocable
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.FlowLogic
 
 open class MessageProcessorImpl(
-    private val startFlowDelegate: (FlowLogic<*>) -> FlowInvocationResult
+    private val startFlowDelegate: (FlowLogic<*>) -> FlowInvocationResult,
+    private val retrieveStateDelegate: (UniqueIdentifier) -> StateQueryResult
 ) : MessageProcessor {
     override fun invoke(message: BusRequest): BusResponse = when (message) {
         is BusRequest.InvokeFlowWithoutInputStates ->
             processInvocationMessage(message.requestId, null, message, true)
-        is BusRequest.InvokeFlowWithInputStates ->
+        is BusRequest.InvokeFlowWithInputStates    ->
             processInvocationMessage(message.requestId, message.linearId, message, false)
-        is BusRequest.QueryFlowState ->
+        is BusRequest.QueryFlowState               ->
             processQueryMessage(message.requestId, message.linearId)
     }
 
@@ -39,8 +41,23 @@ open class MessageProcessorImpl(
         }
     }
 
-    private fun processQueryMessage(requestId: String, linearId: UniqueIdentifier?): BusResponse {
-        TODO("Handler for QueryFlowState not implemented")
+    private fun processQueryMessage(requestId: String, linearId: UniqueIdentifier): BusResponse = try {
+        retrieveStateDelegate(linearId).let { result ->
+            BusResponse.FlowOutput(
+                ingressType = QueryFlowState::class,
+                requestId = requestId,
+                linearId = linearId,
+                fields = result.fields,
+                isNewContract = result.isNewContract
+            )
+        }
+    } catch (exception: Throwable) {
+        BusResponse.FlowError(
+            ingressType = QueryFlowState::class,
+            requestId = requestId,
+            linearId = linearId,
+            exception = exception
+        )
     }
 
     private fun deriveFlowLogic(flowName: String, parameters: Map<String, String>): FlowLogic<*> {

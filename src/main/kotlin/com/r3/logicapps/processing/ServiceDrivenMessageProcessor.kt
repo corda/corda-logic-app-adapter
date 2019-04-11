@@ -6,6 +6,10 @@ import net.corda.client.jackson.JacksonSupport
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.LinearState
 import net.corda.core.node.AppServiceHub
+import net.corda.core.node.services.Vault.StateStatus.CONSUMED
+import net.corda.core.node.services.Vault.StateStatus.UNCONSUMED
+import net.corda.core.node.services.queryBy
+import net.corda.core.node.services.vault.QueryCriteria.LinearStateQueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.getOrThrow
 
@@ -21,12 +25,33 @@ class ServiceDrivenMessageProcessor(appServiceHub: AppServiceHub) : MessageProce
         } catch (exception: Throwable) {
             FlowInvocationResult(exception = exception)
         }
+    },
+    retrieveStateDelegate = { linearId ->
+        val unconsumed = LinearStateQueryCriteria(
+            status = UNCONSUMED,
+            linearId = listOf(linearId)
+        )
+
+        val consumed = LinearStateQueryCriteria(
+            status = CONSUMED,
+            linearId = listOf(linearId)
+        )
+
+        val consumedStateAndRefs = appServiceHub.vaultService.queryBy<LinearState>(consumed).states
+
+        val unconsumedStateAndRef = appServiceHub.vaultService.queryBy<LinearState>(unconsumed).states.firstOrNull()
+            ?: throw IllegalArgumentException("No state with ID found")
+
+        val linearState = unconsumedStateAndRef.state.data
+
+        StateQueryResult(
+            fields = linearState.fields(),
+            isNewContract = consumedStateAndRefs.isEmpty()
+        )
     }
 )
 
 fun List<ContractState>.toFlowInvocationResult(): FlowInvocationResult {
-    val mapper = JacksonSupport.createNonRpcMapper(JsonFactory())
-
     if (size > 1)
         throw IllegalArgumentException("Only flows with at most a single output state are supported")
 
@@ -34,15 +59,17 @@ fun List<ContractState>.toFlowInvocationResult(): FlowInvocationResult {
         it as? LinearState ?: throw IllegalArgumentException("Only linear output states are supported")
     }
 
-    val fields = linearState?.let {
-        mapper.valueToTree<ObjectNode>(it).removeLinearId().flattenWithDotNotation()
-    } ?: emptyMap()
-
     return FlowInvocationResult(
         linearId = linearState?.linearId,
-        fields = fields
+        fields = linearState?.fields() ?: emptyMap()
     )
 }
+
+private fun LinearState.fields(): Map<String, String> = JacksonSupport
+    .createNonRpcMapper(JsonFactory())
+    .valueToTree<ObjectNode>(this)
+    .removeLinearId()
+    .flattenWithDotNotation()
 
 private fun ObjectNode.removeLinearId(): ObjectNode {
     remove("linearId")

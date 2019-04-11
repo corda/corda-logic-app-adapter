@@ -13,7 +13,10 @@ class MessageProcessorTest : TestBase() {
         val requestId = "1234"
         val linearId = UniqueIdentifier()
 
-        val messageProcessor = MessageProcessorImpl { FlowInvocationResult(linearId = linearId) }
+        val messageProcessor = MessageProcessorImpl(
+            startFlowDelegate = { FlowInvocationResult(linearId = linearId) },
+            retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
+        )
         val busResponse = messageProcessor.invoke(
             BusRequest.InvokeFlowWithoutInputStates(requestId, "com.nowhere.SimpleFlow", emptyMap())
         )
@@ -28,7 +31,11 @@ class MessageProcessorTest : TestBase() {
         val requestId = "1234"
         val linearId = UniqueIdentifier()
 
-        val messageProcessor = MessageProcessorImpl { FlowInvocationResult(linearId = linearId) }
+        val messageProcessor = MessageProcessorImpl(
+            startFlowDelegate = { FlowInvocationResult(linearId = linearId) },
+            retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
+        )
+
         val busResponse = messageProcessor.invoke(
             BusRequest.InvokeFlowWithoutInputStates(requestId, "com.r3.logicapps.processing.SimpleFlow", emptyMap())
         )
@@ -47,9 +54,17 @@ class MessageProcessorTest : TestBase() {
         val linearId = UniqueIdentifier()
         val params = mapOf("a" to "", "b" to "", "c" to "", "d" to "")
 
-        val messageProcessor = MessageProcessorImpl { FlowInvocationResult(linearId = linearId) }
+        val messageProcessor = MessageProcessorImpl(
+            startFlowDelegate = { FlowInvocationResult(linearId = linearId) },
+            retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
+        )
+
         val busResponse = messageProcessor.invoke(
-            BusRequest.InvokeFlowWithoutInputStates(requestId, "com.r3.logicapps.processing.SimpleFlowWithInput", params)
+            BusRequest.InvokeFlowWithoutInputStates(
+                requestId,
+                "com.r3.logicapps.processing.SimpleFlowWithInput",
+                params
+            )
         )
 
         val response = busResponse as? BusResponse.FlowOutput
@@ -66,9 +81,17 @@ class MessageProcessorTest : TestBase() {
         val linearId = UniqueIdentifier()
         val params = mapOf("a" to "hello", "b" to "123", "c" to "1.23", "d" to "true")
 
-        val messageProcessor = MessageProcessorImpl { FlowInvocationResult(linearId = linearId) }
+        val messageProcessor = MessageProcessorImpl(
+            startFlowDelegate = { FlowInvocationResult(linearId = linearId) },
+            retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
+        )
+
         val busResponse = messageProcessor.invoke(
-            BusRequest.InvokeFlowWithoutInputStates(requestId, "com.r3.logicapps.processing.SimpleFlowWithInput", params)
+            BusRequest.InvokeFlowWithoutInputStates(
+                requestId,
+                "com.r3.logicapps.processing.SimpleFlowWithInput",
+                params
+            )
         )
 
         val response = busResponse as? BusResponse.FlowOutput
@@ -85,9 +108,17 @@ class MessageProcessorTest : TestBase() {
         val linearId = UniqueIdentifier()
         val params = mapOf("a" to "hello", "b" to "a123", "c" to "1.23", "d" to "true")
 
-        val messageProcessor = MessageProcessorImpl { FlowInvocationResult(linearId = linearId) }
+        val messageProcessor = MessageProcessorImpl(
+            startFlowDelegate = { FlowInvocationResult(linearId = linearId) },
+            retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
+        )
+
         val busResponse = messageProcessor.invoke(
-            BusRequest.InvokeFlowWithoutInputStates(requestId, "com.r3.logicapps.processing.SimpleFlowWithInput", params)
+            BusRequest.InvokeFlowWithoutInputStates(
+                requestId,
+                "com.r3.logicapps.processing.SimpleFlowWithInput",
+                params
+            )
         )
 
         val response = busResponse as? BusResponse.FlowError
