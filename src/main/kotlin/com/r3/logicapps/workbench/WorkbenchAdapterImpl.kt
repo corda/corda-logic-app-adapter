@@ -3,19 +3,25 @@ package com.r3.logicapps.workbench
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.r3.logicapps.BusRequest
-import com.r3.logicapps.BusRequest.*
+import com.r3.logicapps.BusRequest.InvokeFlowWithInputStates
+import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
+import com.r3.logicapps.BusRequest.QueryFlowState
 import com.r3.logicapps.BusResponse
+import com.r3.logicapps.BusResponse.FlowError
 import com.r3.logicapps.BusResponse.FlowOutput
 import com.r3.logicapps.servicebus.ServicebusMessage
-import com.r3.logicapps.workbench.WorkbenchSchema.*
+import com.r3.logicapps.workbench.WorkbenchSchema.FlowInvocationRequestSchema
+import com.r3.logicapps.workbench.WorkbenchSchema.FlowStateRequestSchema
+import com.r3.logicapps.workbench.WorkbenchSchema.FlowUpdateRequestSchema
 import net.corda.core.contracts.UniqueIdentifier
 import org.everit.json.schema.ValidationException
 import org.json.JSONObject
 
-class ValidatingWorkbenchAdapter : WorkbenchAdapter {
+class WorkbenchAdapterImpl : WorkbenchAdapter {
 
     @Throws(IllegalArgumentException::class)
     override fun transformIngress(message: ServicebusMessage): BusRequest =
@@ -37,12 +43,38 @@ class ValidatingWorkbenchAdapter : WorkbenchAdapter {
             }
         }
 
+    @Throws(IllegalArgumentException::class)
+    override fun transformEgress(message: BusResponse): ServicebusMessage = when (message) {
+        is FlowOutput -> transformFlowOutputResponse(message)
+        is FlowError  -> TODO()
+    }
+
     private fun WorkbenchSchema.validate(message: String) {
         try {
             underlying.validate(JSONObject(message))
         } catch (exception: ValidationException) {
             throw IllegalArgumentException("Not a valid message for schema ${this::class.java}: ${exception.message}")
         }
+    }
+
+    private fun transformFlowOutputResponse(flowOutput: FlowOutput): ServicebusMessage {
+        val node = JsonNodeFactory.instance.objectNode().apply {
+            put("messageName", "ContractMessage")
+            put("requestId", flowOutput.requestId)
+            putObject("additionalInformation")
+            put("contractLedgerIdentifier", flowOutput.linearId.toString())
+            putArray("contractProperties").apply {
+                flowOutput.fields.forEach { k, v ->
+                    addObject().apply {
+                        put("name", k)
+                        put("value", v)
+                    }
+                }
+            }
+            put("messageSchemaVersion", "1.0.0")
+            put("isNewContract", flowOutput.isNewContract)
+        }
+        return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
     }
 
     private fun transformFlowInvocationRequest(json: JsonNode): InvokeFlowWithoutInputStates {
@@ -87,14 +119,6 @@ class ValidatingWorkbenchAdapter : WorkbenchAdapter {
                 key to value
             } ?: throw IllegalArgumentException("Malformed Parameter")
         }.toMap()
-    }
-
-    @Throws(IllegalArgumentException::class)
-    override fun transformEgress(message: BusResponse): ServicebusMessage {
-        when (message) {
-            is FlowOutput -> TODO("do it!")
-        }
-        TODO()
     }
 
     private fun JsonNode.messageName(): String? = (get("messageName") as? TextNode)?.textValue()

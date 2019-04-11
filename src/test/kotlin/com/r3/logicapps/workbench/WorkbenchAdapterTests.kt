@@ -8,10 +8,11 @@ import com.natpryce.hamkrest.throws
 import com.r3.logicapps.BusRequest.InvokeFlowWithInputStates
 import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
 import com.r3.logicapps.BusRequest.QueryFlowState
+import com.r3.logicapps.BusResponse.FlowOutput
 import net.corda.core.contracts.UniqueIdentifier
 import org.junit.Test
 
-class ValidatingWorkbenchAdapterTest {
+class WorkbenchAdapterTests {
 
     @Test
     fun `transforming an unknown message fails`() {
@@ -20,7 +21,7 @@ class ValidatingWorkbenchAdapterTest {
             |}""".trimMargin()
 
         assertThat(
-            { ValidatingWorkbenchAdapter().transformIngress(json) },
+            { WorkbenchAdapterImpl().transformIngress(json) },
             throws(isA<IllegalArgumentException>(has(Exception::message, equalTo("Unknown message name"))))
         )
     }
@@ -33,7 +34,7 @@ class ValidatingWorkbenchAdapterTest {
         |}""".trimMargin()
 
         assertThat(
-            { ValidatingWorkbenchAdapter().transformIngress(json) },
+            { WorkbenchAdapterImpl().transformIngress(json) },
             throws(
                 isA<IllegalArgumentException>(
                     has(
@@ -96,7 +97,7 @@ class ValidatingWorkbenchAdapterTest {
         |  "messageSchemaVersion": "1.0.0"
         |}""".trimMargin()
 
-        val actual = ValidatingWorkbenchAdapter().transformIngress(json)
+        val actual = WorkbenchAdapterImpl().transformIngress(json)
 
         val expected = InvokeFlowWithoutInputStates(
             requestId = "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
@@ -127,7 +128,7 @@ class ValidatingWorkbenchAdapterTest {
         |}""".trimMargin()
 
         assertThat(
-            { ValidatingWorkbenchAdapter().transformIngress(json) },
+            { WorkbenchAdapterImpl().transformIngress(json) },
             throws(
                 isA<IllegalArgumentException>(
                     has(
@@ -155,7 +156,7 @@ class ValidatingWorkbenchAdapterTest {
         |    "messageSchemaVersion": "1.0.0"
         |}""".trimMargin()
 
-        val actual = ValidatingWorkbenchAdapter().transformIngress(json)
+        val actual = WorkbenchAdapterImpl().transformIngress(json)
 
         val expected = InvokeFlowWithInputStates(
             requestId = "5a2b34a6-5fa0-4400-b1f5-686a7c212d52",
@@ -176,7 +177,7 @@ class ValidatingWorkbenchAdapterTest {
         |}""".trimMargin()
 
         assertThat(
-            { ValidatingWorkbenchAdapter().transformIngress(json) },
+            { WorkbenchAdapterImpl().transformIngress(json) },
             throws(
                 isA<IllegalArgumentException>(
                     has(
@@ -197,7 +198,7 @@ class ValidatingWorkbenchAdapterTest {
         |    "messageSchemaVersion": "1.0.0"
         |}""".trimMargin()
 
-        val actual = ValidatingWorkbenchAdapter().transformIngress(json)
+        val actual = WorkbenchAdapterImpl().transformIngress(json)
 
         val expected = QueryFlowState(
             requestId = "9c2e532f-15bb-4eb8-ae58-34722c5776f4",
@@ -206,5 +207,39 @@ class ValidatingWorkbenchAdapterTest {
 
         @Suppress("RemoveExplicitTypeArguments")
         assertThat(actual, isA<QueryFlowState>(equalTo(expected)))
+    }
+
+    @Test
+    fun `generates a valid service bus message for a flow output`() {
+        val expected = """{
+        |  "messageName" : "ContractMessage",
+        |  "requestId" : "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
+        |  "additionalInformation" : { },
+        |  "contractLedgerIdentifier" : "f1a27656-3b1a-4469-8e37-04d9e2764bf6",
+        |  "contractProperties" : [ {
+        |    "name" : "state",
+        |    "value" : "Created"
+        |  }, {
+        |    "name" : "owner",
+        |    "value" : "O=Alice Ltd., L=Shanghai, C=CN"
+        |  } ],
+        |  "messageSchemaVersion" : "1.0.0",
+        |  "isNewContract" : false
+        |}""".trimMargin()
+
+        val actual = WorkbenchAdapterImpl().transformEgress(
+            FlowOutput(
+                InvokeFlowWithoutInputStates::class,
+                "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
+                UniqueIdentifier.fromString("f1a27656-3b1a-4469-8e37-04d9e2764bf6"),
+                mapOf(
+                    "state" to "Created",
+                    "owner" to "O=Alice Ltd., L=Shanghai, C=CN"
+                ),
+                false
+            )
+        )
+
+        assertThat(actual, equalTo(expected))
     }
 }
