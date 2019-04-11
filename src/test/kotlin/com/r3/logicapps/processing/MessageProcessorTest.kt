@@ -19,16 +19,12 @@ class MessageProcessorTest : TestBase() {
 
         val messageProcessor = MessageProcessorImpl { FlowInvocationResult(linearId = linearId) }
         val busResponse = messageProcessor.invoke(
-            BusRequest.InvokeFlowWithoutInputStates(
-                requestId,
-                "com.nowhere.SimpleFlow",
-                emptyMap()
-            )
+            BusRequest.InvokeFlowWithoutInputStates(requestId, "com.nowhere.SimpleFlow", emptyMap())
         )
 
         val response = busResponse as? BusResponse.FlowError
             ?: error("Response of type ${busResponse::class.simpleName}, expected FlowError")
-        assert(response.exception is ClassNotFoundException)
+        assertEquals(ClassNotFoundException::class, response.exception::class)
     }
 
     @Test
@@ -38,11 +34,7 @@ class MessageProcessorTest : TestBase() {
 
         val messageProcessor = MessageProcessorImpl { FlowInvocationResult(linearId = linearId) }
         val busResponse = messageProcessor.invoke(
-            BusRequest.InvokeFlowWithoutInputStates(
-                requestId,
-                "com.r3.logicapps.processing.SimpleFlow",
-                emptyMap()
-            )
+            BusRequest.InvokeFlowWithoutInputStates(requestId, "com.r3.logicapps.processing.SimpleFlow", emptyMap())
         )
 
         val response = busResponse as? BusResponse.FlowOutput
@@ -61,11 +53,7 @@ class MessageProcessorTest : TestBase() {
 
         val messageProcessor = MessageProcessorImpl { FlowInvocationResult(linearId = linearId) }
         val busResponse = messageProcessor.invoke(
-            BusRequest.InvokeFlowWithoutInputStates(
-                requestId,
-                "com.r3.logicapps.processing.SimpleFlowWithInput",
-                params
-            )
+            BusRequest.InvokeFlowWithoutInputStates(requestId, "com.r3.logicapps.processing.SimpleFlowWithInput", params)
         )
 
         val response = busResponse as? BusResponse.FlowOutput

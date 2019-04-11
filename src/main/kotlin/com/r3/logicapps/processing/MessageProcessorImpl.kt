@@ -44,8 +44,13 @@ open class MessageProcessorImpl(
     }
 
     private fun deriveFlowLogic(flowName: String, parameters: Map<String, String>): FlowLogic<*> {
-        val clazz = Class.forName(flowName) ?: error("Unable to find '$flowName' on the class path")
+        val clazz = try {
+            Class.forName(flowName)
+        } catch (_: ClassNotFoundException) {
+            throw ClassNotFoundException("Unable to find '$flowName' on the class path")
+        }
         val flowLogic = clazz.asSubclass(FlowLogic::class.java) ?: error("$flowName is not a subclass of FlowLogic")
-        TODO()
+        val ctor = flowLogic.constructors.firstOrNull() ?: error("No viable constructor found for $flowName")
+        return ctor.newInstance() as? FlowLogic<*> ?: error("Unable to instantiate new $flowName with provided arguments")
     }
 }
