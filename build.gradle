@@ -86,7 +86,7 @@ dependencies {
 
     cordaCompile "com.github.everit-org.json-schema:org.everit.json.schema:1.11.1"
 
-    cordaCompile "com.microsoft.azure:azure-servicebus:$azure_servicebus_version"
+    compile "com.microsoft.azure:azure-servicebus:$azure_servicebus_version"
     
     testCompile "junit:junit:$junit_version"
     testCompile "com.natpryce:hamkrest:1.7.0.0"
@@ -101,6 +101,10 @@ cordapp {
         targetPlatformVersion corda_platform_version.toInteger()
         minimumPlatformVersion corda_platform_version.toInteger()
     }
+}
+
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 task installQuasar(type: Copy) {

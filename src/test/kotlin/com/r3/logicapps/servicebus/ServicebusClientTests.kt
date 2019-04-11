@@ -124,7 +124,7 @@ class ServicebusClientTests : TestBase() {
                 "  \"messageName\" : \"CreateContractRequest\",\n" +
                 "  \"requestId\" : \"81a87eb0-b5aa-4d53-a39f-a6ed0742d90d\",\n" +
                 "  \"additionalInformation\" : {\n" +
-                "    \"errorMessage\" : \"net.corda.workbench.refrigeratedTransportation.flow.CreateFlow\"\n" +
+                "    \"errorMessage\" : \"Unable to find 'net.corda.workbench.refrigeratedTransportation.flow.CreateFlow' on the class path\"\n" +
                 "  },\n" +
                 "  \"status\" : \"Failure\",\n" +
                 "  \"messageSchemaVersion\" : \"1.0.0\"\n" +
@@ -132,7 +132,8 @@ class ServicebusClientTests : TestBase() {
         val client = ServicebusClientImpl(SERVICE_BUS, QUEUE1, QUEUE2)
         client.start()
         client.send(message)
-        startNode(providedName = partyA.name).getOrThrow()
+        startNode(providedName = partyA.name, customOverrides = mapOf("cordappSignerKeyFingerprintBlacklist" to emptyList<String>(),
+            "devMode" to true)).getOrThrow()
         assertEquals(expected, client.receive())
     }
 
