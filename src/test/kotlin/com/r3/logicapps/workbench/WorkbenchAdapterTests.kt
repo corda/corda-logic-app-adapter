@@ -10,6 +10,7 @@ import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
 import com.r3.logicapps.BusRequest.QueryFlowState
 import com.r3.logicapps.BusResponse.FlowOutput
 import net.corda.core.contracts.UniqueIdentifier
+import org.json.JSONObject
 import org.junit.Test
 
 class WorkbenchAdapterTests {
@@ -241,5 +242,26 @@ class WorkbenchAdapterTests {
         )
 
         assertThat(actual, equalTo(expected))
+    }
+
+    @Test
+    fun `a reasonable service bus message for a flow output conforms to the schema`() {
+        // TODO moritzplatt 2019-04-11 -- should this be done in the adapter, too?
+
+        val json = WorkbenchAdapterImpl.transformEgress(
+            FlowOutput(
+                InvokeFlowWithoutInputStates::class,
+                "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
+                UniqueIdentifier.fromString("f1a27656-3b1a-4469-8e37-04d9e2764bf6"),
+                mapOf(
+                    "state" to "Created",
+                    "owner" to "O=Alice Ltd., L=Shanghai, C=CN"
+                ),
+                false
+            )
+        )
+
+        // no assertion needed, validator will throw if invalid
+        WorkbenchSchema.FlowInvocationResponseSchema.underlying.validate(JSONObject(json))
     }
 }

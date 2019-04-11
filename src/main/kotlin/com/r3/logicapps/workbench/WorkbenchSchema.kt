@@ -20,4 +20,5 @@ sealed class WorkbenchSchema(fileName: String) {
     object FlowStateRequestSchema : WorkbenchSchema("flow-state-request.schema.json")
 
     object FlowInvocationResponseSchema : WorkbenchSchema("flow-invocation-response.schema.json")
+    object FlowErrorResponseSchema : WorkbenchSchema("flow-error-response.schema.json")
 }
