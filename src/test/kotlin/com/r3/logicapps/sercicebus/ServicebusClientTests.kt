@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
+import kotlin.test.assertEquals
 
 class ServicebusClientTests {
 
@@ -19,7 +20,6 @@ class ServicebusClientTests {
         const val QUEUE1 = "to-corda"
         const val QUEUE2 = "from-corda"
     }
-
 
     @Test(timeout = 10000)
     fun `test send-receive`() {
@@ -47,6 +47,29 @@ class ServicebusClientTests {
 
         threadA.join()
         threadB.join()
+    }
+
+    @Test
+    fun `test client fails to connect`() {
+        val client = ServicebusClientImpl(SERVICE_BUS, inboundQueue = QUEUE1, outboundQueue = QUEUE2)
+        client.start()
+        while(true) {}
+    }
+
+    @Test
+    fun `test blocking consumer`() {
+        val clientA = ServicebusClientImpl(SERVICE_BUS, inboundQueue = QUEUE1, outboundQueue = QUEUE2)
+        val clientB = ServicebusClientImpl(SERVICE_BUS, inboundQueue = QUEUE2, outboundQueue = QUEUE1)
+
+        clientA.start()
+        clientB.start()
+
+        val consumerThread = thread {
+            assertEquals("{test: test}", clientB.receive())
+        }
+
+        clientA.send("{test: test}")
+        consumerThread.join()
     }
 
     class MyMessageHandler(val id: String, val client: ServicebusClient, val count: AtomicInteger, val errorHandler: (e: Throwable?) -> Any?) : IMessageHandler {

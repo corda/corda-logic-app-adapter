@@ -59,6 +59,7 @@ class ServicebusClientImpl(private val connectionString: String,
     override fun receive(): String {
         require(started.get()) { "Service bus client should be started before calling receive()" }
         val msg = blockingReceiver!!.receive()
+        blockingReceiver!!.complete(msg.lockToken)
         return String(msg.messageBody.binaryData.first(), UTF_8)
     }
 
@@ -92,11 +93,11 @@ class ServicebusClientImpl(private val connectionString: String,
         }
 
         try {
-            blockingReceiver = ClientFactory.createMessageReceiverFromConnectionStringBuilder(ConnectionStringBuilder(connectionString, outboundQueue).apply { retryPolicy = exponentialRetry }, clientMode)
+            blockingReceiver = ClientFactory.createMessageReceiverFromConnectionStringBuilder(ConnectionStringBuilder(connectionString, inboundQueue).apply { retryPolicy = exponentialRetry }, clientMode)
         } catch (e: ServiceBusException) {
-            log.error("Connection to $outboundQueue could not be established", e)
+            log.error("Connection to $inboundQueue could not be established", e)
         } catch (e: InterruptedException) {
-            log.error("Connection attempt to $outboundQueue was interrupted", e)
+            log.error("Connection attempt to $inboundQueue was interrupted", e)
             //TODO: have no clue what happens in this case
         }
 
