@@ -1,7 +1,7 @@
 package com.r3.logicapps
 
-import com.r3.logicapps.rpc.RPCInvoker
-import com.r3.logicapps.rpc.RPCInvokerImpl
+import com.r3.logicapps.processing.MessageProcessor
+import com.r3.logicapps.processing.MessageProcessorImpl
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
 import net.corda.core.serialization.SingletonSerializeAsToken
@@ -12,7 +12,7 @@ class LogicAppService(
     private val appServiceHub: AppServiceHub
 ) : SingletonSerializeAsToken() {
 
-    private val rpcInvoker: RPCInvoker = RPCInvokerImpl(
+    private val messageProcessor: MessageProcessor = MessageProcessorImpl(
         startFlowDelegate = { flowLogic -> appServiceHub.startTrackedFlow(flowLogic) }
     )
 

@@ -1,27 +1,27 @@
-package com.r3.logicapps.rpc
+package com.r3.logicapps.processing
 
-import com.r3.logicapps.RPCRequest
-import com.r3.logicapps.RPCResponse
+import com.r3.logicapps.BusRequest
+import com.r3.logicapps.BusResponse
 import net.corda.core.flows.FlowLogic
 import net.corda.core.messaging.FlowProgressHandle
 
-class RPCInvokerImpl(
+class MessageProcessorImpl(
     private val startFlowDelegate: (FlowLogic<*>) -> FlowProgressHandle<*>
-) : RPCInvoker {
+) : MessageProcessor {
     /**
      * TODO
      *  - Invoke RPC using the message parameters
      *  - Obtain the transaction ID
      *  - Obtain the output state
      */
-    override fun invoke(message: RPCRequest): RPCResponse? = when (message) {
-        is RPCRequest.InvokeFlowWithoutInputStates -> {
+    override fun invoke(message: BusRequest): BusResponse? = when (message) {
+        is BusRequest.InvokeFlowWithoutInputStates -> {
             null
         }
-        is RPCRequest.InvokeFlowWithInputStates -> {
+        is BusRequest.InvokeFlowWithInputStates -> {
             null
         }
-        is RPCRequest.QueryFlowState -> {
+        is BusRequest.QueryFlowState -> {
             null
         }
     }

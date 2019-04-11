@@ -2,8 +2,8 @@ package com.r3.logicapps
 
 import net.corda.core.contracts.UniqueIdentifier
 
-// A message in a format suitable for RPC invocation
-sealed class RPCRequest : Correlatable {
+// A message in a format suitable for message processing
+sealed class BusRequest : Correlatable {
     /**
      * "CreateContractRequest"
      * @param requestId A simple correlation ID, generated at the source, opaque to the key components.
@@ -14,7 +14,7 @@ sealed class RPCRequest : Correlatable {
         override val requestId: String,
         override val workflowName: String,
         override val parameters: Map<String, String>
-    ) : RPCRequest(), Parametrised, Associated
+    ) : BusRequest(), Parametrised, Associated
 
     /**
      * "CreateContractActionRequest"
@@ -27,7 +27,7 @@ sealed class RPCRequest : Correlatable {
         override val linearId: UniqueIdentifier,
         override val workflowName: String,
         override val parameters: Map<String, String>
-    ) : RPCRequest(), Parametrised, Identifiable, Associated
+    ) : BusRequest(), Parametrised, Identifiable, Associated
 
     /**
      * "ReadContractRequest"
@@ -37,10 +37,10 @@ sealed class RPCRequest : Correlatable {
     data class QueryFlowState(
         override val requestId: String,
         override val linearId: UniqueIdentifier
-    ) : RPCRequest(), Identifiable
+    ) : BusRequest(), Identifiable
 }
 
-sealed class RPCResponse : Correlatable {
+sealed class BusResponse : Correlatable {
     /**
      * "ContractMessage"
      * @param requestId A simple correlation ID, generated in the ingress message
@@ -53,7 +53,7 @@ sealed class RPCResponse : Correlatable {
         override val linearId: UniqueIdentifier,
         override val parameters: Map<String, String>,
         val isNewContract: Boolean
-    ) : RPCResponse(), Identifiable, Parametrised
+    ) : BusResponse(), Identifiable, Parametrised
 }
 
 /**

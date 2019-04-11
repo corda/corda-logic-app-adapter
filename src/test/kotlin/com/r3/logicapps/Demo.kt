@@ -1,8 +1,8 @@
 package com.r3.logicapps
 
-import com.r3.logicapps.RPCRequest.InvokeFlowWithoutInputStates
-import com.r3.logicapps.RPCResponse.FlowOutput
-import com.r3.logicapps.rpc.RPCInvoker
+import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
+import com.r3.logicapps.BusResponse.FlowOutput
+import com.r3.logicapps.processing.MessageProcessor
 import com.r3.logicapps.servicebus.ServicebusMessage
 import com.r3.logicapps.servicebus.consumer.ServicebusConsumer
 import com.r3.logicapps.servicebus.producer.ServicebusProducer
@@ -12,19 +12,19 @@ import java.util.*
 
 object Demo {
     val dummyAdapter = object : WorkbenchAdapter {
-        override fun transformIngress(message: ServicebusMessage): RPCRequest {
-            // determine type and convert to RPCRequest object
+        override fun transformIngress(message: ServicebusMessage): BusRequest {
+            // determine type and convert to BusRequest object
             return InvokeFlowWithoutInputStates("id", "name", mapOf("par" to "ams"))
         }
 
-        override fun transformEgress(message: RPCResponse): ServicebusMessage {
+        override fun transformEgress(message: BusResponse): ServicebusMessage {
             // get message and translate to Workbench JSON
             return "response from corda"
         }
     }
 
-    val dummyRPCInvoker = object : RPCInvoker {
-        override fun invoke(message: RPCRequest): RPCResponse? {
+    val dummyRPCInvoker = object : MessageProcessor {
+        override fun invoke(message: BusRequest): BusResponse? {
             // call corda with request
             // transform reponse to message format
             val transformed = dummyAdapter.transformEgress(

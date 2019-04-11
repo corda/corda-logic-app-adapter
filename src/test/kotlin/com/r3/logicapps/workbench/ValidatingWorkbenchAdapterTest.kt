@@ -5,7 +5,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.throws
-import com.r3.logicapps.RPCRequest.*
+import com.r3.logicapps.BusRequest.*
 import net.corda.core.contracts.UniqueIdentifier
 import org.junit.Test
 
