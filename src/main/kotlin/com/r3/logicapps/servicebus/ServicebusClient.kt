@@ -10,6 +10,7 @@ interface ServicebusClient {
     fun close()
 
     fun send(message: String)
+    fun receive(): String
     fun registerReceivedMessageHandler(handler: IMessageHandler)
 
 }

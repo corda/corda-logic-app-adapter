@@ -5,6 +5,7 @@ import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder
 import com.microsoft.azure.servicebus.primitives.RetryExponential
 import com.microsoft.azure.servicebus.primitives.ServiceBusException
 import org.slf4j.LoggerFactory
+import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Duration
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -18,6 +19,7 @@ class ServicebusClientImpl(private val connectionString: String,
     private companion object {
         val log = LoggerFactory.getLogger(javaClass.enclosingClass)
         val clientMode = ReceiveMode.PEEKLOCK
+        const val MAX_RETRY_COUNT = Integer.MAX_VALUE //For the time being use a large number until we figure out what to do in case of failure
         const val RETRY_POLICY_NAME = "INSERT_MEANINGFUL_NAME_HERE"
         val MESSAGE_LOCK_RENEW_TIMEOUT: Duration = Duration.ofSeconds(60)
     }
@@ -26,10 +28,11 @@ class ServicebusClientImpl(private val connectionString: String,
 
     //TODO: Bogdan - perhaps this should be configurable
     //Seems like this policy is used by both senders and receivers to retry failed operations before throwing exceptions.
-    private val exponentialRetry = RetryExponential(Duration.ofSeconds(5), Duration.ofMinutes(3), 10, RETRY_POLICY_NAME)
+    private val exponentialRetry = RetryExponential(Duration.ofSeconds(5), Duration.ofMinutes(3), MAX_RETRY_COUNT, RETRY_POLICY_NAME)
 
     private var sender: QueueClient? = null
     private var receiver: QueueClient? = null
+    private var blockingReceiver: IMessageReceiver? = null
 
     override fun send(message: String) {
         require(started.get()) { "Service bus client should be started before calling send()" }
@@ -53,6 +56,12 @@ class ServicebusClientImpl(private val connectionString: String,
         log.info("Message sent")
     }
 
+    override fun receive(): String {
+        require(started.get()) { "Service bus client should be started before calling receive()" }
+        val msg = blockingReceiver!!.receive()
+        return String(msg.messageBody.binaryData.first(), UTF_8)
+    }
+
     override fun registerReceivedMessageHandler(handler: IMessageHandler) {
         require(started.get()) { "Service bus client should be started before calling registerReceivedMessageHandler()" }
         //TODO: Bogdan - would having several handlers be required in the future?
@@ -72,12 +81,22 @@ class ServicebusClientImpl(private val connectionString: String,
             log.error("Connection attempt to $outboundQueue was interrupted", e)
             //TODO: have no clue what happens in this case
         }
+
         try {
             receiver = QueueClient(ConnectionStringBuilder(connectionString, inboundQueue).apply { retryPolicy = exponentialRetry }, clientMode)
         } catch (e: ServiceBusException) {
             log.error("Connection to $inboundQueue could not be established", e)
         } catch (e: InterruptedException) {
             log.error("Connection attempt to $inboundQueue was interrupted", e)
+            //TODO: have no clue what happens in this case
+        }
+
+        try {
+            blockingReceiver = ClientFactory.createMessageReceiverFromConnectionStringBuilder(ConnectionStringBuilder(connectionString, outboundQueue).apply { retryPolicy = exponentialRetry }, clientMode)
+        } catch (e: ServiceBusException) {
+            log.error("Connection to $outboundQueue could not be established", e)
+        } catch (e: InterruptedException) {
+            log.error("Connection attempt to $outboundQueue was interrupted", e)
             //TODO: have no clue what happens in this case
         }
 
@@ -90,12 +109,17 @@ class ServicebusClientImpl(private val connectionString: String,
             sender!!.close()
         } catch (e: ServiceBusException) {
             log.error("Could not close sender client", e)
+        } finally {
+            sender = null
         }
         try {
             receiver!!.close()
         } catch (e: ServiceBusException) {
             log.error("Could not close receiver client", e)
+        } finally {
+            receiver = null
         }
+
         started.set(false)
     }
 }
