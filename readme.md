@@ -230,6 +230,34 @@ Here, the following concepts are used to provide outcomes of the flow invocation
  
 This format is formally specified in [`flow-invocation-response.schema.json`](src/main/resources/schemata/flow-invocation-response.schema.json).
  
+ 
+#### Service Bus Egress Format for Errors
+
+Any errors that occur during flow invocation will be surfaced as error messages on the bus.
+If the input that lead to the error referenced a `contractLedgerIdentifier`, this `contractLedgerIdentifier` will be part of the message to allow for correlation.
+
+```json
+{
+  "messageName": "CreateContractUpdate",
+  "requestId": "50adfa06-b41f-40b9-a44f-4319f5837b35",
+  "additionalInformation": {
+    "errorMessage": "Not a valid message for schema class com.r3.logicapps.workbench.WorkbenchSchema$FlowInvocationRequestSchema: #: 4 schema violations found"
+  },
+  "contractLedgerIdentifier": "c2523b50-85cd-4242-b5e5-f75e80d1fbfd",
+  "status": "Failure",
+  "messageSchemaVersion": "1.0.0"
+}
+```
+
+ - `messageName`: The message name of the request leading to the error
+ - `requestId`: A simple correlation ID, generated in the ingress message
+ - `additionalInformation`.`errorMessage`: A description of the error that occurred
+ - `contractLedgerIdentifier` (optional): The linear ID of the input state (if the transaction had one).
+ - `status`: Always `Failure`
+ - `messageSchemaVersion`: Always `1.0.0`
+
+This format is formally specified in [`flow-error-response.schema.json`](src/main/resources/schemata/flow-error-response.schema.json).
+
 ### Execute a Function on a Contract
 
 #### Service Bus Ingress Format (`CreateContractActionRequest`)
