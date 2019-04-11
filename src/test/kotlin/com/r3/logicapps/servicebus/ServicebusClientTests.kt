@@ -1,10 +1,8 @@
-package com.r3.logicapps.sercicebus
+package com.r3.logicapps.servicebus
 
 import com.microsoft.azure.servicebus.ExceptionPhase
 import com.microsoft.azure.servicebus.IMessage
 import com.microsoft.azure.servicebus.IMessageHandler
-import com.r3.logicapps.servicebus.ServicebusClient
-import com.r3.logicapps.servicebus.ServicebusClientImpl
 import junit.framework.TestCase.fail
 import org.junit.Test
 import java.nio.charset.StandardCharsets.UTF_8
