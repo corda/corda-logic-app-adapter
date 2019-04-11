@@ -96,5 +96,6 @@ class ServicebusClientImpl(private val connectionString: String,
         } catch (e: ServiceBusException) {
             log.error("Could not close receiver client", e)
         }
+        started.set(false)
     }
 }
