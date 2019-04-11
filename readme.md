@@ -30,7 +30,7 @@ The connector will provide the following _Triggers_:
 |---------------------------------|-------------------------------------------------------------------|-----------|
 | An Event Occurs                 | A new `LinearState` has been observed on the node’s state machine | M2        |
  
-The connector will require a Connection that specifies the target address of the running node as well as RPC credentials to be used with the node.
+The connector will run as a `Corda Service` and as such does not require any connection details but will use intra-process communication.
 
 ![Logic App Connector](components.svg)
 
@@ -39,7 +39,7 @@ The colour coding in above figure illustrates the four different classes of comp
  1. _Grey_; External Components that are not to be delivered by R3.
  2. _Blue_; Key Components that are to be delivered by R3. Likely to be delivered in a single deployment unit but structured as different modules internally.
  3. _Red_; External components that are assumed to be deployed independent of any of the connector components.
- 4. _Green_; External components that are necessary to serialise and deserialise RPC messages in the format dictated by Corda.
+ 4. _Green_; External components that are necessary to serialise and deserialise flow invocation messages in the format dictated by Corda.
 
 Components
 ----------
@@ -68,11 +68,11 @@ The service bus as well as the queues need to be created manually before the que
 
 ### Service Bus Consumer (M1)
 
-The service bus consumer will consume a message targeted at a channel and topic they have responsibility for (and are thus subscribed to) and pass the message consumed to the RPC invoker.
+The service bus consumer will consume a message targeted at a channel and topic they have responsibility for (and are thus subscribed to) and pass the message consumed to the message processor.
 We distinguish between the following error cases that can occur following the consumption of a message:
 
  1. A message is malformed and cannot be parsed.
- 2. A flow cannot be invoked using a message because an error occurred during RPC invocation (i.e. no connectivity to the node via RPC).
+ 2. A flow cannot be invoked using a message because an error occurred during flow invocation.
  3. Flow invocation times out.
  4. A flow cannot be invoked because the invoked flow logic throws an exception (e.g. inapplicable parameters passed).
 
@@ -83,21 +83,16 @@ This component leverages the [Azure Java SDK](https://github.com/Azure/azure-ser
 
 The workbench message adapter translates the established ‘Workbench’-based format to the basic message format and vice versa.
 
-### RPC Invoker (M1)
+### Message Processor (M1)
 
-The ‘RPC Invoker’ is the main contribution in this design.
-Once received from the adapter, it will translate a message in the basic message format into a suitable RPC format.
+The ‘Message Processor’ is the main contribution in this design.
+Once received from the adapter, it will translate a message in the basic message format into a suitable flow invocation format.
 Since Corda makes use of type safe binary serialisation for flow invocation, assembling the message necessary is not trivial.
 While there are ways of constructing the message necessary to invoke the flow without the ‘flow logic’ class being present, this would introduce the challenge of having to describe the types of flow logic constructor parameters in a different way.
 
-Having the target CorDapp available at runtime, the ‘RPC Invoker’ uses core Corda functionality (primarily `net.corda.client.rpc` and `net.corda.tools.shell`) to start the flow.
-The topic of the message received from the bus will inform the flow to invoke, the target node will be determined by configuration supplied to the ‘RPC Invoker’ process when started.
+Having the target CorDapp available at runtime, the ‘Message Processor’ uses core Corda functionality (primarily `appServiceHub.startTrackedFlow`) to start the flow.
 
-Additional configuration parameters on the ‘RPC Invoker’ will allow for setting a timeout when invoking flows.
-
-The flow response will—once received—be passed to the service bus producer.
-
-Corda authentication (via RPC authentication) will be performed by the RPC Invoker with credentials provided when starting the service.
+The out put state of the transaction will—once received—be passed to the service bus producer.
 
 ### Recorded Transaction Observer (M2)
 
@@ -110,19 +105,18 @@ The services bus producer will place the flow response as received by the Workbe
 Composition
 -----------
 
-Service Bus Consumer, Workbench Message Adapter, RPC Invoker and Service Bus Publisher (‘Key Components’) form a deployment unit and can be viewed as a single component from external perspective.
+Service Bus Consumer, Workbench Message Adapter, Message Processor and Service Bus Publisher (‘Key Components’) form a deployment unit and can be viewed as a single component from external perspective.
 
 Compatibility
 -------------
 
-RPC format compatibility between Corda and Corda Enterprise is subject to the published [compatibility limitations](https://docs.corda.r3.com/version-compatibility.html).
-The RPC invoker will utilise Corda 4 functionality. 
-Nodes targeted will run Corda 4 as well.
+Format compatibility between Corda and Corda Enterprise is subject to the published [compatibility limitations](https://docs.corda.r3.com/version-compatibility.html).
+The Message Processor will utilise Corda 4 functionality. 
 
 Threading and Concurrency
 -------------------------
 
-The RPC invoker will run in a single-threaded mode to maintain order of transactions on the bus.
+The Message Processor will run in a single-threaded mode to maintain order of transactions on the bus.
 This means, new messages will only be consumed off the bus once a flow invocation has terminated (successfully or otherwise).
 
 Message Formats
@@ -327,8 +321,8 @@ Those are not supported.
 
 ### Durability and Delivery Guarantees
 
-The RPC Invoker will treat a message as delivered whenever a flow response has been received.
-This introduces a problematic ‘at-least-once delivered’ behaviour for the RPC Invoker.
-While this only applies in an edge case—i.e. in a scenario where the invoker crashes during flow invocation—this should be targeted in a future release by holding state for correlation IDs received in persistent storage and allowing to query the node for whether the flow has been invoked properly.
+The Message Processor will treat a message as delivered whenever a flow response has been received.
+This introduces a problematic ‘at-least-once delivered’ behaviour for the Message Processor.
+While this only applies in an edge case—i.e. in a scenario where the Message Processor crashes during flow invocation—this should be targeted in a future release by holding state for correlation IDs received in persistent storage and allowing to query the node for whether the flow has been invoked properly.
 
 The transaction observer is not durable, i.e. messages will not be listened to while the listener is shut down. 

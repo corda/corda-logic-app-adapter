@@ -8,7 +8,7 @@ import com.r3.logicapps.servicebus.consumer.ServicebusConsumer
 import com.r3.logicapps.servicebus.producer.ServicebusProducer
 import com.r3.logicapps.workbench.WorkbenchAdapter
 import net.corda.core.contracts.UniqueIdentifier
-import java.util.*
+import java.util.UUID
 
 object Demo {
     val dummyAdapter = object : WorkbenchAdapter {
@@ -23,7 +23,7 @@ object Demo {
         }
     }
 
-    val dummyRPCInvoker = object : MessageProcessor {
+    val dummyMessageProcessor = object : MessageProcessor {
         override fun invoke(message: BusRequest): BusResponse? {
             // call corda with request
             // transform reponse to message format
@@ -44,7 +44,7 @@ object Demo {
     val dummyConsumer = object : ServicebusConsumer {
         override fun handleMessage(message: String) {
             val transformed = dummyAdapter.transformIngress(message)
-            dummyRPCInvoker.invoke(transformed)
+            dummyMessageProcessor.invoke(transformed)
         }
     }
 
