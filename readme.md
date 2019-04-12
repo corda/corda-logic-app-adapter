@@ -329,6 +329,7 @@ Caveats
 ### Flows and Transactions
 
 All flow logic to be invoked using this connector need to implement `FlowLogic<SignedTransaction>`.
+To be startable by the Logic App Service, all flow logic needs to be annotated by `@StartableByService`.
 
 To support the query requirements stated, only transactions that evolve single states linearly (sharing a common linearId, i.e. `LinearStates`) are supported in the adapter.
 All flows invoked must have up to one linear state as input and up to one linear state as output and must not take any other inputs or outputs.

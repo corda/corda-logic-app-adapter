@@ -100,8 +100,8 @@ cordapp {
     info {
         name "R3 Corda LogicApp Connector"
         vendor "R3"
-        targetPlatformVersion corda_platform_version.toInteger()
-        minimumPlatformVersion corda_platform_version.toInteger()
+        targetPlatformVersion 3
+        minimumPlatformVersion 3
     }
 }
 
