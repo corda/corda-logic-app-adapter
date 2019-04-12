@@ -5,11 +5,10 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.throws
-import com.r3.logicapps.BusRequest.InvokeFlowWithInputStates
-import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
-import com.r3.logicapps.BusRequest.QueryFlowState
+import com.r3.logicapps.BusRequest.*
 import com.r3.logicapps.BusResponse.FlowError
 import com.r3.logicapps.BusResponse.FlowOutput
+import com.r3.logicapps.servicebus.ServicebusMessage
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.contracts.UniqueIdentifier.Companion
 import org.json.JSONObject
@@ -243,7 +242,7 @@ class WorkbenchAdapterTests {
             )
         )
 
-        assertThat(actual, equalTo(expected))
+        assertThat(actual.sanitized, equalTo(expected))
     }
 
     @Test
@@ -289,7 +288,7 @@ class WorkbenchAdapterTests {
             )
         )
 
-        assertThat(actual, equalTo(expected))
+        assertThat(actual.sanitized, equalTo(expected))
     }
 
     @Test
@@ -308,5 +307,8 @@ class WorkbenchAdapterTests {
         // no assertion needed, validator will throw if invalid
         WorkbenchSchema.FlowErrorResponseSchema.underlying.validate(JSONObject(json))
     }
+
+    private val ServicebusMessage.sanitized: String
+        get() = this.replace("\r", "")
 
 }
