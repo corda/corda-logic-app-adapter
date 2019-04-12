@@ -19,9 +19,9 @@ class ServicebusClientTests : TestBase() {
     private val partyB = "PartyB".toIdentity()
 
     companion object {
-        const val SERVICE_BUS = "Endpoint=sb://bogdan-logicapp-bus.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=eAIZ5rfIoZQCEeZ9GGcxvjO6m20hCKs9wbzAykAtcSU="
-        const val QUEUE1 = "from-corda"
-        const val QUEUE2 = "to-corda"
+        const val SERVICE_BUS = "Endpoint=sb://tlil1337.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=9aLCrh0p8mqrG9VxTTTJe8L82fxa9dXgbymDNXqyauk="
+        const val FROM_CORDA_QUEUE = "e2e-from-corda"
+        const val TO_CORDA_QUEUE = "e2e-to-corda"
     }
 
     @Test(timeout = 10000)
@@ -29,7 +29,7 @@ class ServicebusClientTests : TestBase() {
         val threadA = thread {
             val msg = "{ping: pong}"
             val count = AtomicInteger(0)
-            val client = ServicebusClientImpl(SERVICE_BUS, inboundQueue = QUEUE1, outboundQueue = QUEUE2)
+            val client = ServicebusClientImpl(SERVICE_BUS, inboundQueue = FROM_CORDA_QUEUE, outboundQueue = TO_CORDA_QUEUE)
             client.start()
             client.registerReceivedMessageHandler(MyMessageHandler("ClientA", client, count) { e -> fail(e?.message) })
             //start the ping-pong
@@ -40,7 +40,7 @@ class ServicebusClientTests : TestBase() {
 
         val threadB = thread {
             val count = AtomicInteger(0)
-            val client = ServicebusClientImpl(SERVICE_BUS, inboundQueue = QUEUE2, outboundQueue = QUEUE1)
+            val client = ServicebusClientImpl(SERVICE_BUS, inboundQueue = TO_CORDA_QUEUE, outboundQueue = FROM_CORDA_QUEUE)
             client.start()
             client.registerReceivedMessageHandler(MyMessageHandler("ClientB", client, count) { e -> fail(e?.message) })
             //start the ping-pong
@@ -54,8 +54,8 @@ class ServicebusClientTests : TestBase() {
 
     @Test
     fun `test blocking consumer`() {
-        val clientA = ServicebusClientImpl(SERVICE_BUS, inboundQueue = QUEUE1, outboundQueue = QUEUE2)
-        val clientB = ServicebusClientImpl(SERVICE_BUS, inboundQueue = QUEUE2, outboundQueue = QUEUE1)
+        val clientA = ServicebusClientImpl(SERVICE_BUS, inboundQueue = FROM_CORDA_QUEUE, outboundQueue = TO_CORDA_QUEUE)
+        val clientB = ServicebusClientImpl(SERVICE_BUS, inboundQueue = TO_CORDA_QUEUE, outboundQueue = FROM_CORDA_QUEUE)
 
         clientA.start()
         clientB.start()
@@ -128,7 +128,7 @@ class ServicebusClientTests : TestBase() {
                 "  \"status\" : \"Failure\",\n" +
                 "  \"messageSchemaVersion\" : \"1.0.0\"\n" +
                 "}"
-        val client = ServicebusClientImpl(SERVICE_BUS, QUEUE1, QUEUE2)
+        val client = ServicebusClientImpl(SERVICE_BUS, FROM_CORDA_QUEUE, TO_CORDA_QUEUE)
         client.start()
         client.send(message)
         startNode(providedName = partyA.name, customOverrides = mapOf("cordappSignerKeyFingerprintBlacklist" to emptyList<String>(),
