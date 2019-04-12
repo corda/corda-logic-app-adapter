@@ -30,9 +30,18 @@
       "$id": "#/properties/additionalInformation",
       "type": "object",
       "required": [
+        "errorCode",
         "errorMessage"
       ],
       "properties": {
+        "errorCode": {
+          "$id": "#/properties/additionalInformation/properties/errorCode",
+          "type": "integer",
+          "description": "A unique numeric error code for the underlying exception.",
+          "examples": [
+            561675734
+          ]
+        },
         "errorMessage": {
           "$id": "#/properties/additionalInformation/properties/errorMessage",
           "type": "string",

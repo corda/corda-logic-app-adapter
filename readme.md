@@ -233,6 +233,7 @@ If the input that lead to the error referenced a `contractLedgerIdentifier`, thi
   "messageName": "CreateContractUpdate",
   "requestId": "50adfa06-b41f-40b9-a44f-4319f5837b35",
   "additionalInformation": {
+    "errorCode" : 561675734,
     "errorMessage": "Not a valid message for schema class com.r3.logicapps.workbench.WorkbenchSchema$FlowInvocationRequestSchema: #: 4 schema violations found"
   },
   "contractLedgerIdentifier": "c2523b50-85cd-4242-b5e5-f75e80d1fbfd",
@@ -243,6 +244,7 @@ If the input that lead to the error referenced a `contractLedgerIdentifier`, thi
 
  - `messageName`: The message name of the request leading to the error
  - `requestId`: A simple correlation ID, generated in the ingress message
+ - `additionalInformation`.`errorCode`: A unique numeric error code for the exception caught
  - `additionalInformation`.`errorMessage`: A description of the error that occurred
  - `contractLedgerIdentifier` (optional): The linear ID of the input state (if the transaction had one).
  - `status`: Always `Failure`

@@ -5,7 +5,9 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.throws
-import com.r3.logicapps.BusRequest.*
+import com.r3.logicapps.BusRequest.InvokeFlowWithInputStates
+import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
+import com.r3.logicapps.BusRequest.QueryFlowState
 import com.r3.logicapps.BusResponse.FlowError
 import com.r3.logicapps.BusResponse.FlowOutput
 import com.r3.logicapps.servicebus.ServicebusMessage
@@ -272,6 +274,7 @@ class WorkbenchAdapterTests {
         |  "messageName" : "CreateContractRequest",
         |  "requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
         |  "additionalInformation" : {
+        |    "errorCode" : 561675734,
         |    "errorMessage" : "Boooom!"
         |  },
         |  "contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",

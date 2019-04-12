@@ -83,6 +83,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             put("messageName", flowError.ingressType.toWorkbenchName())
             put("requestId", flowError.requestId)
             putObject("additionalInformation").apply {
+                put("errorCode", flowError.exception.errorCode())
                 put("errorMessage", flowError.exception.message ?: "")
             }
             flowError.linearId?.let {
