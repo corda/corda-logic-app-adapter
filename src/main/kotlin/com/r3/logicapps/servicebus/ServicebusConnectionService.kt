@@ -11,11 +11,11 @@ import java.lang.Math.min
 import java.util.concurrent.CountDownLatch
 
 
-//TODO: Bogdan - Service that should be used to establish initial connection to the service bus.
-//It's currently WIP as it needs to be able to allow the LogicAppService to subscribe. Upon receiving
-//notification of successful connection, the LogicAppService would then register the message handler
-//A separate thread is used for creating a connection to not block the main thread of the LogicAppService and prevent
-//the node from being shut down politely
+// TODO: Bogdan - Service that should be used to establish initial connection to the service bus.
+// It's currently WIP as it needs to be able to allow the LogicAppService to subscribe. Upon receiving
+// notification of successful connection, the LogicAppService would then register the message handler
+// A separate thread is used for creating a connection to not block the main thread of the LogicAppService and prevent
+// the node from being shut down politely
 class ServicebusConnectionService(val bus: String,
                                   val queue: String,
                                   val policy: RetryPolicy,

@@ -28,8 +28,8 @@ class ServicebusClientImpl(private val connectionString: String,
 
     private val started = AtomicBoolean(false)
 
-    //TODO: Bogdan - perhaps this should be configurable
-    //Seems like this policy is used by both senders and receivers to retry failed operations before throwing exceptions.
+    // TODO: Bogdan - perhaps this should be configurable
+    // Seems like this policy is used by both senders and receivers to retry failed operations before throwing exceptions.
     private val exponentialRetry = RetryExponential(Duration.ofSeconds(5), Duration.ofMinutes(3), MAX_RETRY_COUNT, RETRY_POLICY_NAME)
 
     private var sender: QueueClient? = null
@@ -44,8 +44,8 @@ class ServicebusClientImpl(private val connectionString: String,
         try {
             sender!!.send(serviceBusMessage)
         } catch (e: ServiceBusException) {
-            //With current retry policy this should rarely be thrown, but if it is, message will be discarded which is ok for now as
-            //the service app only sends messages as replies to incoming bus requests
+            // With current retry policy this should rarely be thrown, but if it is, message will be discarded which is ok for now as
+            // the service app only sends messages as replies to incoming bus requests
             log.error("Message could not be sent to entity", e)
         } catch (e: InterruptedException) {
             log.error("Sending thread was interrupted", e)
@@ -55,8 +55,8 @@ class ServicebusClientImpl(private val connectionString: String,
 
     override fun registerReceivedMessageHandler(handler: IMessageHandler) {
         require(started.get()) { "Service bus client should be started before calling registerReceivedMessageHandler()" }
-        //TODO: autoComplete = true means the bus receives an ACK as soon as the message is received, deleting it from the queue. Perhaps
-        //TODO: complete() should be called after flow start to avoid loss - THIS NEEDS TESTING!!!!
+        // TODO: autoComplete = true means the bus receives an ACK as soon as the message is received, deleting it from the queue. Perhaps
+        // TODO: complete() should be called after flow start to avoid loss - THIS NEEDS TESTING!!!!
         receiver!!.registerMessageHandler(handler, MessageHandlerOptions(1, true, MESSAGE_LOCK_RENEW_TIMEOUT), threadPool)
     }
 
@@ -95,10 +95,10 @@ class ServicebusClientImpl(private val connectionString: String,
                     retryPolicy = exponentialRetry
                 }, clientMode)
             } catch (e: ServiceBusException) {
-                //TODO: Bogdan - finish implementation of background retry logic in [ServiceBusConnectionService]
-                //log.error("Connection to $queueName could not be established. Retrying in $reconnectInterval ms")
+                // TODO: Bogdan - finish implementation of background retry logic in [ServiceBusConnectionService]
+                // log.error("Connection to $queueName could not be established. Retrying in $reconnectInterval ms")
                 log.error("Connection to $queueName could not be established. Shutting down")
-                //Retrying to connect in this thread seems to prevent a polite shutdown of the node, so we just kill it for now
+                // Retrying to connect in this thread seems to prevent a polite shutdown of the node, so we just kill it for now
                 System.exit(1)
             }
 
