@@ -5,8 +5,6 @@ import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder
 import com.microsoft.azure.servicebus.primitives.RetryExponential
 import com.microsoft.azure.servicebus.primitives.ServiceBusException
 import net.corda.core.utilities.contextLogger
-import org.slf4j.LoggerFactory
-import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Duration
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
