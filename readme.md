@@ -56,27 +56,19 @@ The Service bus allows for ‘highly reliable cloud messaging service between ap
 The mapping between Service Bus components and Corda is as follows:
 _Messages_ on a service bus can target multiple Corda _Nodes_.
 _Nodes_ are targeted via _Queues_, where one _Queue_ is directed at one Corda _Node_. 
-Different _CorDapps_ deployed to a node are targeted using _Topics_.
 
 | Corda Concept | Azure Service Bus Concept |
 |---------------|---------------------------|
 | Set of Nodes  | Service Bus               |
 | Node          | Queue                     |
-| Flow          | Topic                     |
 
 The service bus as well as the queues need to be created manually before the queue consumer/producer are started.
 
 ### Service Bus Consumer (M1)
 
-The service bus consumer will consume a message targeted at a channel and topic they have responsibility for (and are thus subscribed to) and pass the message consumed to the message processor.
-We distinguish between the following error cases that can occur following the consumption of a message:
+The service bus consumer will consume a message targeted at a queue they have responsibility for (and are thus subscribed to) and pass the message consumed to the message processor.
+All errors detected will be surfaced as error messages (similar to the output outlined below).
 
- 1. A message is malformed and cannot be parsed.
- 2. A flow cannot be invoked using a message because an error occurred during flow invocation.
- 3. Flow invocation times out.
- 4. A flow cannot be invoked because the invoked flow logic throws an exception (e.g. inapplicable parameters passed).
-
-Cases 1, 2 and 3 should be retried and ultimately be placed in a dead letter queue, messages relating to 4 should be placed in a dead letter queue immediately when observed.
 This component leverages the [Azure Java SDK](https://github.com/Azure/azure-service-bus-java). 
 
 ### Workbench Message Adapter (M1)
