@@ -2,11 +2,16 @@ package com.r3.logicapps.processing
 
 import com.fasterxml.jackson.core.JsonFactory
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.module.SimpleModule
 import net.corda.client.jackson.JacksonSupport
 import net.corda.client.jackson.StringToMethodCallParser
+import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.FlowLogic
 import net.corda.core.internal.packageName
 import net.corda.core.node.services.IdentityService
+import net.corda.tools.shell.InputStreamDeserializer
+import net.corda.tools.shell.UniqueIdentifierDeserializer
+import java.io.InputStream
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
@@ -23,6 +28,14 @@ object FlowInvoker {
                 fuzzyIdentityMatch = true
             )
         } ?: JacksonSupport.createNonRpcMapper(JsonFactory())
+
+        om.apply {
+            val rpcModule = SimpleModule().apply {
+                addDeserializer(InputStream::class.java, InputStreamDeserializer)
+                addDeserializer(UniqueIdentifier::class.java, UniqueIdentifierDeserializer)
+            }
+            registerModule(rpcModule)
+        }
 
         val inputData = om.writerWithDefaultPrettyPrinter().writeValueAsString(arguments).santitized()
         val parser = StringToMethodCallParser(clazz, om)
