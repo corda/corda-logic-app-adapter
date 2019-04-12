@@ -14,7 +14,7 @@ class MessageProcessorTest : TestBase() {
         val linearId = UniqueIdentifier()
 
         val messageProcessor = MessageProcessorImpl(
-            startFlowDelegate = { FlowInvocationResult(linearId = linearId) },
+            startFlowDelegate = { FlowInvocationResult(linearId = linearId, hash = null) },
             retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
         )
         val busResponse = messageProcessor.invoke(
@@ -32,7 +32,7 @@ class MessageProcessorTest : TestBase() {
         val linearId = UniqueIdentifier()
 
         val messageProcessor = MessageProcessorImpl(
-            startFlowDelegate = { FlowInvocationResult(linearId = linearId) },
+            startFlowDelegate = { FlowInvocationResult(linearId = linearId, hash = null) },
             retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
         )
 
@@ -55,7 +55,7 @@ class MessageProcessorTest : TestBase() {
         val params = mapOf("a" to "", "b" to "", "c" to "", "d" to "")
 
         val messageProcessor = MessageProcessorImpl(
-            startFlowDelegate = { FlowInvocationResult(linearId = linearId) },
+            startFlowDelegate = { FlowInvocationResult(linearId = linearId, hash = null) },
             retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
         )
 
@@ -82,7 +82,7 @@ class MessageProcessorTest : TestBase() {
         val params = mapOf("a" to "hello", "b" to "123", "c" to "1.23", "d" to "true")
 
         val messageProcessor = MessageProcessorImpl(
-            startFlowDelegate = { FlowInvocationResult(linearId = linearId) },
+            startFlowDelegate = { FlowInvocationResult(linearId = linearId, hash = null) },
             retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
         )
 
@@ -109,7 +109,7 @@ class MessageProcessorTest : TestBase() {
         val params = mapOf("a" to "hello", "b" to "a123", "c" to "1.23", "d" to "true")
 
         val messageProcessor = MessageProcessorImpl(
-            startFlowDelegate = { FlowInvocationResult(linearId = linearId) },
+            startFlowDelegate = { FlowInvocationResult(linearId = linearId, hash = null) },
             retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
         )
 

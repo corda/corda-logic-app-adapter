@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import net.corda.client.jackson.JacksonSupport
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.LinearState
+import net.corda.core.crypto.SecureHash
+import net.corda.core.identity.CordaX500Name
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.Vault.StateStatus.CONSUMED
 import net.corda.core.node.services.Vault.StateStatus.UNCONSUMED
@@ -21,9 +23,19 @@ class ServiceDrivenMessageProcessor(appServiceHub: AppServiceHub) : MessageProce
             val transaction = handle.returnValue.getOrThrow() as? SignedTransaction
                 ?: throw IllegalArgumentException("Only flows returning `SignedTransaction` are supported")
 
-            transaction.coreTransaction.outputStates.toFlowInvocationResult()
+            val from = appServiceHub.myInfo.legalIdentities.first()
+            val to = transaction.coreTransaction.outputStates.firstOrNull()?.let {
+                it.participants - from
+            } ?: emptyList()
+
+            val fromName = from.name
+            val toNames = to.mapNotNull { it.nameOrNull() }
+
+            val transactionHash = transaction.tx.id
+
+            transaction.coreTransaction.outputStates.toFlowInvocationResult(fromName, toNames, transactionHash)
         } catch (exception: Throwable) {
-            FlowInvocationResult(exception = exception)
+            FlowInvocationResult(exception = exception, hash = null)
         }
     },
     retrieveStateDelegate = { linearId ->
@@ -51,7 +63,11 @@ class ServiceDrivenMessageProcessor(appServiceHub: AppServiceHub) : MessageProce
     }
 )
 
-fun List<ContractState>.toFlowInvocationResult(): FlowInvocationResult {
+fun List<ContractState>.toFlowInvocationResult(
+    fromName: CordaX500Name,
+    toNames: List<CordaX500Name>,
+    transactionHash: SecureHash
+): FlowInvocationResult {
     if (size > 1)
         throw IllegalArgumentException("Only flows with at most a single output state are supported")
 
@@ -61,7 +77,10 @@ fun List<ContractState>.toFlowInvocationResult(): FlowInvocationResult {
 
     return FlowInvocationResult(
         linearId = linearState?.linearId,
-        fields = linearState?.fields() ?: emptyMap()
+        fields = linearState?.fields() ?: emptyMap(),
+        fromName = fromName,
+        toNames = toNames,
+        hash = transactionHash
     )
 }
 

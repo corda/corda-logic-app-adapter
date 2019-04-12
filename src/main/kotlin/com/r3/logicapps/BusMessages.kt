@@ -1,6 +1,8 @@
 package com.r3.logicapps
 
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.crypto.SecureHash
+import net.corda.core.identity.CordaX500Name
 import kotlin.reflect.KClass
 
 // A message in a format suitable for message processing
@@ -42,6 +44,9 @@ sealed class BusRequest : Correlatable {
 }
 
 sealed class BusResponse : Correlatable {
+    // TODO moritzplatt 2019-04-12 -- `FlowOutput` as a response of flow invocation should be modeled differently from
+    //  flow output to a query. This will remove the need for nullable fields.
+
     /**
      * "ContractMessage"
      * @param ingressType The type of the [BusRequest] that triggered the invocation generating this response.
@@ -49,13 +54,19 @@ sealed class BusResponse : Correlatable {
      * @param linearId The linear ID of the output state of the flow invoked
      * @param fields A flattened serialisation of the fields of the output state of the transaction or an empty array if the transaction did not have outputs. Flattening is to follow the rules JSON property access notation using dots for named properties and bracket for array positions.
      * @param isNewContract `true` if the transaction had no input states
+     * @param fromName The X509 name of the party that invoked the transaction (i.e. the node's legal identity)
+     * @param toNames The participants to the output state of the transactions
+     * @param transactionHash The hash of the transaction, if available
      */
     data class FlowOutput(
         override val ingressType: KClass<*>,
         override val requestId: String,
         override val linearId: UniqueIdentifier,
         override val fields: Map<String, String>,
-        val isNewContract: Boolean
+        val isNewContract: Boolean,
+        val fromName: CordaX500Name? = null,
+        val toNames: List<CordaX500Name> = emptyList(),
+        val transactionHash: SecureHash? = null
     ) : BusResponse(), Identifiable, WithIngressType, WithOutput
 
     /**

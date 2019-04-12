@@ -13,6 +13,8 @@ import com.r3.logicapps.BusResponse.FlowOutput
 import com.r3.logicapps.servicebus.ServicebusMessage
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.contracts.UniqueIdentifier.Companion
+import net.corda.core.crypto.SecureHash
+import net.corda.core.identity.CordaX500Name
 import org.json.JSONObject
 import org.junit.Test
 
@@ -217,6 +219,8 @@ class WorkbenchAdapterTests {
     fun `generates a valid service bus message for a flow output`() {
         val expected = """{
         |  "messageName" : "ContractMessage",
+        |  "blockId" : 999,
+        |  "blockhash" : "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
         |  "requestId" : "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
         |  "additionalInformation" : { },
         |  "contractLedgerIdentifier" : "f1a27656-3b1a-4469-8e37-04d9e2764bf6",
@@ -227,6 +231,14 @@ class WorkbenchAdapterTests {
         |    "name" : "owner",
         |    "value" : "O=Alice Ltd., L=Shanghai, C=CN"
         |  } ],
+        |  "modifyingTransactions" : [ {
+        |    "from" : "O=Member 1, L=London, C=GB",
+        |    "to" : [ "O=Member 2, L=Manchester, C=GB", "O=Member 3, L=Bristol, C=GB" ],
+        |    "transactionId" : 999,
+        |    "transactionHash" : "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+        |  } ],
+        |  "contractId" : 1,
+        |  "connectionId" : 1,
         |  "messageSchemaVersion" : "1.0.0",
         |  "isNewContract" : false
         |}""".trimMargin()
@@ -240,7 +252,13 @@ class WorkbenchAdapterTests {
                     "state" to "Created",
                     "owner" to "O=Alice Ltd., L=Shanghai, C=CN"
                 ),
-                false
+                false,
+                CordaX500Name.parse("O=Member 1, L=London, C=GB"),
+                listOf(
+                    CordaX500Name.parse("O=Member 2, L=Manchester, C=GB"),
+                    CordaX500Name.parse("O=Member 3, L=Bristol, C=GB")
+                ),
+                SecureHash.allOnesHash
             )
         )
 

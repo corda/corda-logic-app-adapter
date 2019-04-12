@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
@@ -29,7 +30,11 @@ class ServiceDrivenMessageProcessorTests {
             )
         )
 
-        val actual = listOf(example).toFlowInvocationResult()
+        val actual = listOf(example).toFlowInvocationResult(
+            fromName = CordaX500Name.parse("O=Member 1, L=London, C=GB"),
+            toNames = listOf(CordaX500Name.parse("O=Member 2, L=London, C=GB")),
+            transactionHash = SecureHash.allOnesHash
+        )
 
         val expected = FlowInvocationResult(
             linearId = UniqueIdentifier.fromString("6c99cc50-cb00-4932-94cf-98b3f344755a"),
@@ -42,7 +47,10 @@ class ServiceDrivenMessageProcessorTests {
                 "participants[1]" to "O=Member 1, L=London, C=GB",
                 "participants[2]" to "O=Member 2, L=London, C=GB"
             ),
-            exception = null
+            exception = null,
+            fromName = CordaX500Name.parse("O=Member 1, L=London, C=GB"),
+            toNames = listOf(CordaX500Name.parse("O=Member 2, L=London, C=GB")),
+            hash = SecureHash.allOnesHash
         )
 
         assertThat(actual, equalTo(expected))

@@ -24,6 +24,11 @@ import kotlin.reflect.KClass
 
 object WorkbenchAdapterImpl : WorkbenchAdapter {
 
+    private const val FAKE_BLOCK_ID = 999
+    private const val FAKE_TRANSACTION_ID = 999
+    private const val FAKE_CONTRACT_ID = 1
+    private const val FAKE_CONNECTION_ID = 1
+
     @Throws(IllegalArgumentException::class)
     override fun transformIngress(message: ServicebusMessage): BusRequest =
         ObjectMapper().readTree(message).let { json ->
@@ -61,6 +66,9 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
     private fun transformFlowOutputResponse(flowOutput: FlowOutput): ServicebusMessage {
         val node = JsonNodeFactory.instance.objectNode().apply {
             put("messageName", "ContractMessage")
+            // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
+            put("blockId", FAKE_BLOCK_ID)
+            flowOutput.transactionHash?.let { put("blockhash", it.toString()) }
             put("requestId", flowOutput.requestId)
             putObject("additionalInformation")
             put("contractLedgerIdentifier", flowOutput.linearId.toString())
@@ -72,6 +80,23 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
                     }
                 }
             }
+            putArray("modifyingTransactions").apply {
+                addObject().apply {
+                    flowOutput.fromName?.let { put("from", it.toString()) }
+                    putArray("to").apply {
+                        flowOutput.toNames.forEach {
+                            add(it.toString())
+                        }
+                    }
+                    // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
+                    put("transactionId", FAKE_TRANSACTION_ID)
+                    flowOutput.transactionHash?.let { put("transactionHash", it.toString()) }
+                }
+            }
+            // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
+            put("contractId", FAKE_CONTRACT_ID)
+            // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
+            put("connectionId", FAKE_CONNECTION_ID)
             put("messageSchemaVersion", "1.0.0")
             put("isNewContract", flowOutput.isNewContract)
         }
