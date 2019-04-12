@@ -29,7 +29,8 @@ open class MessageProcessorImpl(
         isNew: Boolean
     ): BusResponse {
         return try {
-            val flowLogic = deriveFlowLogic(invocable.workflowName, invocable.parameters)
+            val linearIdParameter = linearId?.let { mapOf("linearId" to "${linearId.id}") } ?: emptyMap()
+            val flowLogic = deriveFlowLogic(invocable.workflowName, invocable.parameters + linearIdParameter)
             val result = startFlowDelegate(flowLogic)
             BusResponse.FlowOutput(
                 ingressType = invocable::class,
