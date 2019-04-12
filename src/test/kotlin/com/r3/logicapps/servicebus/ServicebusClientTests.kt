@@ -9,9 +9,9 @@ import net.corda.core.utilities.getOrThrow
 import org.junit.Test
 import java.nio.charset.StandardCharsets.UTF_8
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
-import kotlin.test.assertEquals
 
 class ServicebusClientTests : TestBase() {
 
@@ -50,22 +50,6 @@ class ServicebusClientTests : TestBase() {
 
         threadA.join()
         threadB.join()
-    }
-
-    @Test
-    fun `test blocking consumer`() {
-        val clientA = ServicebusClientImpl(SERVICE_BUS, inboundQueue = FROM_CORDA_QUEUE, outboundQueue = TO_CORDA_QUEUE)
-        val clientB = ServicebusClientImpl(SERVICE_BUS, inboundQueue = TO_CORDA_QUEUE, outboundQueue = FROM_CORDA_QUEUE)
-
-        clientA.start()
-        clientB.start()
-
-        val consumerThread = thread {
-            assertEquals("{test: test}", clientB.receive())
-        }
-
-        clientA.send("{test: test}")
-        consumerThread.join()
     }
 
     @Test(timeout = 60000)
@@ -123,17 +107,32 @@ class ServicebusClientTests : TestBase() {
                 "  \"messageName\" : \"CreateContractRequest\",\n" +
                 "  \"requestId\" : \"81a87eb0-b5aa-4d53-a39f-a6ed0742d90d\",\n" +
                 "  \"additionalInformation\" : {\n" +
+                "    \"errorCode\" : -1426288842,\n" +
                 "    \"errorMessage\" : \"Unable to find 'net.corda.workbench.refrigeratedTransportation.flow.CreateFlow' on the class path\"\n" +
                 "  },\n" +
                 "  \"status\" : \"Failure\",\n" +
                 "  \"messageSchemaVersion\" : \"1.0.0\"\n" +
                 "}"
+        val latch = CountDownLatch(1)
         val client = ServicebusClientImpl(SERVICE_BUS, FROM_CORDA_QUEUE, TO_CORDA_QUEUE)
         client.start()
+        client.registerReceivedMessageHandler(object : IMessageHandler {
+            override fun onMessageAsync(message: IMessage?): CompletableFuture<Void> {
+                println(String(message!!.body, UTF_8))
+                if (expected == String(message!!.body, UTF_8))
+                    latch.countDown()
+                return CompletableFuture.completedFuture(null)
+            }
+
+            override fun notifyException(exception: Throwable?, phase: ExceptionPhase?) {
+                println(exception)
+            }
+
+        })
         client.send(message)
         startNode(providedName = partyA.name, customOverrides = mapOf("cordappSignerKeyFingerprintBlacklist" to emptyList<String>(),
             "devMode" to true)).getOrThrow()
-        assertEquals(expected, client.receive())
+        latch.await()
     }
 
     class MyMessageHandler(val id: String, val client: ServicebusClient, val count: AtomicInteger, val errorHandler: (e: Throwable?) -> Any?) : IMessageHandler {
@@ -142,7 +141,6 @@ class ServicebusClientTests : TestBase() {
             count.set(count.get() + 1)
             if (count.get() <= 10) {
                 println("Client $id sending message with count ${count.get()}")
-//                client.send(String(message!!.messageBody.binaryData.first(), UTF_8))
                 client.send(String(message!!.body, UTF_8))
             }
             return CompletableFuture.completedFuture(null)

@@ -2,9 +2,11 @@ package com.r3.logicapps.servicebus
 
 import com.microsoft.azure.servicebus.*
 import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder
+import com.microsoft.azure.servicebus.primitives.IllegalConnectionStringFormatException
 import com.microsoft.azure.servicebus.primitives.RetryExponential
 import com.microsoft.azure.servicebus.primitives.ServiceBusException
 import net.corda.core.utilities.contextLogger
+import java.lang.IllegalArgumentException
 import java.time.Duration
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -94,14 +96,20 @@ class ServicebusClientImpl(private val connectionString: String,
                 return QueueClient(ConnectionStringBuilder(connectionString, queueName).apply {
                     retryPolicy = exponentialRetry
                 }, clientMode)
-            } catch (e: ServiceBusException) {
-                // TODO: Bogdan - finish implementation of background retry logic in [ServiceBusConnectionService]
-                // log.error("Connection to $queueName could not be established. Retrying in $reconnectInterval ms")
-                log.error("Connection to $queueName could not be established. Shutting down")
+            } catch (e: Exception) {
+                when (e) {
+                    is ServiceBusException -> {
+                        // TODO: Bogdan - finish implementation of background retry logic in [ServiceBusConnectionService]
+                        // log.error("Connection to $queueName could not be established. Retrying in $reconnectInterval ms")
+                        log.error("Connection to $queueName could not be established. Shutting down")
+                    }
+                    is IllegalArgumentException, is IllegalConnectionStringFormatException -> {
+                        log.error("Service bus connection details are invalid. connectionString=$connectionString queueName=$queueName. Shutting down")
+                    }
+                }
                 // Retrying to connect in this thread seems to prevent a polite shutdown of the node, so we just kill it for now
                 System.exit(1)
             }
-
             try {
                 Thread.sleep(reconnectInterval)
             } catch (e: InterruptedException) {
