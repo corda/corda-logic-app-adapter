@@ -60,7 +60,8 @@ class ServiceDrivenMessageProcessor(appServiceHub: AppServiceHub) : MessageProce
             fields = linearState.fields(),
             isNewContract = consumedStateAndRefs.isEmpty()
         )
-    }
+    },
+    identityService = appServiceHub.identityService
 )
 
 fun List<ContractState>.toFlowInvocationResult(

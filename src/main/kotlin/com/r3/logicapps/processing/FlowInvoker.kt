@@ -6,6 +6,7 @@ import net.corda.client.jackson.JacksonSupport
 import net.corda.client.jackson.StringToMethodCallParser
 import net.corda.core.flows.FlowLogic
 import net.corda.core.internal.packageName
+import net.corda.core.node.services.IdentityService
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
@@ -13,9 +14,16 @@ import java.lang.reflect.Type
 object FlowInvoker {
     fun getFlowStatementFromString(
         clazz: Class<out FlowLogic<*>>,
-        arguments: Map<String, String>
+        arguments: Map<String, String>,
+        identityService: IdentityService? = null
     ): FlowStatement {
-        val om: ObjectMapper = JacksonSupport.createNonRpcMapper(JsonFactory())
+        val om: ObjectMapper = identityService?.let {
+            JacksonSupport.createInMemoryMapper(
+                identityService = it,
+                fuzzyIdentityMatch = true
+            )
+        } ?: JacksonSupport.createNonRpcMapper(JsonFactory())
+
         val inputData = om.writerWithDefaultPrettyPrinter().writeValueAsString(arguments).santitized()
         val parser = StringToMethodCallParser(clazz, om)
         val errors = ArrayList<String>()
@@ -31,7 +39,11 @@ object FlowInvoker {
 
             try {
                 paramNamesFromConstructor = parser.paramNamesFromConstructor(ctor)
-                val args = parser.parseArguments(clazz.name, paramNamesFromConstructor.zip(ctor.genericParameterTypes), inputData)
+                val args = parser.parseArguments(
+                    clazz.name,
+                    paramNamesFromConstructor.zip(ctor.genericParameterTypes),
+                    inputData
+                )
                 if (args.size != ctor.genericParameterTypes.size) {
                     errors.add("${getPrototype()}: Wrong number of arguments (${args.size} provided, ${ctor.genericParameterTypes.size} needed)")
                     continue
@@ -63,13 +75,13 @@ object FlowInvoker {
                 val args: List<String> = type.actualTypeArguments.map(::innerLoop)
                 abbreviated(type.rawType.typeName) + '<' + args.joinToString(", ") + '>'
             }
-            is GenericArrayType -> innerLoop(type.genericComponentType) + "[]"
-            is Class<*> -> if (type.isArray) {
+            is GenericArrayType  -> innerLoop(type.genericComponentType) + "[]"
+            is Class<*>          -> if (type.isArray) {
                 abbreviated(type.simpleName)
             } else {
                 abbreviated(type.name).replace('$', '.')
             }
-            else -> type.toString()
+            else                 -> type.toString()
         }
 
         return innerLoop(type)

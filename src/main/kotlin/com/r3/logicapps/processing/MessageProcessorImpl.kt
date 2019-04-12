@@ -6,10 +6,12 @@ import com.r3.logicapps.BusResponse
 import com.r3.logicapps.Invocable
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.FlowLogic
+import net.corda.core.node.services.IdentityService
 
 open class MessageProcessorImpl(
     private val startFlowDelegate: (FlowLogic<*>) -> FlowInvocationResult,
-    private val retrieveStateDelegate: (UniqueIdentifier) -> StateQueryResult
+    private val retrieveStateDelegate: (UniqueIdentifier) -> StateQueryResult,
+    private val identityService: IdentityService? = null
 ) : MessageProcessor {
     override fun invoke(message: BusRequest): BusResponse = when (message) {
         is BusRequest.InvokeFlowWithoutInputStates ->
@@ -67,7 +69,7 @@ open class MessageProcessorImpl(
             throw ClassNotFoundException("Unable to find '$flowName' on the class path")
         }
         val flowLogic = clazz.asSubclass(FlowLogic::class.java) ?: error("$flowName is not a subclass of FlowLogic")
-        val statement = FlowInvoker.getFlowStatementFromString(flowLogic, parameters)
+        val statement = FlowInvoker.getFlowStatementFromString(flowLogic, parameters, identityService)
         if (statement.errors.isNotEmpty()) {
             throw IllegalStateException(statement.errors.joinToString("; "))
         }
