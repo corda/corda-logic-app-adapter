@@ -3,6 +3,7 @@ package com.r3.logicapps.processing
 import com.r3.logicapps.BusRequest
 import com.r3.logicapps.BusRequest.QueryFlowState
 import com.r3.logicapps.BusResponse
+import com.r3.logicapps.BusResponse.InvocationState
 import com.r3.logicapps.Invocable
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.FlowLogic
@@ -35,16 +36,32 @@ open class MessageProcessorImpl(
             val flowLogic = deriveFlowLogic(invocable.workflowName, invocable.parameters + linearIdParameter)
             val result = startFlowDelegate(flowLogic)
             val lid = result.linearId ?: linearId ?: error("Unable to derive linear ID after flow invocation")
+
+            val fromName = result.fromName ?: error("Unable to retrieve invoking party after flow invocation")
+            val transactionHash = result.hash ?: error("Unable to derive transaction hash after flow invocation")
+
             listOf(
+                *result.toNames.map { to ->
+                    InvocationState(
+                        requestId = requestId,
+                        linearId = lid,
+                        parameters = invocable.parameters,
+                        caller = fromName,
+                        flowClass = flowLogic::class,
+                        fromName = fromName,
+                        toName = to,
+                        transactionHash = transactionHash
+                    )
+                }.toTypedArray(),
                 BusResponse.FlowOutput(
                     ingressType = ingressType,
                     requestId = requestId,
                     linearId = lid,
                     fields = result.fields,
                     isNewContract = isNew,
-                    fromName = result.fromName ?: error("Unable to retrieve invoking party after flow invocation"),
+                    fromName = fromName,
                     toNames = result.toNames,
-                    transactionHash = result.hash ?: error("Unable to derive transaction hash after flow invocation")
+                    transactionHash = transactionHash
                 ),
                 BusResponse.Confirmation.Committed(
                     requestId = requestId,
