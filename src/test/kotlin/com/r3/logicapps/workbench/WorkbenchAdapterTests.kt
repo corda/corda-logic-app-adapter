@@ -16,7 +16,6 @@ import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.contracts.UniqueIdentifier.Companion
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.CordaX500Name
-import org.json.JSONObject
 import org.junit.Test
 
 class WorkbenchAdapterTests {
@@ -267,33 +266,6 @@ class WorkbenchAdapterTests {
     }
 
     @Test
-    fun `a reasonable service bus message for a flow output conforms to the schema`() {
-        // TODO moritzplatt 2019-04-11 -- should this be done in the adapter, too?
-
-        val json = WorkbenchAdapterImpl.transformEgress(
-            FlowOutput(
-                InvokeFlowWithoutInputStates::class,
-                "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
-                UniqueIdentifier.fromString("f1a27656-3b1a-4469-8e37-04d9e2764bf6"),
-                mapOf(
-                    "state" to "Created",
-                    "owner" to "O=Alice Ltd., L=Shanghai, C=CN"
-                ),
-                false,
-                CordaX500Name.parse("O=Member 1, L=London, C=GB"),
-                listOf(
-                    CordaX500Name.parse("O=Member 2, L=Portsmouth, C=GB"),
-                    CordaX500Name.parse("O=Member 2, L=Manchester, C=GB")
-                ),
-                SecureHash.allOnesHash
-            )
-        )
-
-        // no assertion needed, validator will throw if invalid
-        WorkbenchSchema.FlowInvocationResponseSchema.underlying.validate(JSONObject(json))
-    }
-
-    @Test
     fun `generates a valid service bus message for error output`() {
         val expected = """{
         |  "messageName" : "CreateContractRequest",
@@ -350,23 +322,6 @@ class WorkbenchAdapterTests {
         )
 
         assertThat(actual.sanitized, equalTo(expected))
-    }
-
-    @Test
-    fun `a reasonable service bus message for a flow error conforms to the schema`() {
-        // TODO moritzplatt 2019-04-11 -- should this be done in the adapter, too?
-
-        val json = WorkbenchAdapterImpl.transformEgress(
-            FlowError(
-                ingressType = InvokeFlowWithoutInputStates::class,
-                requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-                linearId = Companion.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21"),
-                exception = IllegalStateException("Boooom!")
-            )
-        )
-
-        // no assertion needed, validator will throw if invalid
-        WorkbenchSchema.FlowErrorResponseSchema.underlying.validate(JSONObject(json))
     }
 
     private val ServicebusMessage.sanitized: String get() = this.replace("\r", "")
