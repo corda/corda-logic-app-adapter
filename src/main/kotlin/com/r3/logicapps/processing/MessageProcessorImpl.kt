@@ -41,7 +41,10 @@ open class MessageProcessorImpl(
                     requestId = requestId,
                     linearId = lid,
                     fields = result.fields,
-                    isNewContract = isNew
+                    isNewContract = isNew,
+                    fromName = result.fromName ?: error("Unable to retrieve invoking party after flow invocation"),
+                    toNames = result.toNames,
+                    transactionHash = result.hash ?: error("Unable to derive transaction hash after flow invocation")
                 ),
                 BusResponse.Confirmation.Committed(
                     requestId = requestId,
@@ -61,8 +64,7 @@ open class MessageProcessorImpl(
 
     private fun processQueryMessage(requestId: String, linearId: UniqueIdentifier): BusResponse = try {
         retrieveStateDelegate(linearId).let { result ->
-            BusResponse.FlowOutput(
-                ingressType = QueryFlowState::class,
+            BusResponse.StateOutput(
                 requestId = requestId,
                 linearId = linearId,
                 fields = result.fields,

@@ -44,11 +44,9 @@ sealed class BusRequest : Correlatable {
 }
 
 sealed class BusResponse : Correlatable {
-    // TODO moritzplatt 2019-04-12 -- `FlowOutput` as a response of flow invocation should be modeled differently from
-    //  flow output to a query. This will remove the need for nullable fields.
-
     /**
-     * "ContractMessage"
+     * A response to invoking a flow that mirrors the ingress type
+     *
      * @param ingressType The type of the [BusRequest] that triggered the invocation generating this response.
      * @param requestId A simple correlation ID, generated in the ingress message
      * @param linearId The linear ID of the output state of the flow invoked
@@ -64,10 +62,25 @@ sealed class BusResponse : Correlatable {
         override val linearId: UniqueIdentifier,
         override val fields: Map<String, String>,
         val isNewContract: Boolean,
-        val fromName: CordaX500Name? = null,
-        val toNames: List<CordaX500Name> = emptyList(),
-        val transactionHash: SecureHash? = null
+        val fromName: CordaX500Name,
+        val toNames: List<CordaX500Name>,
+        val transactionHash: SecureHash
     ) : BusResponse(), Identifiable, WithIngressType, WithOutput
+
+    /**
+     * "ContractMessage": A response to a state query
+     *
+     * @param requestId A simple correlation ID, generated in the ingress message
+     * @param linearId The linear ID of the state
+     * @param fields flattened serialisation of the fields of the output state of the transaction or an empty array if the transaction did not have outputs. Flattening is to follow the rules JSON property access notation using dots for named properties and bracket for array positions
+     * @param isNewContract `true` if the transaction had no input states
+     */
+    data class StateOutput(
+        override val requestId: String,
+        override val linearId: UniqueIdentifier,
+        override val fields: Map<String, String>,
+        val isNewContract: Boolean
+    ) : BusResponse(), Identifiable, WithOutput
 
     /**
      * "ContractMessage"
