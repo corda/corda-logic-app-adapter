@@ -265,6 +265,6 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
         is Committed -> "Committed"
     }
 
-    @Deprecated("This is based on a non-cryptographic hash of low entropy. Replace with an appropriate custom hasing function.")
+    @Deprecated("This is based on a non-cryptographic hash of low entropy. Replace with an function that guarantees uniqueness.")
     private fun String.numericId(): Int = hashCode().absoluteValue
 }
