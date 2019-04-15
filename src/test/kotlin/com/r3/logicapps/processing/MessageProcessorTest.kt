@@ -1,5 +1,7 @@
 package com.r3.logicapps.processing
 
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import com.r3.logicapps.BusRequest
 import com.r3.logicapps.BusResponse
 import com.r3.logicapps.TestBase
@@ -8,6 +10,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 
 class MessageProcessorTest : TestBase() {
+
     @Test
     fun `fails if referencing non-existent class`() {
         val requestId = "1234"
@@ -17,7 +20,7 @@ class MessageProcessorTest : TestBase() {
             startFlowDelegate = { FlowInvocationResult(linearId = linearId, hash = null) },
             retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
         )
-        val busResponse = messageProcessor.invoke(
+        val (busResponse) = messageProcessor.invoke(
             BusRequest.InvokeFlowWithoutInputStates(requestId, "com.nowhere.SimpleFlow", emptyMap())
         )
 
@@ -36,12 +39,21 @@ class MessageProcessorTest : TestBase() {
             retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
         )
 
-        val busResponse = messageProcessor.invoke(
+        val (busResponse, commit, submit) = messageProcessor.invoke(
             BusRequest.InvokeFlowWithoutInputStates(requestId, "com.r3.logicapps.processing.SimpleFlow", emptyMap())
         )
 
         val response = busResponse as? BusResponse.FlowOutput
             ?: error("Response of type ${busResponse::class.simpleName}, expected FlowOutput")
+
+        val cr = commit as? BusResponse.Confirmation.Committed
+            ?: error("Response of type ${commit::class.simpleName}, expected Committed")
+        val sr = submit as? BusResponse.Confirmation.Submitted
+            ?: error("Response of type ${submit::class.simpleName}, expected Submitted")
+
+        assertThat(cr.requestId, equalTo(requestId))
+        assertThat(sr.requestId, equalTo(requestId))
+
         assertEquals(requestId, response.requestId)
         assertEquals(0, response.fields.size)
         assertEquals(linearId, response.linearId)
@@ -59,7 +71,7 @@ class MessageProcessorTest : TestBase() {
             retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
         )
 
-        val busResponse = messageProcessor.invoke(
+        val (busResponse, commit, submit) = messageProcessor.invoke(
             BusRequest.InvokeFlowWithoutInputStates(
                 requestId,
                 "com.r3.logicapps.processing.SimpleFlowWithInput",
@@ -69,6 +81,15 @@ class MessageProcessorTest : TestBase() {
 
         val response = busResponse as? BusResponse.FlowOutput
             ?: error("Response of type ${busResponse::class.simpleName}, expected FlowOutput")
+
+        val cr = commit as? BusResponse.Confirmation.Committed
+            ?: error("Response of type ${commit::class.simpleName}, expected Committed")
+        val sr = submit as? BusResponse.Confirmation.Submitted
+            ?: error("Response of type ${submit::class.simpleName}, expected Submitted")
+
+        assertThat(cr.requestId, equalTo(requestId))
+        assertThat(sr.requestId, equalTo(requestId))
+
         assertEquals(requestId, response.requestId)
         assertEquals(0, response.fields.size)
         assertEquals(linearId, response.linearId)
@@ -86,13 +107,21 @@ class MessageProcessorTest : TestBase() {
             retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
         )
 
-        val busResponse = messageProcessor.invoke(
+        val (busResponse, commit, submit) = messageProcessor.invoke(
             BusRequest.InvokeFlowWithoutInputStates(
                 requestId,
                 "com.r3.logicapps.processing.SimpleFlowWithInput",
                 params
             )
         )
+
+        val cr = commit as? BusResponse.Confirmation.Committed
+            ?: error("Response of type ${commit::class.simpleName}, expected Committed")
+        val sr = submit as? BusResponse.Confirmation.Submitted
+            ?: error("Response of type ${submit::class.simpleName}, expected Submitted")
+
+        assertThat(cr.requestId, equalTo(requestId))
+        assertThat(sr.requestId, equalTo(requestId))
 
         val response = busResponse as? BusResponse.FlowOutput
             ?: error("Response of type ${busResponse::class.simpleName}, expected FlowOutput")
@@ -113,7 +142,7 @@ class MessageProcessorTest : TestBase() {
             retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
         )
 
-        val busResponse = messageProcessor.invoke(
+        val busResponses = messageProcessor.invoke(
             BusRequest.InvokeFlowWithoutInputStates(
                 requestId,
                 "com.r3.logicapps.processing.SimpleFlowWithInput",
@@ -121,9 +150,10 @@ class MessageProcessorTest : TestBase() {
             )
         )
 
-        val response = busResponse as? BusResponse.FlowError
-            ?: error("Response of type ${busResponse::class.simpleName}, expected FlowError")
-        assertEquals(requestId, response.requestId)
-        assertEquals(IllegalStateException::class, response.exception::class)
+        val (busResponse) = busResponses
+        val r = busResponse as? BusResponse.FlowError
+            ?: error("Response of type ${busResponses::class.simpleName}, expected FlowError")
+
+        assertEquals(IllegalStateException::class, r.exception::class)
     }
 }

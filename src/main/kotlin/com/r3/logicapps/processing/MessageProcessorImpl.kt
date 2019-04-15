@@ -13,13 +13,13 @@ open class MessageProcessorImpl(
     private val retrieveStateDelegate: (UniqueIdentifier) -> StateQueryResult,
     private val identityService: IdentityService? = null
 ) : MessageProcessor {
-    override fun invoke(message: BusRequest): BusResponse = when (message) {
+    override fun invoke(message: BusRequest): List<BusResponse> = when (message) {
         is BusRequest.InvokeFlowWithoutInputStates ->
             processInvocationMessage(message.requestId, null, message, true)
         is BusRequest.InvokeFlowWithInputStates    ->
             processInvocationMessage(message.requestId, message.linearId, message, false)
         is BusRequest.QueryFlowState               ->
-            processQueryMessage(message.requestId, message.linearId)
+            listOf(processQueryMessage(message.requestId, message.linearId))
     }
 
     private fun processInvocationMessage(
@@ -27,20 +27,35 @@ open class MessageProcessorImpl(
         linearId: UniqueIdentifier?,
         invocable: Invocable,
         isNew: Boolean
-    ): BusResponse {
+    ): List<BusResponse> {
+        val ingressType = invocable::class
+
         return try {
             val linearIdParameter = linearId?.let { mapOf("linearId" to linearId.toString()) } ?: emptyMap()
             val flowLogic = deriveFlowLogic(invocable.workflowName, invocable.parameters + linearIdParameter)
             val result = startFlowDelegate(flowLogic)
-            BusResponse.FlowOutput(
-                ingressType = invocable::class,
-                requestId = requestId,
-                linearId = result.linearId ?: linearId ?: error("Unable to derive linear ID after flow invocation"),
-                fields = result.fields,
-                isNewContract = isNew
+            val lid = result.linearId ?: linearId ?: error("Unable to derive linear ID after flow invocation")
+            listOf(
+                BusResponse.FlowOutput(
+                    ingressType = ingressType,
+                    requestId = requestId,
+                    linearId = lid,
+                    fields = result.fields,
+                    isNewContract = isNew
+                ),
+                BusResponse.Confirmation.Committed(
+                    requestId = requestId,
+                    linearId = lid,
+                    ingressType = ingressType
+                ),
+                BusResponse.Confirmation.Submitted(
+                    requestId = requestId,
+                    linearId = lid,
+                    ingressType = ingressType
+                )
             )
         } catch (exception: Throwable) {
-            BusResponse.FlowError(invocable::class, requestId, linearId, exception)
+            listOf(BusResponse.FlowError(ingressType, requestId, linearId, exception))
         }
     }
 

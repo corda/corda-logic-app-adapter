@@ -10,11 +10,14 @@ import net.corda.core.utilities.contextLogger
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.CompletableFuture
 
-class BusMessageHandler(private val busClient: ServicebusClient,
-                        private val messageProcessor: MessageProcessor) : IMessageHandler {
+class BusMessageHandler(
+    private val busClient: ServicebusClient,
+    private val messageProcessor: MessageProcessor
+) : IMessageHandler {
     companion object {
         val log = contextLogger()
     }
+
     override fun onMessageAsync(message: IMessage?): CompletableFuture<Void> {
         // At this point, the client has already signalled the bus that the message is acknowledged and will
         // be removed from the queue, preventing redelivery should anything happen between this point and the first checkpoint
@@ -24,10 +27,13 @@ class BusMessageHandler(private val busClient: ServicebusClient,
         val payload = String(message!!.body, StandardCharsets.UTF_8)
         log.info("Received message: $payload")
         val busRequest = WorkbenchAdapterImpl.transformIngress(payload)
-        val response = WorkbenchAdapterImpl.transformEgress(messageProcessor.invoke(busRequest))
+        val messages = messageProcessor.invoke(busRequest)
 
-        log.info("Sending reply: $response")
-        busClient.send(response)
+        messages.forEach {
+            val response = WorkbenchAdapterImpl.transformEgress(it)
+            log.info("Sending reply: $response")
+            busClient.send(response)
+        }
 
         return CompletableFuture.completedFuture(null)
     }
