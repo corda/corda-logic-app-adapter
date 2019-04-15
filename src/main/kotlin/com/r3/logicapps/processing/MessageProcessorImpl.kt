@@ -37,7 +37,10 @@ open class MessageProcessorImpl(
                 requestId = requestId,
                 linearId = result.linearId ?: linearId ?: error("Unable to derive linear ID after flow invocation"),
                 fields = result.fields,
-                isNewContract = isNew
+                isNewContract = isNew,
+                fromName = result.fromName ?: error("Unable to retrieve invoking party after flow invocation"),
+                toNames = result.toNames,
+                transactionHash = result.hash ?: error("Unable to derive transaction hash after flow invocation")
             )
         } catch (exception: Throwable) {
             BusResponse.FlowError(invocable::class, requestId, linearId, exception)
@@ -46,8 +49,7 @@ open class MessageProcessorImpl(
 
     private fun processQueryMessage(requestId: String, linearId: UniqueIdentifier): BusResponse = try {
         retrieveStateDelegate(linearId).let { result ->
-            BusResponse.FlowOutput(
-                ingressType = QueryFlowState::class,
+            BusResponse.StateOutput(
                 requestId = requestId,
                 linearId = linearId,
                 fields = result.fields,

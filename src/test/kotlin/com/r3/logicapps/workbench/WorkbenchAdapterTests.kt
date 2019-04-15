@@ -10,6 +10,7 @@ import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
 import com.r3.logicapps.BusRequest.QueryFlowState
 import com.r3.logicapps.BusResponse.FlowError
 import com.r3.logicapps.BusResponse.FlowOutput
+import com.r3.logicapps.BusResponse.StateOutput
 import com.r3.logicapps.servicebus.ServicebusMessage
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.contracts.UniqueIdentifier.Companion
@@ -278,7 +279,13 @@ class WorkbenchAdapterTests {
                     "state" to "Created",
                     "owner" to "O=Alice Ltd., L=Shanghai, C=CN"
                 ),
-                false
+                false,
+                CordaX500Name.parse("O=Member 1, L=London, C=GB"),
+                listOf(
+                    CordaX500Name.parse("O=Member 2, L=Portsmouth, C=GB"),
+                    CordaX500Name.parse("O=Member 2, L=Manchester, C=GB")
+                ),
+                SecureHash.allOnesHash
             )
         )
 
@@ -313,6 +320,39 @@ class WorkbenchAdapterTests {
     }
 
     @Test
+    fun `generates a valid service bus message for state queries`() {
+        val expected = """{
+        |  "messageName" : "ContractMessage",
+        |  "requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
+        |  "additionalInformation" : { },
+        |  "contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
+        |  "contractProperties" : [ {
+        |    "name" : "lorem",
+        |    "value" : "ipsum"
+        |  }, {
+        |    "name" : "dolor",
+        |    "value" : "sit amet"
+        |  } ],
+        |  "messageSchemaVersion" : "1.0.0",
+        |  "isNewContract" : false
+        |}""".trimMargin()
+
+        val actual = WorkbenchAdapterImpl.transformEgress(
+            StateOutput(
+                requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
+                linearId = Companion.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21"),
+                fields = mapOf(
+                    "lorem" to "ipsum",
+                    "dolor" to "sit amet"
+                ),
+                isNewContract = false
+            )
+        )
+
+        assertThat(actual.sanitized, equalTo(expected))
+    }
+
+    @Test
     fun `a reasonable service bus message for a flow error conforms to the schema`() {
         // TODO moritzplatt 2019-04-11 -- should this be done in the adapter, too?
 
@@ -329,7 +369,6 @@ class WorkbenchAdapterTests {
         WorkbenchSchema.FlowErrorResponseSchema.underlying.validate(JSONObject(json))
     }
 
-    private val ServicebusMessage.sanitized: String
-        get() = this.replace("\r", "")
+    private val ServicebusMessage.sanitized: String get() = this.replace("\r", "")
 
 }
