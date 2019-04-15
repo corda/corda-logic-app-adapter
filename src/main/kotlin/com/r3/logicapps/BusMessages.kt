@@ -94,6 +94,40 @@ sealed class BusResponse : Correlatable {
         val linearId: UniqueIdentifier?,
         val exception: Throwable
     ) : BusResponse(), WithIngressType
+
+    /**
+     * A legacy message to be sent whenever a "CreateContractRequest" or a "CreateContractActionRequest" has been
+     * received.
+     *
+     * For legacy reasons, both messages have to be sent.
+     */
+    sealed class Confirmation : BusResponse(), Identifiable, WithIngressType {
+        data class Submitted(
+            override val requestId: String,
+            override val linearId: UniqueIdentifier,
+            override val ingressType: KClass<*>
+        ) : Confirmation()
+
+        data class Committed(
+            override val requestId: String,
+            override val linearId: UniqueIdentifier,
+            override val ingressType: KClass<*>
+        ) : Confirmation()
+    }
+
+    /**
+     * "EventMessage"
+     */
+    data class InvocationState(
+        override val requestId: String,
+        override val linearId: UniqueIdentifier,
+        override val parameters: Map<String, String>,
+        val caller: CordaX500Name,
+        val flowClass: KClass<*>,
+        val fromName: CordaX500Name,
+        val toName: CordaX500Name,
+        val transactionHash: SecureHash
+    ) : BusResponse(), Identifiable, Parameterised
 }
 
 /**

@@ -11,8 +11,12 @@ import com.r3.logicapps.BusRequest.InvokeFlowWithInputStates
 import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
 import com.r3.logicapps.BusRequest.QueryFlowState
 import com.r3.logicapps.BusResponse
+import com.r3.logicapps.BusResponse.Confirmation
+import com.r3.logicapps.BusResponse.Confirmation.Committed
+import com.r3.logicapps.BusResponse.Confirmation.Submitted
 import com.r3.logicapps.BusResponse.FlowError
 import com.r3.logicapps.BusResponse.FlowOutput
+import com.r3.logicapps.BusResponse.InvocationState
 import com.r3.logicapps.BusResponse.StateOutput
 import com.r3.logicapps.servicebus.ServicebusMessage
 import com.r3.logicapps.workbench.WorkbenchSchema.FlowInvocationRequestSchema
@@ -21,6 +25,7 @@ import com.r3.logicapps.workbench.WorkbenchSchema.FlowUpdateRequestSchema
 import net.corda.core.contracts.UniqueIdentifier
 import org.everit.json.schema.ValidationException
 import org.json.JSONObject
+import kotlin.math.absoluteValue
 import kotlin.reflect.KClass
 
 object WorkbenchAdapterImpl : WorkbenchAdapter {
@@ -29,6 +34,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
     private const val FAKE_TRANSACTION_ID = 999
     private const val FAKE_CONTRACT_ID = 1
     private const val FAKE_CONNECTION_ID = 1
+    private const val FAKE_TRANSACTION_SEQUENCE = 1
 
     @Throws(IllegalArgumentException::class)
     override fun transformIngress(message: ServicebusMessage): BusRequest =
@@ -52,9 +58,11 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
 
     @Throws(IllegalArgumentException::class)
     override fun transformEgress(message: BusResponse): ServicebusMessage = when (message) {
-        is FlowOutput  -> transformFlowOutputResponse(message)
-        is StateOutput -> transformStateOutputMessage(message)
-        is FlowError   -> transformFlowErrorResponse(message)
+        is FlowOutput      -> transformFlowOutputResponse(message)
+        is StateOutput     -> transformStateOutputResponse(message)
+        is FlowError       -> transformFlowErrorResponse(message)
+        is Confirmation    -> transformConfirmationResponse(message)
+        is InvocationState -> transformInvocationStateResponse(message)
     }
 
     private fun WorkbenchSchema.validate(message: String) {
@@ -105,7 +113,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
         return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
     }
 
-    private fun transformStateOutputMessage(flowOutput: StateOutput): ServicebusMessage {
+    private fun transformStateOutputResponse(flowOutput: StateOutput): ServicebusMessage {
         val node = JsonNodeFactory.instance.objectNode().apply {
             put("messageName", "ContractMessage")
             put("requestId", flowOutput.requestId)
@@ -139,6 +147,62 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             }
             put("status", "Failure")
             put("messageSchemaVersion", "1.0.0")
+        }
+        return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
+    }
+
+    private fun transformConfirmationResponse(confirmation: Confirmation): ServicebusMessage {
+        val node = JsonNodeFactory.instance.objectNode().apply {
+            put("messageName", confirmation.ingressType.toWorkbenchName())
+            putObject("additionalInformation")
+            put("requestId", confirmation.requestId)
+
+            // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
+            put("contractId", FAKE_CONTRACT_ID)
+            // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
+            put("connectionId", FAKE_CONNECTION_ID)
+
+            put("messageSchemaVersion", "1.0.0")
+            put("status", confirmation.toWorkbenchName())
+        }
+        return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
+    }
+
+    private fun transformInvocationStateResponse(flowOutput: InvocationState): ServicebusMessage {
+        val node = JsonNodeFactory.instance.objectNode().apply {
+            put("eventName", "ContractFunctionInvocation")
+            put("requestId", flowOutput.requestId)
+
+            putObject("caller").apply {
+                put("type", "User")
+                put("id", flowOutput.caller.toString().numericId())
+                put("ledgerIdentifier", flowOutput.caller.toString())
+            }
+
+            putObject("additionalInformation")
+
+            flowOutput.flowClass.qualifiedName?.let { put("contractId", it.numericId()) }
+
+            putArray("contractProperties").apply {
+                flowOutput.parameters.forEach { k, v ->
+                    addObject().apply {
+                        put("name", k)
+                        put("value", v)
+                    }
+                }
+            }
+
+            putObject("transaction").apply {
+                put("transactionId", flowOutput.transactionHash.toString().numericId())
+                put("transactionHash", flowOutput.transactionHash.toString())
+                put("from", flowOutput.fromName.toString())
+                put("to", flowOutput.toName.toString())
+            }
+
+            put("inTransactionSequenceNumber", FAKE_TRANSACTION_SEQUENCE)
+            put("connectionId", FAKE_CONNECTION_ID)
+            put("messageSchemaVersion", "1.0.0")
+            put("messageName", "EventMessage")
         }
         return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
     }
@@ -195,4 +259,12 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
         QueryFlowState::class               -> "ReadContractRequest"
         else                                -> throw IllegalArgumentException("Unknown bus request type ${this.simpleName}")
     }
+
+    private fun Confirmation.toWorkbenchName(): String = when (this) {
+        is Submitted -> "Submitted"
+        is Committed -> "Committed"
+    }
+
+    @Deprecated("This is based on a non-cryptographic hash of low entropy. Replace with an appropriate custom hasing function.")
+    private fun String.numericId(): Int = hashCode().absoluteValue
 }

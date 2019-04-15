@@ -8,13 +8,17 @@ import com.natpryce.hamkrest.throws
 import com.r3.logicapps.BusRequest.InvokeFlowWithInputStates
 import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
 import com.r3.logicapps.BusRequest.QueryFlowState
+import com.r3.logicapps.BusResponse.Confirmation.Committed
+import com.r3.logicapps.BusResponse.Confirmation.Submitted
 import com.r3.logicapps.BusResponse.FlowError
 import com.r3.logicapps.BusResponse.FlowOutput
+import com.r3.logicapps.BusResponse.InvocationState
 import com.r3.logicapps.BusResponse.StateOutput
 import com.r3.logicapps.servicebus.ServicebusMessage
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.contracts.UniqueIdentifier.Companion
 import net.corda.core.crypto.SecureHash
+import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.CordaX500Name
 import org.junit.Test
 
@@ -324,6 +328,111 @@ class WorkbenchAdapterTests {
         assertThat(actual.sanitized, equalTo(expected))
     }
 
-    private val ServicebusMessage.sanitized: String get() = this.replace("\r", "")
+    @Test
+    fun `a valid submitted message is generated `() {
+        val expected = """{
+        |  "messageName" : "CreateContractRequest",
+        |  "additionalInformation" : { },
+        |  "requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
+        |  "contractId" : 1,
+        |  "connectionId" : 1,
+        |  "messageSchemaVersion" : "1.0.0",
+        |  "status" : "Submitted"
+        |}""".trimMargin()
 
+        val actual = WorkbenchAdapterImpl.transformEgress(
+            Submitted(
+                ingressType = InvokeFlowWithoutInputStates::class,
+                requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
+                linearId = Companion.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21")
+            )
+        )
+
+        assertThat(actual.sanitized, equalTo(expected))
+    }
+
+    @Test
+    fun `a valid committed message is generated `() {
+        val expected = """{
+        |  "messageName" : "CreateContractRequest",
+        |  "additionalInformation" : { },
+        |  "requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
+        |  "contractId" : 1,
+        |  "connectionId" : 1,
+        |  "messageSchemaVersion" : "1.0.0",
+        |  "status" : "Committed"
+        |}""".trimMargin()
+
+        val actual = WorkbenchAdapterImpl.transformEgress(
+            Committed(
+                ingressType = InvokeFlowWithoutInputStates::class,
+                requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
+                linearId = Companion.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21")
+            )
+        )
+
+        assertThat(actual.sanitized, equalTo(expected))
+    }
+
+    @Test
+    fun `a valid event message is generated`() {
+        val expected = """{
+        |  "eventName" : "ContractFunctionInvocation",
+        |  "requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
+        |  "caller" : {
+        |    "type" : "User",
+        |    "id" : 388261153,
+        |    "ledgerIdentifier" : "O=Member 1, L=London, C=GB"
+        |  },
+        |  "additionalInformation" : { },
+        |  "contractId" : 1426306713,
+        |  "contractProperties" : [ {
+        |    "name" : "one",
+        |    "value" : "eins"
+        |  }, {
+        |    "name" : "two",
+        |    "value" : "zwei"
+        |  }, {
+        |    "name" : "three",
+        |    "value" : "drei"
+        |  } ],
+        |  "transaction" : {
+        |    "transactionId" : 1348943872,
+        |    "transactionHash" : "0000000000000000000000000000000000000000000000000000000000000000",
+        |    "from" : "O=Member 1, L=London, C=GB",
+        |    "to" : "O=Member 2, L=Berlin, C=DE"
+        |  },
+        |  "inTransactionSequenceNumber" : 1,
+        |  "connectionId" : 1,
+        |  "messageSchemaVersion" : "1.0.0",
+        |  "messageName" : "EventMessage"
+        |}""".trimMargin()
+
+        val actual = WorkbenchAdapterImpl.transformEgress(
+            InvocationState(
+                requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
+                linearId = Companion.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21"),
+                parameters = mapOf(
+                    "one" to "eins",
+                    "two" to "zwei",
+                    "three" to "drei"
+                ),
+                caller = CordaX500Name.parse("O=Member 1, L=London, C=GB"),
+                flowClass = NonSenseFlow::class,
+                fromName = CordaX500Name.parse("O=Member 1, L=London, C=GB"),
+                toName = CordaX500Name.parse("O=Member 2, L=Berlin, C=DE"),
+                transactionHash = SecureHash.zeroHash
+            )
+        )
+
+        assertThat(actual.sanitized, equalTo(expected))
+    }
+
+    private val ServicebusMessage.sanitized: String
+        get() = this.replace("\r", "")
+
+    private class NonSenseFlow : FlowLogic<String>() {
+        override fun call(): String = TODO()
+
+    }
 }

@@ -4,5 +4,5 @@ import com.r3.logicapps.BusRequest
 import com.r3.logicapps.BusResponse
 
 interface MessageProcessor {
-    fun invoke(message: BusRequest): BusResponse
+    fun invoke(message: BusRequest): List<BusResponse>
 }
