@@ -1,0 +1,8 @@
+{
+  "messageName": "CreateContractActionRequest",
+  "requestId": "c48e202f-fb9a-46b6-b939-d0a09bac9a8f",
+  "contractLedgerIdentifier": "{{ The linear ID of the input state. }}",
+  "workflowName": "net.corda.logicapps.refrigeratedTransportation.flow.CompleteFlow",
+  "parameters": [],
+  "messageSchemaVersion": "1.0.0"
+}

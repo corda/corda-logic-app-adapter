@@ -1,0 +1,36 @@
+{
+  "messageName": "CreateContractRequest",
+  "requestId": "4b2c9336-6d16-48b1-99fc-dbafc82cbc1e",
+  "workflowName": "net.corda.logicapps.refrigeratedTransportation.flow.Constructor",
+  "parameters": [
+    {
+      "name": "device",
+      "value": "O=Bob, L=London, C=GB"
+    },
+    {
+      "name": "supplyChainOwner",
+      "value": "O=Charly, L=London, C=GB"
+    },
+    {
+      "name": "supplyChainObserver",
+      "value": "O=Demi, L=London, C=GB"
+    },
+    {
+      "name": "minHumidity",
+      "value": "12"
+    },
+    {
+      "name": "maxHumidity",
+      "value": "45"
+    },
+    {
+      "name": "minTemperature",
+      "value": "-20"
+    },
+    {
+      "name": "maxTemperature",
+      "value": "-7"
+    }
+  ],
+  "messageSchemaVersion": "1.0.0"
+}
