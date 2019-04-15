@@ -25,6 +25,7 @@ import com.r3.logicapps.workbench.WorkbenchSchema.FlowUpdateRequestSchema
 import net.corda.core.contracts.UniqueIdentifier
 import org.everit.json.schema.ValidationException
 import org.json.JSONObject
+import kotlin.math.absoluteValue
 import kotlin.reflect.KClass
 
 object WorkbenchAdapterImpl : WorkbenchAdapter {
@@ -174,13 +175,13 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
 
             putObject("caller").apply {
                 put("type", "User")
-                put("id", flowOutput.caller.toString().hashCode())
+                put("id", flowOutput.caller.toString().numericId())
                 put("ledgerIdentifier", flowOutput.caller.toString())
             }
 
             putObject("additionalInformation")
 
-            flowOutput.flowClass.qualifiedName?.hashCode()?.let { put("contractId", it) }
+            flowOutput.flowClass.qualifiedName?.let { put("contractId", it.numericId()) }
 
             putArray("contractProperties").apply {
                 flowOutput.parameters.forEach { k, v ->
@@ -192,7 +193,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             }
 
             putObject("transaction").apply {
-                put("transactionId", flowOutput.transactionHash.toString().hashCode())
+                put("transactionId", flowOutput.transactionHash.toString().numericId())
                 put("transactionHash", flowOutput.transactionHash.toString())
                 put("from", flowOutput.fromName.toString())
                 put("to", flowOutput.toName.toString())
@@ -258,9 +259,12 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
         QueryFlowState::class               -> "ReadContractRequest"
         else                                -> throw IllegalArgumentException("Unknown bus request type ${this.simpleName}")
     }
-}
 
-private fun Confirmation.toWorkbenchName(): String = when (this) {
-    is Submitted -> "Submitted"
-    is Committed -> "Committed"
+    private fun Confirmation.toWorkbenchName(): String = when (this) {
+        is Submitted -> "Submitted"
+        is Committed -> "Committed"
+    }
+
+    @Deprecated("This is based on a non-cryptographic hash of low entropy. Replace with an appropriate custom hasing function.")
+    private fun String.numericId(): Int = hashCode().absoluteValue
 }

@@ -381,7 +381,7 @@ class WorkbenchAdapterTests {
         |  "requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
         |  "caller" : {
         |    "type" : "User",
-        |    "id" : -388261153,
+        |    "id" : 388261153,
         |    "ledgerIdentifier" : "O=Member 1, L=London, C=GB"
         |  },
         |  "additionalInformation" : { },
@@ -397,7 +397,7 @@ class WorkbenchAdapterTests {
         |    "value" : "drei"
         |  } ],
         |  "transaction" : {
-        |    "transactionId" : -1348943872,
+        |    "transactionId" : 1348943872,
         |    "transactionHash" : "0000000000000000000000000000000000000000000000000000000000000000",
         |    "from" : "O=Member 1, L=London, C=GB",
         |    "to" : "O=Member 2, L=Berlin, C=DE"
