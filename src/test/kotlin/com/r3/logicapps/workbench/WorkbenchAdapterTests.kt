@@ -224,7 +224,7 @@ class WorkbenchAdapterTests {
         val expected = """{
         |  "messageName" : "ContractMessage",
         |  "blockId" : 999,
-        |  "blockhash" : "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+        |  "blockHash" : "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
         |  "requestId" : "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
         |  "additionalInformation" : { },
         |  "contractLedgerIdentifier" : "f1a27656-3b1a-4469-8e37-04d9e2764bf6",

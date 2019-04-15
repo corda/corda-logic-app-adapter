@@ -78,7 +78,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             put("messageName", "ContractMessage")
             // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
             put("blockId", FAKE_BLOCK_ID)
-            put("blockhash", flowOutput.transactionHash.toString())
+            put("blockHash", flowOutput.transactionHash.toString())
             put("requestId", flowOutput.requestId)
             putObject("additionalInformation")
             put("contractLedgerIdentifier", flowOutput.linearId.toString())
