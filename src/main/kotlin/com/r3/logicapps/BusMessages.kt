@@ -114,6 +114,20 @@ sealed class BusResponse : Correlatable {
             override val ingressType: KClass<*>
         ) : Confirmation()
     }
+
+    /**
+     * "EventMessage"
+     */
+    data class InvocationState(
+        override val requestId: String,
+        override val linearId: UniqueIdentifier,
+        override val parameters: Map<String, String>,
+        val caller: CordaX500Name,
+        val flowClass: KClass<*>,
+        val fromName: CordaX500Name,
+        val toName: CordaX500Name,
+        val transactionHash: SecureHash
+    ) : BusResponse(), Identifiable, Parameterised
 }
 
 /**

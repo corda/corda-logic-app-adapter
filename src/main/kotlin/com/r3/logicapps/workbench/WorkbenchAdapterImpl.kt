@@ -16,6 +16,7 @@ import com.r3.logicapps.BusResponse.Confirmation.Committed
 import com.r3.logicapps.BusResponse.Confirmation.Submitted
 import com.r3.logicapps.BusResponse.FlowError
 import com.r3.logicapps.BusResponse.FlowOutput
+import com.r3.logicapps.BusResponse.InvocationState
 import com.r3.logicapps.BusResponse.StateOutput
 import com.r3.logicapps.servicebus.ServicebusMessage
 import com.r3.logicapps.workbench.WorkbenchSchema.FlowInvocationRequestSchema
@@ -32,6 +33,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
     private const val FAKE_TRANSACTION_ID = 999
     private const val FAKE_CONTRACT_ID = 1
     private const val FAKE_CONNECTION_ID = 1
+    private const val FAKE_TRANSACTION_SEQUENCE = 1
 
     @Throws(IllegalArgumentException::class)
     override fun transformIngress(message: ServicebusMessage): BusRequest =
@@ -55,10 +57,11 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
 
     @Throws(IllegalArgumentException::class)
     override fun transformEgress(message: BusResponse): ServicebusMessage = when (message) {
-        is FlowOutput  -> transformFlowOutputResponse(message)
-        is StateOutput -> transformStateOutputMessage(message)
-        is FlowError   -> transformFlowErrorResponse(message)
-        is Confirmation -> transformConfirmationResponse(message)
+        is FlowOutput      -> transformFlowOutputResponse(message)
+        is StateOutput     -> transformStateOutputResponse(message)
+        is FlowError       -> transformFlowErrorResponse(message)
+        is Confirmation    -> transformConfirmationResponse(message)
+        is InvocationState -> transformInvocationStateResponse(message)
     }
 
     private fun WorkbenchSchema.validate(message: String) {
@@ -109,7 +112,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
         return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
     }
 
-    private fun transformStateOutputMessage(flowOutput: StateOutput): ServicebusMessage {
+    private fun transformStateOutputResponse(flowOutput: StateOutput): ServicebusMessage {
         val node = JsonNodeFactory.instance.objectNode().apply {
             put("messageName", "ContractMessage")
             put("requestId", flowOutput.requestId)
@@ -160,6 +163,45 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
 
             put("messageSchemaVersion", "1.0.0")
             put("status", confirmation.toWorkbenchName())
+        }
+        return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
+    }
+
+    private fun transformInvocationStateResponse(flowOutput: InvocationState): ServicebusMessage {
+        val node = JsonNodeFactory.instance.objectNode().apply {
+            put("eventName", "ContractFunctionInvocation")
+            put("requestId", flowOutput.requestId)
+
+            putObject("caller").apply {
+                put("type", "User")
+                put("id", flowOutput.caller.toString().hashCode())
+                put("ledgerIdentifier", flowOutput.caller.toString())
+            }
+
+            putObject("additionalInformation")
+
+            flowOutput.flowClass.qualifiedName?.hashCode()?.let { put("contractId", it) }
+
+            putArray("contractProperties").apply {
+                flowOutput.parameters.forEach { k, v ->
+                    addObject().apply {
+                        put("name", k)
+                        put("value", v)
+                    }
+                }
+            }
+
+            putObject("transaction").apply {
+                put("transactionId", flowOutput.transactionHash.toString().hashCode())
+                put("transactionHash", flowOutput.transactionHash.toString())
+                put("from", flowOutput.fromName.toString())
+                put("to", flowOutput.toName.toString())
+            }
+
+            put("inTransactionSequenceNumber", FAKE_TRANSACTION_SEQUENCE)
+            put("connectionId", FAKE_CONNECTION_ID)
+            put("messageSchemaVersion", "1.0.0")
+            put("messageName", "EventMessage")
         }
         return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
     }
