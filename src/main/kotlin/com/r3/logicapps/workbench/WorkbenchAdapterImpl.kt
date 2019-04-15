@@ -70,7 +70,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             put("messageName", "ContractMessage")
             // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
             put("blockId", FAKE_BLOCK_ID)
-            flowOutput.transactionHash?.let { put("blockhash", it.toString()) }
+            put("blockhash", flowOutput.transactionHash.toString())
             put("requestId", flowOutput.requestId)
             putObject("additionalInformation")
             put("contractLedgerIdentifier", flowOutput.linearId.toString())
@@ -84,7 +84,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             }
             putArray("modifyingTransactions").apply {
                 addObject().apply {
-                    flowOutput.fromName?.let { put("from", it.toString()) }
+                    put("from", flowOutput.fromName.toString())
                     putArray("to").apply {
                         flowOutput.toNames.forEach {
                             add(it.toString())
@@ -92,7 +92,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
                     }
                     // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
                     put("transactionId", FAKE_TRANSACTION_ID)
-                    flowOutput.transactionHash?.let { put("transactionHash", it.toString()) }
+                    put("transactionHash", flowOutput.transactionHash.toString())
                 }
             }
             // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
