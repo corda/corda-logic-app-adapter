@@ -326,7 +326,6 @@ class WorkbenchAdapterTests {
         assertThat(actual.sanitized, equalTo(expected))
     }
 
-    private val ServicebusMessage.sanitized: String get() = this.replace("\r", "")
     @Test
     fun `a valid submitted message is generated `() {
         val expected = """{
