@@ -13,6 +13,7 @@ import com.r3.logicapps.BusRequest.QueryFlowState
 import com.r3.logicapps.BusResponse
 import com.r3.logicapps.BusResponse.FlowError
 import com.r3.logicapps.BusResponse.FlowOutput
+import com.r3.logicapps.BusResponse.StateOutput
 import com.r3.logicapps.servicebus.ServicebusMessage
 import com.r3.logicapps.workbench.WorkbenchSchema.FlowInvocationRequestSchema
 import com.r3.logicapps.workbench.WorkbenchSchema.FlowStateRequestSchema
@@ -51,8 +52,9 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
 
     @Throws(IllegalArgumentException::class)
     override fun transformEgress(message: BusResponse): ServicebusMessage = when (message) {
-        is FlowOutput -> transformFlowOutputResponse(message)
-        is FlowError  -> transformFlowErrorResponse(message)
+        is FlowOutput  -> transformFlowOutputResponse(message)
+        is StateOutput -> transformStateOutputMessage(message)
+        is FlowError   -> transformFlowErrorResponse(message)
     }
 
     private fun WorkbenchSchema.validate(message: String) {
@@ -68,7 +70,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             put("messageName", "ContractMessage")
             // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
             put("blockId", FAKE_BLOCK_ID)
-            flowOutput.transactionHash?.let { put("blockhash", it.toString()) }
+            put("blockhash", flowOutput.transactionHash.toString())
             put("requestId", flowOutput.requestId)
             putObject("additionalInformation")
             put("contractLedgerIdentifier", flowOutput.linearId.toString())
@@ -82,7 +84,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             }
             putArray("modifyingTransactions").apply {
                 addObject().apply {
-                    flowOutput.fromName?.let { put("from", it.toString()) }
+                    put("from", flowOutput.fromName.toString())
                     putArray("to").apply {
                         flowOutput.toNames.forEach {
                             add(it.toString())
@@ -90,7 +92,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
                     }
                     // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
                     put("transactionId", FAKE_TRANSACTION_ID)
-                    flowOutput.transactionHash?.let { put("transactionHash", it.toString()) }
+                    put("transactionHash", flowOutput.transactionHash.toString())
                 }
             }
             // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
@@ -101,6 +103,27 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             put("isNewContract", flowOutput.isNewContract)
         }
         return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
+    }
+
+    private fun transformStateOutputMessage(flowOutput: StateOutput): ServicebusMessage {
+        val node = JsonNodeFactory.instance.objectNode().apply {
+            put("messageName", "ContractMessage")
+            put("requestId", flowOutput.requestId)
+            putObject("additionalInformation")
+            put("contractLedgerIdentifier", flowOutput.linearId.toString())
+            putArray("contractProperties").apply {
+                flowOutput.fields.forEach { k, v ->
+                    addObject().apply {
+                        put("name", k)
+                        put("value", v)
+                    }
+                }
+            }
+            put("messageSchemaVersion", "1.0.0")
+            put("isNewContract", flowOutput.isNewContract)
+        }
+        return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
+
     }
 
     private fun transformFlowErrorResponse(flowError: FlowError): ServicebusMessage {

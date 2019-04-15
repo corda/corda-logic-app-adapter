@@ -10,12 +10,12 @@ import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
 import com.r3.logicapps.BusRequest.QueryFlowState
 import com.r3.logicapps.BusResponse.FlowError
 import com.r3.logicapps.BusResponse.FlowOutput
+import com.r3.logicapps.BusResponse.StateOutput
 import com.r3.logicapps.servicebus.ServicebusMessage
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.contracts.UniqueIdentifier.Companion
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.CordaX500Name
-import org.json.JSONObject
 import org.junit.Test
 
 class WorkbenchAdapterTests {
@@ -266,27 +266,6 @@ class WorkbenchAdapterTests {
     }
 
     @Test
-    fun `a reasonable service bus message for a flow output conforms to the schema`() {
-        // TODO moritzplatt 2019-04-11 -- should this be done in the adapter, too?
-
-        val json = WorkbenchAdapterImpl.transformEgress(
-            FlowOutput(
-                InvokeFlowWithoutInputStates::class,
-                "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
-                UniqueIdentifier.fromString("f1a27656-3b1a-4469-8e37-04d9e2764bf6"),
-                mapOf(
-                    "state" to "Created",
-                    "owner" to "O=Alice Ltd., L=Shanghai, C=CN"
-                ),
-                false
-            )
-        )
-
-        // no assertion needed, validator will throw if invalid
-        WorkbenchSchema.FlowInvocationResponseSchema.underlying.validate(JSONObject(json))
-    }
-
-    @Test
     fun `generates a valid service bus message for error output`() {
         val expected = """{
         |  "messageName" : "CreateContractRequest",
@@ -313,23 +292,38 @@ class WorkbenchAdapterTests {
     }
 
     @Test
-    fun `a reasonable service bus message for a flow error conforms to the schema`() {
-        // TODO moritzplatt 2019-04-11 -- should this be done in the adapter, too?
+    fun `generates a valid service bus message for state queries`() {
+        val expected = """{
+        |  "messageName" : "ContractMessage",
+        |  "requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
+        |  "additionalInformation" : { },
+        |  "contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
+        |  "contractProperties" : [ {
+        |    "name" : "lorem",
+        |    "value" : "ipsum"
+        |  }, {
+        |    "name" : "dolor",
+        |    "value" : "sit amet"
+        |  } ],
+        |  "messageSchemaVersion" : "1.0.0",
+        |  "isNewContract" : false
+        |}""".trimMargin()
 
-        val json = WorkbenchAdapterImpl.transformEgress(
-            FlowError(
-                ingressType = InvokeFlowWithoutInputStates::class,
+        val actual = WorkbenchAdapterImpl.transformEgress(
+            StateOutput(
                 requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
                 linearId = Companion.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21"),
-                exception = IllegalStateException("Boooom!")
+                fields = mapOf(
+                    "lorem" to "ipsum",
+                    "dolor" to "sit amet"
+                ),
+                isNewContract = false
             )
         )
 
-        // no assertion needed, validator will throw if invalid
-        WorkbenchSchema.FlowErrorResponseSchema.underlying.validate(JSONObject(json))
+        assertThat(actual.sanitized, equalTo(expected))
     }
 
-    private val ServicebusMessage.sanitized: String
-        get() = this.replace("\r", "")
+    private val ServicebusMessage.sanitized: String get() = this.replace("\r", "")
 
 }
