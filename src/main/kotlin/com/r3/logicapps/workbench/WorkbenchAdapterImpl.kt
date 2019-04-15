@@ -11,6 +11,9 @@ import com.r3.logicapps.BusRequest.InvokeFlowWithInputStates
 import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
 import com.r3.logicapps.BusRequest.QueryFlowState
 import com.r3.logicapps.BusResponse
+import com.r3.logicapps.BusResponse.Confirmation
+import com.r3.logicapps.BusResponse.Confirmation.Committed
+import com.r3.logicapps.BusResponse.Confirmation.Submitted
 import com.r3.logicapps.BusResponse.FlowError
 import com.r3.logicapps.BusResponse.FlowOutput
 import com.r3.logicapps.servicebus.ServicebusMessage
@@ -51,8 +54,9 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
 
     @Throws(IllegalArgumentException::class)
     override fun transformEgress(message: BusResponse): ServicebusMessage = when (message) {
-        is FlowOutput -> transformFlowOutputResponse(message)
-        is FlowError  -> transformFlowErrorResponse(message)
+        is FlowOutput   -> transformFlowOutputResponse(message)
+        is FlowError    -> transformFlowErrorResponse(message)
+        is Confirmation -> transformConfirmationResponse(message)
     }
 
     private fun WorkbenchSchema.validate(message: String) {
@@ -120,6 +124,23 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
         return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
     }
 
+    private fun transformConfirmationResponse(confirmation: Confirmation): ServicebusMessage {
+        val node = JsonNodeFactory.instance.objectNode().apply {
+            put("messageName", confirmation.ingressType.toWorkbenchName())
+            putObject("additionalInformation")
+            put("requestId", confirmation.requestId)
+
+            // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
+            put("contractId", FAKE_CONTRACT_ID)
+            // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
+            put("connectionId", FAKE_CONNECTION_ID)
+
+            put("messageSchemaVersion", "1.0.0")
+            put("status", confirmation.toWorkbenchName())
+        }
+        return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
+    }
+
     private fun transformFlowInvocationRequest(json: JsonNode): InvokeFlowWithoutInputStates {
         val requestId = json.extractRequestId("requestId")
         val workflowName = json.extractWorkflowName("workflowName")
@@ -172,4 +193,9 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
         QueryFlowState::class               -> "ReadContractRequest"
         else                                -> throw IllegalArgumentException("Unknown bus request type ${this.simpleName}")
     }
+}
+
+private fun Confirmation.toWorkbenchName(): String = when (this) {
+    is Submitted -> "Submitted"
+    is Committed -> "Committed"
 }
