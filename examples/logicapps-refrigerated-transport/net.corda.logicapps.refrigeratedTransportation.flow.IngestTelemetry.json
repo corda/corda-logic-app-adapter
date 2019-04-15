@@ -2,7 +2,7 @@
   "messageName": "CreateContractActionRequest",
   "requestId": "eca2ce04-6bae-4383-b144-71c3208b6082",
   "contractLedgerIdentifier": "{{ The linear ID of the input state. }}",
-  "workflowName": "net.corda.logicapps.refrigeratedTransportation.flow.IngestTelemetry",
+  "workflowFunctionName": "net.corda.logicapps.refrigeratedTransportation.flow.IngestTelemetry",
   "parameters": [
     {
       "name": "humidity",

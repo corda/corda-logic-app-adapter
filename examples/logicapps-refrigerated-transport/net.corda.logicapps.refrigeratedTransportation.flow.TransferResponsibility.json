@@ -2,7 +2,7 @@
   "messageName": "CreateContractActionRequest",
   "requestId": "3dc1e227-d0da-4756-bf24-553256ef38db",
   "contractLedgerIdentifier": "{{ The linear ID of the input state. }}",
-  "workflowName": "net.corda.logicapps.refrigeratedTransportation.flow.TransferResponsibility",
+  "workflowFunctionName": "net.corda.logicapps.refrigeratedTransportation.flow.TransferResponsibility",
   "parameters": [
     {
       "name": "newCounterparty",
