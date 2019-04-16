@@ -15,6 +15,7 @@ buildscript {
         slf4j_version = '1.7.25'
         log4j_version = '2.11.2'
         azure_servicebus_version = '1.2.8'
+        class_graph_version = '4.6.12'
     }
 
     repositories {
@@ -89,6 +90,8 @@ dependencies {
     compile("com.microsoft.azure:azure-servicebus:$azure_servicebus_version") {
 //        exclude group: 'org.apache.qpid'
     }
+    
+    compile "io.github.classgraph:classgraph:$class_graph_version"
     
     testCompile "junit:junit:$junit_version"
     testCompile "com.natpryce:hamkrest:1.7.0.0"

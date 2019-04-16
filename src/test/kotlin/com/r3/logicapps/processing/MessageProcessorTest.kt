@@ -113,6 +113,49 @@ class MessageProcessorTest : TestBase() {
     }
 
     @Test
+    fun `can invoke simple flow with arguments and an abbreviated flow name`() {
+        val requestId = "1234"
+        val linearId = UniqueIdentifier()
+        val params = mapOf("a" to "a", "b" to "1", "c" to "2", "d" to "true")
+
+        val messageProcessor = MessageProcessorImpl(
+            startFlowDelegate = {
+                FlowInvocationResult(
+                    linearId = linearId,
+                    hash = Companion.zeroHash,
+                    fromName = CordaX500Name.parse("O=Member 1, L=London, C=GB"),
+                    toNames = emptyList()
+                )
+            },
+            retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
+        )
+
+        val (busResponse, commit, submit) = messageProcessor.invoke(
+            BusRequest.InvokeFlowWithoutInputStates(
+                requestId,
+                "SimpleFlowWithInput",
+                params
+            )
+        )
+
+        val response = busResponse as? BusResponse.FlowOutput
+            ?: error("Response of type ${busResponse::class.simpleName}, expected FlowOutput")
+
+        val cr = commit as? BusResponse.Confirmation.Committed
+            ?: error("Response of type ${commit::class.simpleName}, expected Committed")
+        val sr = submit as? BusResponse.Confirmation.Submitted
+            ?: error("Response of type ${submit::class.simpleName}, expected Submitted")
+
+        assertThat(cr.requestId, equalTo(requestId))
+        assertThat(sr.requestId, equalTo(requestId))
+
+        assertEquals(requestId, response.requestId)
+        assertEquals(0, response.fields.size)
+        assertEquals(linearId, response.linearId)
+        assertEquals(true, response.isNewContract)
+    }
+
+    @Test
     fun `can invoke simple flow with specific arguments`() {
         val requestId = "1234"
         val linearId = UniqueIdentifier()

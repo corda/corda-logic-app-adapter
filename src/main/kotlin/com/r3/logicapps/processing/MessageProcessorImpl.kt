@@ -5,8 +5,10 @@ import com.r3.logicapps.BusRequest.QueryFlowState
 import com.r3.logicapps.BusResponse
 import com.r3.logicapps.BusResponse.InvocationState
 import com.r3.logicapps.Invocable
+import io.github.classgraph.ClassGraph
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.FlowLogic
+import net.corda.core.internal.pooledScan
 import net.corda.core.node.services.IdentityService
 
 open class MessageProcessorImpl(
@@ -98,8 +100,10 @@ open class MessageProcessorImpl(
     }
 
     private fun deriveFlowLogic(flowName: String, parameters: Map<String, String>): FlowLogic<*> {
+        val flowClasses = flowClassList
+        val fullFlowName = flowClasses.firstOrNull { it.endsWith(".$flowName") }
         val clazz = try {
-            Class.forName(flowName)
+            Class.forName(fullFlowName ?: flowName)
         } catch (_: ClassNotFoundException) {
             throw ClassNotFoundException("Unable to find '$flowName' on the class path")
         }
@@ -112,5 +116,13 @@ open class MessageProcessorImpl(
         val arguments = statement.arguments ?: error("Unable to derive arguments for $flowName")
         return ctor.newInstance(*arguments) as? FlowLogic<*>
             ?: error("Unable to instantiate $flowName with provided arguments")
+    }
+
+    companion object {
+        private val flowClassList: List<String> by lazy {
+            val scanResult = ClassGraph().enableAllInfo().pooledScan()
+            val flowClasses = scanResult.getSubclasses(FlowLogic::class.java.name).map { it.name }
+            flowClasses
+        }
     }
 }
