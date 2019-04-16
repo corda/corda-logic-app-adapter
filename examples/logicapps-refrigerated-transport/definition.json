@@ -302,7 +302,7 @@
             {
               "AllowedRoles": [],
               "AllowedInstanceRoles": [
-                "InitiatingCounterparty"
+                "initiatingCounterparty"
               ],
               "Description": "...",
               "Function": "TransferResponsibility",
@@ -314,7 +314,7 @@
             {
               "AllowedRoles": [],
               "AllowedInstanceRoles": [
-                "Device"
+                "device"
               ],
               "Description": "...",
               "Function": "IngestTelemetry",
@@ -337,7 +337,7 @@
             {
               "AllowedRoles": [],
               "AllowedInstanceRoles": [
-                "Counterparty"
+                "counterparty"
               ],
               "Description": "...",
               "Function": "TransferResponsibility",
@@ -349,7 +349,7 @@
             {
               "AllowedRoles": [],
               "AllowedInstanceRoles": [
-                "Device"
+                "device"
               ],
               "Description": "...",
               "Function": "IngestTelemetry",
@@ -362,7 +362,7 @@
             {
               "AllowedRoles": [],
               "AllowedInstanceRoles": [
-                "Owner"
+                "owner"
               ],
               "Description": "...",
               "Function": "Complete",
