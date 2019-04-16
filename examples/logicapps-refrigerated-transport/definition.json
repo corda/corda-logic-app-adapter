@@ -26,7 +26,7 @@
   ],
   "Workflows": [
     {
-      "Name": "net.corda.logicapps.refrigeratedTransportation.flow.Constructor",
+      "Name": "RefrigeratedTransportation",
       "DisplayName": "Refrigerated Transportation",
       "Description": "Main workflow to track end-to-end transportation of perishable goods.",
       "Initiators": [
@@ -238,7 +238,7 @@
       },
       "Functions": [
         {
-          "Name": "net.corda.logicapps.refrigeratedTransportation.flow.IngestTelemetry",
+          "Name": "IngestTelemetry",
           "DisplayName": "Ingest Telemetry",
           "Description": "...",
           "Parameters": [
@@ -269,7 +269,7 @@
           ]
         },
         {
-          "Name": "net.corda.logicapps.refrigeratedTransportation.flow.TransferResponsibility",
+          "Name": "TransferResponsibility",
           "DisplayName": "Transfer Responsibility",
           "Description": "...",
           "Parameters": [
@@ -284,7 +284,7 @@
           ]
         },
         {
-          "Name": "net.corda.logicapps.refrigeratedTransportation.flow.CompleteFlow",
+          "Name": "Complete",
           "DisplayName": "Complete",
           "Description": "...",
           "Parameters": []
@@ -305,7 +305,7 @@
                 "InitiatingCounterparty"
               ],
               "Description": "...",
-              "Function": "net.corda.logicapps.refrigeratedTransportation.flow.TransferResponsibility",
+              "Function": "TransferResponsibility",
               "NextStates": [
                 "InTransit"
               ],
@@ -317,7 +317,7 @@
                 "Device"
               ],
               "Description": "...",
-              "Function": "net.corda.logicapps.refrigeratedTransportation.flow.IngestTelemetry",
+              "Function": "IngestTelemetry",
               "NextStates": [
                 "OutOfCompliance",
                 "Created"
@@ -340,7 +340,7 @@
                 "Counterparty"
               ],
               "Description": "...",
-              "Function": "net.corda.logicapps.refrigeratedTransportation.flow.TransferResponsibility",
+              "Function": "TransferResponsibility",
               "NextStates": [
                 "InTransit"
               ],
@@ -352,7 +352,7 @@
                 "Device"
               ],
               "Description": "...",
-              "Function": "net.corda.logicapps.refrigeratedTransportation.flow.IngestTelemetry",
+              "Function": "IngestTelemetry",
               "NextStates": [
                 "OutOfCompliance",
                 "InTransit"
@@ -365,7 +365,7 @@
                 "Owner"
               ],
               "Description": "...",
-              "Function": "net.corda.logicapps.refrigeratedTransportation.flow.CompleteFlow",
+              "Function": "Complete",
               "NextStates": [
                 "Completed"
               ],
@@ -374,7 +374,7 @@
           ]
         },
         {
-          "Name": "net.corda.logicapps.refrigeratedTransportation.flow.CompleteFlow",
+          "Name": "Completed",
           "DisplayName": "Completed",
           "Description": "...",
           "PercentComplete": 100,
