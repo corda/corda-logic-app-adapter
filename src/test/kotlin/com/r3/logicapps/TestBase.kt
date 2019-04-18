@@ -21,11 +21,6 @@ abstract class TestBase {
                     "connectionString" to SERVICE_BUS,
                     "inboundQueue" to TO_CORDA_QUEUE,
                     "outboundQueue" to FROM_CORDA_QUEUE
-                )),
-                TestCordapp.findCordapp("net.corda.logicapps.refrigeratedTransportation").withConfig(mapOf(
-                    "connectionString" to SERVICE_BUS,
-                    "inboundQueue" to TO_CORDA_QUEUE,
-                    "outboundQueue" to FROM_CORDA_QUEUE
                 ))
             ),
             isDebug = true,
