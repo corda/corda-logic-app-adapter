@@ -36,7 +36,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
     private const val FAKE_CONNECTION_ID = 1
     private const val FAKE_TRANSACTION_SEQUENCE = 1
 
-    @Throws(IllegalArgumentException::class)
+    @Throws(IngressFormatException::class)
     override fun transformIngress(message: ServicebusMessage): BusRequest =
         ObjectMapper().readTree(message).let { json ->
             when (json.messageName()) {
@@ -52,11 +52,10 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
                     FlowStateRequestSchema.validate(message)
                     transformFlowStateRequest(json)
                 }
-                else                          -> throw IllegalArgumentException("Unknown message name")
+                else                          -> throw IngressFormatException("Unknown message name")
             }
         }
 
-    @Throws(IllegalArgumentException::class)
     override fun transformEgress(message: BusResponse): ServicebusMessage = when (message) {
         is FlowOutput      -> transformFlowOutputResponse(message)
         is StateOutput     -> transformStateOutputResponse(message)
@@ -69,7 +68,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
         try {
             underlying.validate(JSONObject(message))
         } catch (exception: ValidationException) {
-            throw IllegalArgumentException("Not a valid message for schema ${this::class.java}: ${exception.message}")
+            throw IngressFormatException("Schema violation '${this::class.java}': ${exception.message}", exception)
         }
     }
 
@@ -229,25 +228,25 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
     }
 
     private fun JsonNode.extractRequestId(name: String) = (get(name) as? TextNode)?.textValue()
-        ?: throw IllegalArgumentException("Invalid request ID provided")
+        ?: throw IngressFormatException("Invalid request ID provided")
 
     private fun JsonNode.extractLinearId(name: String) = (get(name) as? TextNode)?.textValue()
-        ?: throw IllegalArgumentException("Invalid linear ID provided")
+        ?: throw IngressFormatException("Invalid linear ID provided")
 
     private fun JsonNode.extractWorkflowName(name: String) = (get(name) as? TextNode)?.textValue()
-        ?: throw IllegalArgumentException("Invalid workflow name provided")
+        ?: throw IngressFormatException("Invalid workflow name provided")
 
     private fun JsonNode.extractParameters(name: String): Map<String, String> {
-        return (get(name) as? ArrayNode ?: throw IllegalArgumentException("No parameters provided")).map {
+        return (get(name) as? ArrayNode ?: throw IngressFormatException("No parameters provided")).map {
             (it as? ObjectNode)?.let { parameter ->
                 val key = (parameter.get("name") as? TextNode)?.textValue()
-                    ?: throw IllegalArgumentException("Malformed Key")
+                    ?: throw IngressFormatException("Malformed Key")
 
                 val value = (parameter.get("value") as? TextNode)?.textValue()
-                    ?: throw IllegalArgumentException("Malformed Value")
+                    ?: throw IngressFormatException("Malformed Value")
 
                 key to value
-            } ?: throw IllegalArgumentException("Malformed Parameter")
+            } ?: throw IngressFormatException("Malformed Parameter")
         }.toMap()
     }
 
@@ -257,7 +256,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
         InvokeFlowWithoutInputStates::class -> "CreateContractRequest"
         InvokeFlowWithInputStates::class    -> "CreateContractActionRequest"
         QueryFlowState::class               -> "ReadContractRequest"
-        else                                -> throw IllegalArgumentException("Unknown bus request type ${this.simpleName}")
+        else                                -> throw IllegalStateException("Unknown bus request type ${this.simpleName}")
     }
 
     private fun Confirmation.toWorkbenchName(): String = when (this) {
