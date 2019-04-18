@@ -3,6 +3,7 @@ package com.r3.logicapps.processing
 import com.r3.logicapps.BusRequest
 import com.r3.logicapps.BusRequest.QueryFlowState
 import com.r3.logicapps.BusResponse
+import com.r3.logicapps.BusResponse.Error.FlowError
 import com.r3.logicapps.BusResponse.InvocationState
 import com.r3.logicapps.Invocable
 import io.github.classgraph.ClassGraph
@@ -77,7 +78,7 @@ open class MessageProcessorImpl(
                 )
             )
         } catch (exception: Throwable) {
-            listOf(BusResponse.FlowError(ingressType, requestId, linearId, exception))
+            listOf(FlowError(ingressType, requestId, exception, linearId))
         }
     }
 
@@ -91,11 +92,11 @@ open class MessageProcessorImpl(
             )
         }
     } catch (exception: Throwable) {
-        BusResponse.FlowError(
+        FlowError(
             ingressType = QueryFlowState::class,
             requestId = requestId,
             linearId = linearId,
-            exception = exception
+            cause = exception
         )
     }
 

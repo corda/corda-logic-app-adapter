@@ -1,3 +1,6 @@
+// classes are used via reflection only and might appear as unused in IDEs
+@file:Suppress("unused")
+
 package com.r3.logicapps.processing
 
 import net.corda.core.flows.FlowLogic

@@ -3,7 +3,9 @@ package com.r3.logicapps.processing
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.r3.logicapps.BusRequest
+import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
 import com.r3.logicapps.BusResponse
+import com.r3.logicapps.BusResponse.Error.FlowError
 import com.r3.logicapps.TestBase
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.SecureHash.Companion
@@ -26,9 +28,9 @@ class MessageProcessorTest : TestBase() {
             BusRequest.InvokeFlowWithoutInputStates(requestId, "com.nowhere.SimpleFlow", emptyMap())
         )
 
-        val response = busResponse as? BusResponse.FlowError
+        val response = busResponse as? FlowError
             ?: error("Response of type ${busResponse::class.simpleName}, expected FlowError")
-        assertEquals(ClassNotFoundException::class, response.exception::class)
+        assertEquals(ClassNotFoundException::class, response.cause::class)
     }
 
     @Test
@@ -131,7 +133,7 @@ class MessageProcessorTest : TestBase() {
         )
 
         val (busResponse, commit, submit) = messageProcessor.invoke(
-            BusRequest.InvokeFlowWithoutInputStates(
+            InvokeFlowWithoutInputStates(
                 requestId,
                 "SimpleFlowWithInput",
                 params
@@ -224,10 +226,10 @@ class MessageProcessorTest : TestBase() {
         )
 
         val (busResponse) = busResponses
-        val r = busResponse as? BusResponse.FlowError
+        val r = busResponse as? FlowError
             ?: error("Response of type ${busResponses::class.simpleName}, expected FlowError")
 
-        assertEquals(IllegalStateException::class, r.exception::class)
+        assertEquals(IllegalStateException::class, r.cause::class)
     }
 
     @Test

@@ -10,7 +10,8 @@ import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
 import com.r3.logicapps.BusRequest.QueryFlowState
 import com.r3.logicapps.BusResponse.Confirmation.Committed
 import com.r3.logicapps.BusResponse.Confirmation.Submitted
-import com.r3.logicapps.BusResponse.FlowError
+import com.r3.logicapps.BusResponse.Error.FlowError
+import com.r3.logicapps.BusResponse.Error.GenericError
 import com.r3.logicapps.BusResponse.FlowOutput
 import com.r3.logicapps.BusResponse.InvocationState
 import com.r3.logicapps.BusResponse.StateOutput
@@ -46,10 +47,10 @@ class WorkbenchAdapterTests {
         assertThat(
             { WorkbenchAdapterImpl.transformIngress(json) },
             throws(
-                isA<IllegalArgumentException>(
+                isA<IngressFormatException>(
                     has(
                         Exception::message,
-                        equalTo("Not a valid message for schema class com.r3.logicapps.workbench.WorkbenchSchema\$FlowInvocationRequestSchema: #: 4 schema violations found")
+                        equalTo("Schema violation 'class com.r3.logicapps.workbench.WorkbenchSchema\$FlowInvocationRequestSchema': #: 4 schema violations found")
                     )
                 )
             )
@@ -140,10 +141,10 @@ class WorkbenchAdapterTests {
         assertThat(
             { WorkbenchAdapterImpl.transformIngress(json) },
             throws(
-                isA<IllegalArgumentException>(
+                isA<IngressFormatException>(
                     has(
                         Exception::message,
-                        equalTo("Not a valid message for schema class com.r3.logicapps.workbench.WorkbenchSchema\$FlowUpdateRequestSchema: #: 5 schema violations found")
+                        equalTo("Schema violation 'class com.r3.logicapps.workbench.WorkbenchSchema\$FlowUpdateRequestSchema': #: 5 schema violations found")
                     )
                 )
             )
@@ -189,10 +190,10 @@ class WorkbenchAdapterTests {
         assertThat(
             { WorkbenchAdapterImpl.transformIngress(json) },
             throws(
-                isA<IllegalArgumentException>(
+                isA<IngressFormatException>(
                     has(
                         Exception::message,
-                        equalTo("Not a valid message for schema class com.r3.logicapps.workbench.WorkbenchSchema\$FlowStateRequestSchema: #: 3 schema violations found")
+                        equalTo("Schema violation 'class com.r3.logicapps.workbench.WorkbenchSchema\$FlowStateRequestSchema': #: 3 schema violations found")
                     )
                 )
             )
@@ -270,15 +271,15 @@ class WorkbenchAdapterTests {
     }
 
     @Test
-    fun `generates a valid service bus message for error output`() {
+    fun `generates a valid service bus message for flow error output`() {
         val expected = """{
         |  "messageName" : "CreateContractRequest",
+        |  "contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
         |  "requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
         |  "additionalInformation" : {
-        |    "errorCode" : 561675734,
+        |    "errorCode" : 543349448,
         |    "errorMessage" : "Boooom!"
         |  },
-        |  "contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
         |  "status" : "Failure",
         |  "messageSchemaVersion" : "1.0.0"
         |}""".trimMargin()
@@ -288,7 +289,29 @@ class WorkbenchAdapterTests {
                 ingressType = InvokeFlowWithoutInputStates::class,
                 requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
                 linearId = Companion.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21"),
-                exception = IllegalStateException("Boooom!")
+                cause = IllegalStateException("Boooom!")
+            )
+        )
+
+        assertThat(actual.sanitized, equalTo(expected))
+    }
+
+    @Test
+    fun `generates a valid service bus message for generic error output`() {
+        val expected = """{
+        |  "requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
+        |  "additionalInformation" : {
+        |    "errorCode" : 112405697,
+        |    "errorMessage" : "Boooom!"
+        |  },
+        |  "status" : "Failure",
+        |  "messageSchemaVersion" : "1.0.0"
+        |}""".trimMargin()
+
+        val actual = WorkbenchAdapterImpl.transformEgress(
+            GenericError(
+                requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
+                cause = IllegalStateException("Boooom!")
             )
         )
 

@@ -14,7 +14,9 @@ import com.r3.logicapps.BusResponse
 import com.r3.logicapps.BusResponse.Confirmation
 import com.r3.logicapps.BusResponse.Confirmation.Committed
 import com.r3.logicapps.BusResponse.Confirmation.Submitted
-import com.r3.logicapps.BusResponse.FlowError
+import com.r3.logicapps.BusResponse.Error
+import com.r3.logicapps.BusResponse.Error.FlowError
+import com.r3.logicapps.BusResponse.Error.GenericError
 import com.r3.logicapps.BusResponse.FlowOutput
 import com.r3.logicapps.BusResponse.InvocationState
 import com.r3.logicapps.BusResponse.StateOutput
@@ -57,11 +59,15 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
         }
 
     override fun transformEgress(message: BusResponse): ServicebusMessage = when (message) {
+        // success cases
         is FlowOutput      -> transformFlowOutputResponse(message)
         is StateOutput     -> transformStateOutputResponse(message)
-        is FlowError       -> transformFlowErrorResponse(message)
         is Confirmation    -> transformConfirmationResponse(message)
         is InvocationState -> transformInvocationStateResponse(message)
+
+        // error cases
+        is FlowError       -> transformFlowErrorResponse(message)
+        is GenericError    -> transformGenericErrorResponse(message)
     }
 
     private fun WorkbenchSchema.validate(message: String) {
@@ -133,21 +139,31 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
 
     }
 
-    private fun transformFlowErrorResponse(flowError: FlowError): ServicebusMessage {
+    private fun transformFlowErrorResponse(error: FlowError): ServicebusMessage {
         val node = JsonNodeFactory.instance.objectNode().apply {
-            put("messageName", flowError.ingressType.toWorkbenchName())
-            put("requestId", flowError.requestId)
-            putObject("additionalInformation").apply {
-                put("errorCode", flowError.exception.errorCode())
-                put("errorMessage", flowError.exception.message ?: "")
-            }
-            flowError.linearId?.let {
+            put("messageName", error.ingressType.toWorkbenchName())
+            error.linearId?.let {
                 put("contractLedgerIdentifier", it.toString())
             }
-            put("status", "Failure")
-            put("messageSchemaVersion", "1.0.0")
+            put(error)
         }
         return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
+    }
+
+    private fun transformGenericErrorResponse(error: GenericError): ServicebusMessage = ObjectMapper()
+        .writerWithDefaultPrettyPrinter()
+        .writeValueAsString(JsonNodeFactory.instance.objectNode().apply {
+            put(error)
+        })
+
+    private fun ObjectNode.put(error: Error) {
+        put("requestId", error.requestId)
+        putObject("additionalInformation").apply {
+            put("errorCode", error.cause.errorCode().absoluteValue)
+            put("errorMessage", error.cause.message ?: "")
+        }
+        put("status", "Failure")
+        put("messageSchemaVersion", "1.0.0")
     }
 
     private fun transformConfirmationResponse(confirmation: Confirmation): ServicebusMessage {
