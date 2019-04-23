@@ -7,3 +7,5 @@ cordapps/**
 
 .DS_Store
 .gradle/
+
+src/*/resources/**/*.actual

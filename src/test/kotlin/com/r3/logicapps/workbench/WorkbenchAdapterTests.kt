@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.throws
+import com.oneeyedmen.okeydoke.junit.ApprovalsRule
 import com.r3.logicapps.BusRequest.InvokeFlowWithInputStates
 import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
 import com.r3.logicapps.BusRequest.QueryFlowState
@@ -15,15 +16,18 @@ import com.r3.logicapps.BusResponse.Error.GenericError
 import com.r3.logicapps.BusResponse.FlowOutput
 import com.r3.logicapps.BusResponse.InvocationState
 import com.r3.logicapps.BusResponse.StateOutput
-import com.r3.logicapps.servicebus.ServicebusMessage
 import net.corda.core.contracts.UniqueIdentifier
-import net.corda.core.contracts.UniqueIdentifier.Companion
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.CordaX500Name
+import org.junit.Rule
 import org.junit.Test
 
 class WorkbenchAdapterTests {
+
+    @Rule
+    @JvmField
+    val approval: ApprovalsRule = ApprovalsRule.fileSystemRule("src/test/resources")
 
     @Test
     fun `transforming an unknown message fails`() {
@@ -222,32 +226,6 @@ class WorkbenchAdapterTests {
 
     @Test
     fun `generates a valid service bus message for a flow output`() {
-        val expected = """{
-        |  "messageName" : "ContractMessage",
-        |  "blockId" : 999,
-        |  "blockHash" : "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
-        |  "requestId" : "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
-        |  "additionalInformation" : { },
-        |  "contractLedgerIdentifier" : "f1a27656-3b1a-4469-8e37-04d9e2764bf6",
-        |  "contractProperties" : [ {
-        |    "name" : "state",
-        |    "value" : "Created"
-        |  }, {
-        |    "name" : "owner",
-        |    "value" : "O=Alice Ltd., L=Shanghai, C=CN"
-        |  } ],
-        |  "modifyingTransactions" : [ {
-        |    "from" : "O=Member 1, L=London, C=GB",
-        |    "to" : [ "O=Member 2, L=Manchester, C=GB", "O=Member 3, L=Bristol, C=GB" ],
-        |    "transactionId" : 999,
-        |    "transactionHash" : "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
-        |  } ],
-        |  "contractId" : 1,
-        |  "connectionId" : 1,
-        |  "messageSchemaVersion" : "1.0.0",
-        |  "isNewContract" : false
-        |}""".trimMargin()
-
         val actual = WorkbenchAdapterImpl.transformEgress(
             FlowOutput(
                 InvokeFlowWithoutInputStates::class,
@@ -267,47 +245,25 @@ class WorkbenchAdapterTests {
             )
         )
 
-        assertThat(actual.sanitized, equalTo(expected))
+        approval.assertApproved(actual)
     }
 
     @Test
     fun `generates a valid service bus message for flow error output`() {
-        val expected = """{
-        |  "messageName" : "CreateContractRequest",
-        |  "contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
-        |  "requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-        |  "additionalInformation" : {
-        |    "errorCode" : 543349448,
-        |    "errorMessage" : "Boooom!"
-        |  },
-        |  "status" : "Failure",
-        |  "messageSchemaVersion" : "1.0.0"
-        |}""".trimMargin()
-
         val actual = WorkbenchAdapterImpl.transformEgress(
             FlowError(
                 ingressType = InvokeFlowWithoutInputStates::class,
                 requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-                linearId = Companion.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21"),
+                linearId = UniqueIdentifier.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21"),
                 cause = IllegalStateException("Boooom!")
             )
         )
 
-        assertThat(actual.sanitized, equalTo(expected))
+        approval.assertApproved(actual)
     }
 
     @Test
     fun `generates a valid service bus message for generic error output`() {
-        val expected = """{
-        |  "requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-        |  "additionalInformation" : {
-        |    "errorCode" : 112405697,
-        |    "errorMessage" : "Boooom!"
-        |  },
-        |  "status" : "Failure",
-        |  "messageSchemaVersion" : "1.0.0"
-        |}""".trimMargin()
-
         val actual = WorkbenchAdapterImpl.transformEgress(
             GenericError(
                 requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
@@ -315,31 +271,15 @@ class WorkbenchAdapterTests {
             )
         )
 
-        assertThat(actual.sanitized, equalTo(expected))
+        approval.assertApproved(actual)
     }
 
     @Test
     fun `generates a valid service bus message for state queries`() {
-        val expected = """{
-        |  "messageName" : "ContractMessage",
-        |  "requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-        |  "additionalInformation" : { },
-        |  "contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
-        |  "contractProperties" : [ {
-        |    "name" : "lorem",
-        |    "value" : "ipsum"
-        |  }, {
-        |    "name" : "dolor",
-        |    "value" : "sit amet"
-        |  } ],
-        |  "messageSchemaVersion" : "1.0.0",
-        |  "isNewContract" : false
-        |}""".trimMargin()
-
         val actual = WorkbenchAdapterImpl.transformEgress(
             StateOutput(
                 requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-                linearId = Companion.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21"),
+                linearId = UniqueIdentifier.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21"),
                 fields = mapOf(
                     "lorem" to "ipsum",
                     "dolor" to "sit amet"
@@ -348,93 +288,41 @@ class WorkbenchAdapterTests {
             )
         )
 
-        assertThat(actual.sanitized, equalTo(expected))
+        approval.assertApproved(actual)
     }
 
     @Test
-    fun `a valid submitted message is generated `() {
-        val expected = """{
-        |  "messageName" : "CreateContractRequest",
-        |  "additionalInformation" : { },
-        |  "requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-        |  "contractId" : 1,
-        |  "connectionId" : 1,
-        |  "messageSchemaVersion" : "1.0.0",
-        |  "status" : "Submitted"
-        |}""".trimMargin()
-
+    fun `generated a valid submitted message`() {
         val actual = WorkbenchAdapterImpl.transformEgress(
             Submitted(
                 ingressType = InvokeFlowWithoutInputStates::class,
                 requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-                linearId = Companion.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21")
+                linearId = UniqueIdentifier.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21")
             )
         )
 
-        assertThat(actual.sanitized, equalTo(expected))
+        approval.assertApproved(actual)
     }
 
     @Test
-    fun `a valid committed message is generated `() {
-        val expected = """{
-        |  "messageName" : "CreateContractRequest",
-        |  "additionalInformation" : { },
-        |  "requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-        |  "contractId" : 1,
-        |  "connectionId" : 1,
-        |  "messageSchemaVersion" : "1.0.0",
-        |  "status" : "Committed"
-        |}""".trimMargin()
-
+    fun `generates a valid committed message`() {
         val actual = WorkbenchAdapterImpl.transformEgress(
             Committed(
                 ingressType = InvokeFlowWithoutInputStates::class,
                 requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-                linearId = Companion.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21")
+                linearId = UniqueIdentifier.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21")
             )
         )
 
-        assertThat(actual.sanitized, equalTo(expected))
+        approval.assertApproved(actual)
     }
 
     @Test
-    fun `a valid event message is generated`() {
-        val expected = """{
-        |  "eventName" : "ContractFunctionInvocation",
-        |  "requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-        |  "caller" : {
-        |    "type" : "User",
-        |    "id" : 388261153,
-        |    "ledgerIdentifier" : "O=Member 1, L=London, C=GB"
-        |  },
-        |  "additionalInformation" : { },
-        |  "contractId" : 1426306713,
-        |  "contractProperties" : [ {
-        |    "name" : "one",
-        |    "value" : "eins"
-        |  }, {
-        |    "name" : "two",
-        |    "value" : "zwei"
-        |  }, {
-        |    "name" : "three",
-        |    "value" : "drei"
-        |  } ],
-        |  "transaction" : {
-        |    "transactionId" : 1348943872,
-        |    "transactionHash" : "0000000000000000000000000000000000000000000000000000000000000000",
-        |    "from" : "O=Member 1, L=London, C=GB",
-        |    "to" : "O=Member 2, L=Berlin, C=DE"
-        |  },
-        |  "inTransactionSequenceNumber" : 1,
-        |  "connectionId" : 1,
-        |  "messageSchemaVersion" : "1.0.0",
-        |  "messageName" : "EventMessage"
-        |}""".trimMargin()
-
+    fun `generates a valid event message`() {
         val actual = WorkbenchAdapterImpl.transformEgress(
             InvocationState(
                 requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-                linearId = Companion.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21"),
+                linearId = UniqueIdentifier.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21"),
                 parameters = mapOf(
                     "one" to "eins",
                     "two" to "zwei",
@@ -448,14 +336,10 @@ class WorkbenchAdapterTests {
             )
         )
 
-        assertThat(actual.sanitized, equalTo(expected))
+        approval.assertApproved(actual)
     }
-
-    private val ServicebusMessage.sanitized: String
-        get() = this.replace("\r", "")
 
     private class NonSenseFlow : FlowLogic<String>() {
         override fun call(): String = TODO()
-
     }
 }

@@ -1,5 +1,6 @@
 package com.r3.logicapps.workbench
 
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
@@ -37,6 +38,11 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
     private const val FAKE_CONTRACT_ID = 1
     private const val FAKE_CONNECTION_ID = 1
     private const val FAKE_TRANSACTION_SEQUENCE = 1
+
+    private val jsonWriter = ObjectMapper().setDefaultPrettyPrinter(DefaultPrettyPrinter().apply {
+        indentArraysWith(PlatformIndependentIndenter())
+        indentObjectsWith(PlatformIndependentIndenter())
+    }).writerWithDefaultPrettyPrinter()
 
     @Throws(IngressFormatException::class)
     override fun transformIngress(message: ServicebusMessage): BusRequest =
@@ -115,7 +121,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             put("messageSchemaVersion", "1.0.0")
             put("isNewContract", flowOutput.isNewContract)
         }
-        return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
+        return node.toPrettyString()
     }
 
     private fun transformStateOutputResponse(flowOutput: StateOutput): ServicebusMessage {
@@ -135,7 +141,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             put("messageSchemaVersion", "1.0.0")
             put("isNewContract", flowOutput.isNewContract)
         }
-        return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
+        return node.toPrettyString()
 
     }
 
@@ -147,14 +153,13 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             }
             put(error)
         }
-        return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
+        return node.toPrettyString()
     }
 
-    private fun transformGenericErrorResponse(error: GenericError): ServicebusMessage = ObjectMapper()
-        .writerWithDefaultPrettyPrinter()
-        .writeValueAsString(JsonNodeFactory.instance.objectNode().apply {
+    private fun transformGenericErrorResponse(error: GenericError): ServicebusMessage =
+        JsonNodeFactory.instance.objectNode().apply {
             put(error)
-        })
+        }.toPrettyString()
 
     private fun ObjectNode.put(error: Error) {
         put("requestId", error.requestId)
@@ -180,7 +185,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             put("messageSchemaVersion", "1.0.0")
             put("status", confirmation.toWorkbenchName())
         }
-        return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
+        return node.toPrettyString()
     }
 
     private fun transformInvocationStateResponse(flowOutput: InvocationState): ServicebusMessage {
@@ -219,7 +224,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             put("messageSchemaVersion", "1.0.0")
             put("messageName", "EventMessage")
         }
-        return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node)
+        return node.toPrettyString()
     }
 
     private fun transformFlowInvocationRequest(json: JsonNode): InvokeFlowWithoutInputStates {
@@ -282,4 +287,6 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
 
     @Deprecated("This is based on a non-cryptographic hash of low entropy. Replace with an function that guarantees uniqueness.")
     private fun String.numericId(): Int = hashCode().absoluteValue
+
+    private fun ObjectNode.toPrettyString(): String = jsonWriter.writeValueAsString(this)
 }
