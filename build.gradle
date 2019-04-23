@@ -90,11 +90,12 @@ dependencies {
     compile("com.microsoft.azure:azure-servicebus:$azure_servicebus_version") {
 //        exclude group: 'org.apache.qpid'
     }
-    
+
     compile "io.github.classgraph:classgraph:$class_graph_version"
-    
+
     testCompile "junit:junit:$junit_version"
     testCompile "com.natpryce:hamkrest:1.7.0.0"
+    testCompile "com.oneeyedmen:okeydoke:1.1.0"
 
     testCompile "$corda_release_group:corda-node-driver:$corda_release_version"
 }

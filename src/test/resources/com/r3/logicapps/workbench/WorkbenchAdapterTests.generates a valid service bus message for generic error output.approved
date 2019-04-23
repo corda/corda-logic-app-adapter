@@ -1,0 +1,9 @@
+{
+	"requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
+	"additionalInformation" : {
+		"errorCode" : 112405697,
+		"errorMessage" : "Boooom!"
+	},
+	"status" : "Failure",
+	"messageSchemaVersion" : "1.0.0"
+}
