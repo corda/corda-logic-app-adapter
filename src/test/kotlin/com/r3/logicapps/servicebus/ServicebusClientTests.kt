@@ -19,11 +19,13 @@ class ServicebusClientTests : TestBase() {
     private val partyB = "PartyB".toIdentity()
 
     companion object {
-        const val SERVICE_BUS = "Endpoint=sb://tlil1337.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=9aLCrh0p8mqrG9VxTTTJe8L82fxa9dXgbymDNXqyauk="
+        const val SERVICE_BUS = "Endpoint=sb://bogdan-logicapp-bus.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=eAIZ5rfIoZQCEeZ9GGcxvjO6m20hCKs9wbzAykAtcSU="
         const val FROM_CORDA_QUEUE = "e2e-from-corda"
         const val TO_CORDA_QUEUE = "e2e-to-corda"
     }
 
+
+    // TODO: this test seems broken as the last message is not consumed before the test finishes
     @Test(timeout = 10000)
     fun `test send-receive`() {
         val threadA = thread {
@@ -52,7 +54,7 @@ class ServicebusClientTests : TestBase() {
         threadB.join()
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = 120000)
     fun `node consumes and replies`() = withDriver {
         val message = "{\n" +
                 "          \"messageName\": \"CreateContractRequest\",\n" +
@@ -107,7 +109,7 @@ class ServicebusClientTests : TestBase() {
                 "  \"messageName\" : \"CreateContractRequest\",\n" +
                 "  \"requestId\" : \"81a87eb0-b5aa-4d53-a39f-a6ed0742d90d\",\n" +
                 "  \"additionalInformation\" : {\n" +
-                "    \"errorCode\" : -1426288842,\n" +
+                "    \"errorCode\" : 1426288842,\n" +
                 "    \"errorMessage\" : \"Unable to find 'net.corda.workbench.refrigeratedTransportation.flow.CreateFlow' on the class path\"\n" +
                 "  },\n" +
                 "  \"status\" : \"Failure\",\n" +
@@ -118,7 +120,7 @@ class ServicebusClientTests : TestBase() {
         client.start()
         client.registerReceivedMessageHandler(object : IMessageHandler {
             override fun onMessageAsync(message: IMessage?): CompletableFuture<Void> {
-                println(String(message!!.body, UTF_8))
+                println("Received from Corda: ${String(message!!.body, UTF_8)}")
                 if (expected == String(message!!.body, UTF_8))
                     latch.countDown()
                 return CompletableFuture.completedFuture(null)
@@ -143,6 +145,7 @@ class ServicebusClientTests : TestBase() {
                 println("Client $id sending message with count ${count.get()}")
                 client.send(String(message!!.body, UTF_8))
             }
+            client.acknowledge(message!!.lockToken)
             return CompletableFuture.completedFuture(null)
         }
 

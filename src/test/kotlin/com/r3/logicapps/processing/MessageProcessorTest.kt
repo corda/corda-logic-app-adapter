@@ -7,13 +7,18 @@ import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
 import com.r3.logicapps.BusResponse
 import com.r3.logicapps.BusResponse.Error.FlowError
 import com.r3.logicapps.TestBase
+import com.r3.logicapps.stubs.ServiceBusClientStub
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.SecureHash.Companion
 import net.corda.core.identity.CordaX500Name
 import org.junit.Test
+import java.util.UUID
 import kotlin.test.assertEquals
 
 class MessageProcessorTest : TestBase() {
+
+    private val busClient = ServiceBusClientStub()
+    private val mockUUID = UUID.randomUUID()
 
     @Test
     fun `fails if referencing non-existent class`() {
@@ -21,11 +26,13 @@ class MessageProcessorTest : TestBase() {
         val linearId = UniqueIdentifier()
 
         val messageProcessor = MessageProcessorImpl(
-            startFlowDelegate = { FlowInvocationResult(linearId = linearId, hash = null) },
+            startFlowDelegate = { _, _, _ -> FlowInvocationResult(linearId = linearId, hash = null) },
             retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
         )
         val (busResponse) = messageProcessor.invoke(
-            BusRequest.InvokeFlowWithoutInputStates(requestId, "com.nowhere.SimpleFlow", emptyMap())
+            BusRequest.InvokeFlowWithoutInputStates(requestId, "com.nowhere.SimpleFlow", emptyMap()),
+            busClient,
+            mockUUID
         )
 
         val response = busResponse as? FlowError
@@ -39,7 +46,7 @@ class MessageProcessorTest : TestBase() {
         val linearId = UniqueIdentifier()
 
         val messageProcessor = MessageProcessorImpl(
-            startFlowDelegate = {
+            startFlowDelegate = { _, _, _ ->
                 FlowInvocationResult(
                     linearId = linearId,
                     hash = Companion.zeroHash,
@@ -51,7 +58,9 @@ class MessageProcessorTest : TestBase() {
         )
 
         val (busResponse, commit, submit) = messageProcessor.invoke(
-            BusRequest.InvokeFlowWithoutInputStates(requestId, "com.r3.logicapps.processing.SimpleFlow", emptyMap())
+            BusRequest.InvokeFlowWithoutInputStates(requestId, "com.r3.logicapps.processing.SimpleFlow", emptyMap()),
+            busClient,
+            mockUUID
         )
 
         val response = busResponse as? BusResponse.FlowOutput
@@ -78,7 +87,7 @@ class MessageProcessorTest : TestBase() {
         val params = mapOf("a" to "", "b" to "", "c" to "", "d" to "")
 
         val messageProcessor = MessageProcessorImpl(
-            startFlowDelegate = {
+            startFlowDelegate = { _, _, _ ->
                 FlowInvocationResult(
                     linearId = linearId,
                     hash = Companion.zeroHash,
@@ -94,7 +103,9 @@ class MessageProcessorTest : TestBase() {
                 requestId,
                 "com.r3.logicapps.processing.SimpleFlowWithInput",
                 params
-            )
+            ),
+            busClient,
+            mockUUID
         )
 
         val response = busResponse as? BusResponse.FlowOutput
@@ -121,7 +132,7 @@ class MessageProcessorTest : TestBase() {
         val params = mapOf("a" to "a", "b" to "1", "c" to "2", "d" to "true")
 
         val messageProcessor = MessageProcessorImpl(
-            startFlowDelegate = {
+            startFlowDelegate = { _, _, _ ->
                 FlowInvocationResult(
                     linearId = linearId,
                     hash = Companion.zeroHash,
@@ -137,7 +148,9 @@ class MessageProcessorTest : TestBase() {
                 requestId,
                 "SimpleFlowWithInput",
                 params
-            )
+            ),
+            busClient,
+            mockUUID
         )
 
         val response = busResponse as? BusResponse.FlowOutput
@@ -164,7 +177,7 @@ class MessageProcessorTest : TestBase() {
         val params = mapOf("a" to "hello", "b" to "123", "c" to "1.23", "d" to "true")
 
         val messageProcessor = MessageProcessorImpl(
-            startFlowDelegate = {
+            startFlowDelegate = { _, _, _ ->
                 FlowInvocationResult(
                     linearId = linearId,
                     hash = Companion.zeroHash,
@@ -180,7 +193,9 @@ class MessageProcessorTest : TestBase() {
                 requestId,
                 "com.r3.logicapps.processing.SimpleFlowWithInput",
                 params
-            )
+            ),
+            busClient,
+            mockUUID
         )
 
         val cr = commit as? BusResponse.Confirmation.Committed
@@ -206,7 +221,7 @@ class MessageProcessorTest : TestBase() {
         val params = mapOf("a" to "hello", "b" to "a123", "c" to "1.23", "d" to "true")
 
         val messageProcessor = MessageProcessorImpl(
-            startFlowDelegate = {
+            startFlowDelegate = { _, _ , _ ->
                 FlowInvocationResult(
                     linearId = linearId,
                     hash = Companion.zeroHash,
@@ -222,7 +237,9 @@ class MessageProcessorTest : TestBase() {
                 requestId,
                 "com.r3.logicapps.processing.SimpleFlowWithInput",
                 params
-            )
+            ),
+            busClient,
+            mockUUID
         )
 
         val (busResponse) = busResponses
@@ -239,7 +256,7 @@ class MessageProcessorTest : TestBase() {
         val params = mapOf("a" to "hello", "b" to "123", "c" to "1.23", "d" to "true")
 
         val messageProcessor = MessageProcessorImpl(
-            startFlowDelegate = {
+            startFlowDelegate = { _, _, _ ->
                 FlowInvocationResult(
                     linearId = linearId,
                     hash = Companion.zeroHash,
@@ -258,7 +275,9 @@ class MessageProcessorTest : TestBase() {
                 requestId,
                 "com.r3.logicapps.processing.SimpleFlowWithInput",
                 params
-            )
+            ),
+            busClient,
+            mockUUID
         )
 
         val i1 = invocation1 as? BusResponse.InvocationState

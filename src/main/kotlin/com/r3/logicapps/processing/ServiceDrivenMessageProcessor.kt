@@ -16,8 +16,10 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.getOrThrow
 
 class ServiceDrivenMessageProcessor(appServiceHub: AppServiceHub) : MessageProcessorImpl(
-    startFlowDelegate = { flowLogic ->
+    startFlowDelegate = { flowLogic, serviceBusClient, messageLockTokenId ->
         val handle = appServiceHub.startFlow(flowLogic)
+        // At this point a flow handle exists which means the flow has been checkpointed. It's safe to ACK the message
+        serviceBusClient.acknowledge(messageLockTokenId)
         try {
             // TODO moritzplatt 2019-04-11 -- allow for configuring a timeout
             val transaction = handle.returnValue.getOrThrow() as? SignedTransaction

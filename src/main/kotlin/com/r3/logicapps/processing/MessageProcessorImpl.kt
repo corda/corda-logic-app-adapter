@@ -6,38 +6,45 @@ import com.r3.logicapps.BusResponse
 import com.r3.logicapps.BusResponse.Error.FlowError
 import com.r3.logicapps.BusResponse.InvocationState
 import com.r3.logicapps.Invocable
+import com.r3.logicapps.servicebus.ServicebusClient
 import io.github.classgraph.ClassGraph
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.FlowLogic
 import net.corda.core.internal.pooledScan
 import net.corda.core.node.services.IdentityService
+import java.util.UUID
 
 open class MessageProcessorImpl(
-    private val startFlowDelegate: (FlowLogic<*>) -> FlowInvocationResult,
+    private val startFlowDelegate: (FlowLogic<*>, ServicebusClient, UUID) -> FlowInvocationResult,
     private val retrieveStateDelegate: (UniqueIdentifier) -> StateQueryResult,
     private val identityService: IdentityService? = null
 ) : MessageProcessor {
-    override fun invoke(message: BusRequest): List<BusResponse> = when (message) {
+    override fun invoke(message: BusRequest, client: ServicebusClient, messageLockTokenId: UUID): List<BusResponse> = when (message) {
         is BusRequest.InvokeFlowWithoutInputStates ->
-            processInvocationMessage(message.requestId, null, message, true)
+            processInvocationMessage(message.requestId, null, message, true, client, messageLockTokenId)
         is BusRequest.InvokeFlowWithInputStates    ->
-            processInvocationMessage(message.requestId, message.linearId, message, false)
-        is BusRequest.QueryFlowState               ->
+            processInvocationMessage(message.requestId, message.linearId, message, false, client, messageLockTokenId)
+        is BusRequest.QueryFlowState               -> {
+            // Message can be safely ACKd
+            client.acknowledge(messageLockTokenId)
             listOf(processQueryMessage(message.requestId, message.linearId))
+        }
     }
 
     private fun processInvocationMessage(
         requestId: String,
         linearId: UniqueIdentifier?,
         invocable: Invocable,
-        isNew: Boolean
+        isNew: Boolean,
+        client: ServicebusClient,
+        messageLockTokenId: UUID
     ): List<BusResponse> {
         val ingressType = invocable::class
 
         return try {
             val linearIdParameter = linearId?.let { mapOf("linearId" to linearId.toString()) } ?: emptyMap()
             val flowLogic = deriveFlowLogic(invocable.workflowName, invocable.parameters + linearIdParameter)
-            val result = startFlowDelegate(flowLogic)
+            val result = startFlowDelegate(flowLogic, client, messageLockTokenId)
             val lid = result.linearId ?: linearId ?: error("Unable to derive linear ID after flow invocation")
 
             val fromName = result.fromName ?: error("Unable to retrieve invoking party after flow invocation")

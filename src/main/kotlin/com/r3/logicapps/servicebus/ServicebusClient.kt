@@ -2,6 +2,7 @@ package com.r3.logicapps.servicebus
 
 import com.microsoft.azure.servicebus.IMessageHandler
 import com.microsoft.azure.servicebus.QueueClient
+import java.util.UUID
 
 /**
  * Interface describing basic functionality of Azure Service Bus clients.
@@ -34,4 +35,5 @@ interface ServicebusClient {
      */
     fun registerReceivedMessageHandler(handler: IMessageHandler)
 
+    fun acknowledge(lockTokenId: UUID)
 }

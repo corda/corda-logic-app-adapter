@@ -19,15 +19,10 @@ class BusMessageHandler(
     }
 
     override fun onMessageAsync(message: IMessage?): CompletableFuture<Void> {
-        // At this point, the client has already signalled the bus that the message is acknowledged and will
-        // be removed from the queue, preventing redelivery should anything happen between this point and the first checkpoint
-        // Consider ACK-ing the messages on flow completion
-        // TODO: Bogdan - find out how to trigger client.complete(messageLockId) on first flow checkpoint to prevent losses
-        // Perhaps ACK the messages also when message processing fails due to invalid messages
         val payload = String(message!!.body, StandardCharsets.UTF_8)
         log.info("Received message: $payload")
         val busRequest = WorkbenchAdapterImpl.transformIngress(payload)
-        val messages = messageProcessor.invoke(busRequest)
+        val messages = messageProcessor.invoke(busRequest, busClient, message.lockToken)
 
         messages.forEach {
             val response = WorkbenchAdapterImpl.transformEgress(it)

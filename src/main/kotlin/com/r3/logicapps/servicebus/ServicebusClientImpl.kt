@@ -8,6 +8,7 @@ import com.microsoft.azure.servicebus.primitives.ServiceBusException
 import net.corda.core.utilities.contextLogger
 import java.lang.IllegalArgumentException
 import java.time.Duration
+import java.util.UUID
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
@@ -57,9 +58,17 @@ class ServicebusClientImpl(private val connectionString: String,
 
     override fun registerReceivedMessageHandler(handler: IMessageHandler) {
         require(started.get()) { "Service bus client should be started before calling registerReceivedMessageHandler()" }
-        // TODO: autoComplete = true means the bus receives an ACK as soon as the message is received, deleting it from the queue. Perhaps
-        // TODO: complete() should be called after flow start to avoid loss - THIS NEEDS TESTING!!!!
-        receiver!!.registerMessageHandler(handler, MessageHandlerOptions(1, true, MESSAGE_LOCK_RENEW_TIMEOUT), threadPool)
+        receiver!!.registerMessageHandler(handler, MessageHandlerOptions(1, false, MESSAGE_LOCK_RENEW_TIMEOUT), threadPool)
+    }
+
+    override fun acknowledge(lockTokenId: UUID) {
+        require(started.get()) {"Service bus client should be started before calling acknowledge()" }
+        try {
+            receiver!!.complete(lockTokenId)
+        } catch (e: Exception) {
+            log.error("Message could not be acknowledged and removed from the bus", e)
+        }
+
     }
 
     override fun start() {
