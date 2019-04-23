@@ -82,18 +82,36 @@ sealed class BusResponse : Correlatable {
         val isNewContract: Boolean
     ) : BusResponse(), Identifiable, WithOutput
 
-    /**
-     * "ContractMessage"
-     * @param ingressType The type of the [BusRequest] that triggered the invocation generating this response.
-     * @param requestId A simple correlation ID, generated in the ingress message
-     * @param exception The exception that was thrown during the processing of the [BusRequest].
-     */
-    data class FlowError(
-        override val ingressType: KClass<*>,
-        override val requestId: String,
-        val linearId: UniqueIdentifier?,
-        val exception: Throwable
-    ) : BusResponse(), WithIngressType
+    sealed class Error : BusResponse() {
+        abstract val cause: Throwable
+
+        /**
+         * An unexpected error that occurs irrespective of the validity of user input
+         *
+         * @param requestId A simple correlation ID, generated in the ingress message
+         * @param cause The exception that was thrown during the processing of the [BusRequest].
+         */
+        data class GenericError(
+            override val requestId: String,
+            override val cause: Throwable
+        ) : Error()
+
+        /**
+         * An error returned when the invocation of the flow failed in a predictable way, i.e. due to inappropriate user inputs
+         *
+         * @param ingressType The type of the [BusRequest] that triggered the invocation generating this response.
+         * @param requestId A simple correlation ID, generated in the ingress message
+         * @param cause The exception that was thrown during the processing of the [BusRequest].
+         * @param linearId The linear id of the input state to the erroneous transaction, if it had one
+         */
+        data class FlowError(
+            override val ingressType: KClass<*>,
+            override val requestId: String,
+            override val cause: Throwable,
+            val linearId: UniqueIdentifier?
+        ) : Error(), WithIngressType
+
+    }
 
     /**
      * A legacy message to be sent whenever a "CreateContractRequest" or a "CreateContractActionRequest" has been
