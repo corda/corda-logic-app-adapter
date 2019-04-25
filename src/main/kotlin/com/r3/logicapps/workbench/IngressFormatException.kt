@@ -1,8 +1,20 @@
 package com.r3.logicapps.workbench
 
-class IngressFormatException : IllegalArgumentException {
-    constructor() : super()
-    constructor(s: String) : super(s)
-    constructor(s: String, cause: Throwable) : super(s, cause)
-    constructor(cause: Throwable) : super(cause)
+open class IngressFormatException(
+    override val message: String?,
+    override val cause: Throwable?
+) : IllegalArgumentException(message, cause) {
+    constructor() : this(null, null)
+    constructor(message: String) : this(message, null)
+    constructor(cause: Throwable) : this(null, cause)
+}
+
+class CorrelatableIngressFormatException(
+    override val message: String?,
+    override val cause: Throwable?,
+    val requestId: String
+) : IngressFormatException(message, cause) {
+    constructor(requestId: String) : this(null, null, requestId)
+    constructor(message: String, requestId: String) : this(message, null, requestId)
+    constructor(cause: Throwable, requestId: String) : this(null, cause, requestId)
 }
