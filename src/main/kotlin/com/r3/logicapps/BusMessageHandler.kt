@@ -46,7 +46,7 @@ class BusMessageHandler(
     }
 
     private fun handleError(exception: IngressFormatException) {
-        log.warn("Ingress message couldn't be deserialised: " + exception.message)
+        log.warn("Ingress message couldn't be deserialised", exception.message)
         val error = when (exception) {
             is CorrelatableIngressFormatException -> CorrelatableError(exception, exception.requestId)
             else                                  -> GenericError(exception)
