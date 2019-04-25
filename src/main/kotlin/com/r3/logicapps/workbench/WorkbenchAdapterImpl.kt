@@ -17,6 +17,7 @@ import com.r3.logicapps.BusResponse.Confirmation
 import com.r3.logicapps.BusResponse.Confirmation.Committed
 import com.r3.logicapps.BusResponse.Confirmation.Submitted
 import com.r3.logicapps.BusResponse.Error
+import com.r3.logicapps.BusResponse.Error.CorrelatableError
 import com.r3.logicapps.BusResponse.Error.FlowError
 import com.r3.logicapps.BusResponse.Error.GenericError
 import com.r3.logicapps.BusResponse.FlowOutput
@@ -100,14 +101,15 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
 
     override fun transformEgress(message: BusResponse): ServicebusMessage = when (message) {
         // success cases
-        is FlowOutput      -> transformFlowOutputResponse(message)
-        is StateOutput     -> transformStateOutputResponse(message)
-        is Confirmation    -> transformConfirmationResponse(message)
-        is InvocationState -> transformInvocationStateResponse(message)
+        is FlowOutput        -> transformFlowOutputResponse(message)
+        is StateOutput       -> transformStateOutputResponse(message)
+        is Confirmation      -> transformConfirmationResponse(message)
+        is InvocationState   -> transformInvocationStateResponse(message)
 
         // error cases
-        is FlowError       -> transformFlowErrorResponse(message)
-        is GenericError    -> transformGenericErrorResponse(message)
+        is FlowError         -> transformFlowErrorResponse(message)
+        is GenericError      -> transformGenericErrorResponse(message)
+        is CorrelatableError -> transformCorrelatableErrorResponse(message)
     }
 
     private fun WorkbenchSchema.validate(message: String) {
@@ -181,10 +183,17 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             error.linearId?.let {
                 put("contractLedgerIdentifier", it.toString())
             }
+            put("requestId", error.requestId)
             put(error)
         }
         return node.toPrettyString()
     }
+
+    private fun transformCorrelatableErrorResponse(error: CorrelatableError): ServicebusMessage =
+        JsonNodeFactory.instance.objectNode().apply {
+            put("requestId", error.requestId)
+            put(error)
+        }.toPrettyString()
 
     private fun transformGenericErrorResponse(error: GenericError): ServicebusMessage =
         JsonNodeFactory.instance.objectNode().apply {
@@ -192,7 +201,6 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
         }.toPrettyString()
 
     private fun ObjectNode.put(error: Error) {
-        put("requestId", error.requestId)
         putObject("additionalInformation").apply {
             put("errorCode", error.cause.errorCode().absoluteValue)
             put("errorMessage", error.cause.message ?: "")

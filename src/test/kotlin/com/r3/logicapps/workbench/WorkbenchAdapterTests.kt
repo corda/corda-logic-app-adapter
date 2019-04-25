@@ -13,6 +13,7 @@ import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
 import com.r3.logicapps.BusRequest.QueryFlowState
 import com.r3.logicapps.BusResponse.Confirmation.Committed
 import com.r3.logicapps.BusResponse.Confirmation.Submitted
+import com.r3.logicapps.BusResponse.Error.CorrelatableError
 import com.r3.logicapps.BusResponse.Error.FlowError
 import com.r3.logicapps.BusResponse.Error.GenericError
 import com.r3.logicapps.BusResponse.FlowOutput
@@ -315,9 +316,18 @@ class WorkbenchAdapterTests {
     @Test
     fun `generates a valid service bus message for generic error output`() {
         val actual = WorkbenchAdapterImpl.transformEgress(
-            GenericError(
-                requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-                cause = IllegalStateException("Boooom!")
+            GenericError(IllegalStateException("Whaam!"))
+        )
+
+        approval.assertApproved(actual)
+    }
+
+    @Test
+    fun `generates a valid service bus message for correlatable error output`() {
+        val actual = WorkbenchAdapterImpl.transformEgress(
+            CorrelatableError(
+                cause = IllegalStateException("Boooom!"),
+                requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9"
             )
         )
 
