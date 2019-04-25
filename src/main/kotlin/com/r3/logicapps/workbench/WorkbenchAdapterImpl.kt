@@ -1,5 +1,6 @@
 package com.r3.logicapps.workbench
 
+import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -45,8 +46,40 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
     }).writerWithDefaultPrettyPrinter()
 
     @Throws(IngressFormatException::class)
-    override fun transformIngress(message: ServicebusMessage): BusRequest =
-        ObjectMapper().readTree(message).let { json ->
+    override fun transformIngress(message: ServicebusMessage): BusRequest {
+        // try to parse JSON
+        val node = try {
+            ObjectMapper().readTree(message)
+        } catch (e: JsonParseException) {
+            throw IngressFormatException(e)
+        }
+
+        // try to determine the request ID early--even if the message is otherwise invalid--so we can return
+        // correlation information to the caller
+        val requestId = try {
+            node.extractRequestId("requestId")
+        } catch (e: IllegalArgumentException) {
+            throw IngressFormatException(e)
+        }
+
+        return try {
+            transformIngress(node, message)
+        } catch (iae: IllegalArgumentException) {
+            throw CorrelatableIngressFormatException(
+                requestId = requestId,
+                cause = iae
+            )
+        } catch (ve: ValidationException) {
+            throw CorrelatableIngressFormatException(
+                message = "${ve.errorMessage}: ${ve.allMessages.joinToString(", ")}",
+                cause = ve,
+                requestId = requestId
+            )
+        }
+    }
+
+    private fun transformIngress(node: JsonNode, message: ServicebusMessage): BusRequest {
+        return node.let { json ->
             when (json.messageName()) {
                 "CreateContractRequest"       -> {
                     FlowInvocationRequestSchema.validate(message)
@@ -60,9 +93,10 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
                     FlowStateRequestSchema.validate(message)
                     transformFlowStateRequest(json)
                 }
-                else                          -> throw IngressFormatException("Unknown message name")
+                else                          -> throw IllegalArgumentException("Unknown message name")
             }
         }
+    }
 
     override fun transformEgress(message: BusResponse): ServicebusMessage = when (message) {
         // success cases
@@ -77,11 +111,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
     }
 
     private fun WorkbenchSchema.validate(message: String) {
-        try {
-            underlying.validate(JSONObject(message))
-        } catch (exception: ValidationException) {
-            throw IngressFormatException("Schema violation '${this::class.java}': ${exception.message}", exception)
-        }
+        underlying.validate(JSONObject(message))
     }
 
     private fun transformFlowOutputResponse(flowOutput: FlowOutput): ServicebusMessage {
@@ -249,25 +279,25 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
     }
 
     private fun JsonNode.extractRequestId(name: String) = (get(name) as? TextNode)?.textValue()
-        ?: throw IngressFormatException("Invalid request ID provided")
+        ?: throw IllegalArgumentException("Invalid request ID provided")
 
     private fun JsonNode.extractLinearId(name: String) = (get(name) as? TextNode)?.textValue()
-        ?: throw IngressFormatException("Invalid linear ID provided")
+        ?: throw IllegalArgumentException("Invalid linear ID provided")
 
     private fun JsonNode.extractWorkflowName(name: String) = (get(name) as? TextNode)?.textValue()
-        ?: throw IngressFormatException("Invalid workflow name provided")
+        ?: throw IllegalArgumentException("Invalid workflow name provided")
 
     private fun JsonNode.extractParameters(name: String): Map<String, String> {
-        return (get(name) as? ArrayNode ?: throw IngressFormatException("No parameters provided")).map {
+        return (get(name) as? ArrayNode ?: throw IllegalArgumentException("No parameters provided")).map {
             (it as? ObjectNode)?.let { parameter ->
                 val key = (parameter.get("name") as? TextNode)?.textValue()
-                    ?: throw IngressFormatException("Malformed Key")
+                    ?: throw IllegalArgumentException("Malformed Key")
 
                 val value = (parameter.get("value") as? TextNode)?.textValue()
-                    ?: throw IngressFormatException("Malformed Value")
+                    ?: throw IllegalArgumentException("Malformed Value")
 
                 key to value
-            } ?: throw IngressFormatException("Malformed Parameter")
+            } ?: throw IllegalArgumentException("Malformed Parameter")
         }.toMap()
     }
 

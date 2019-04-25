@@ -6,7 +6,7 @@ open class IngressFormatException(
 ) : IllegalArgumentException(message, cause) {
     constructor() : this(null, null)
     constructor(message: String) : this(message, null)
-    constructor(cause: Throwable) : this(null, cause)
+    constructor(cause: Throwable) : this(cause.toString(), cause)
 }
 
 class CorrelatableIngressFormatException(
@@ -16,5 +16,5 @@ class CorrelatableIngressFormatException(
 ) : IngressFormatException(message, cause) {
     constructor(requestId: String) : this(null, null, requestId)
     constructor(message: String, requestId: String) : this(message, null, requestId)
-    constructor(cause: Throwable, requestId: String) : this(null, cause, requestId)
+    constructor(cause: Throwable, requestId: String) : this(cause.toString(), cause, requestId)
 }

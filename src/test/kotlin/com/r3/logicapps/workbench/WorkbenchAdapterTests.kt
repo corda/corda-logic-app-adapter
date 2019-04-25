@@ -4,6 +4,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
+import com.natpryce.hamkrest.present
+import com.natpryce.hamkrest.startsWith
 import com.natpryce.hamkrest.throws
 import com.oneeyedmen.okeydoke.junit.ApprovalsRule
 import com.r3.logicapps.BusRequest.InvokeFlowWithInputStates
@@ -30,20 +32,66 @@ class WorkbenchAdapterTests {
     val approval: ApprovalsRule = ApprovalsRule.fileSystemRule("src/test/resources")
 
     @Test
+    fun `transforming a non-JSON message fails`() {
+        val nonJson = "arrrrghh!!!"
+
+        assertThat(
+            { WorkbenchAdapterImpl.transformIngress(nonJson) },
+            throws(
+                isA<IngressFormatException>(
+                    has(
+                        Exception::message,
+                        present(startsWith("com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'arrrrghh'"))
+                    )
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `a request ID is made available even though the message is otherwise nonsensical`() {
+        val json = """{
+            |   "requestId" : "ea3bcdca-cffb-4122-9025-c96c72db1213",
+            |   "xxx" : "yyy"
+            |}""".trimMargin()
+
+        assertThat(
+            { WorkbenchAdapterImpl.transformIngress(json) },
+            throws(
+                isA<CorrelatableIngressFormatException>(
+                    has(
+                        Exception::message,
+                        equalTo("java.lang.IllegalArgumentException: Unknown message name")
+                    )
+                )
+            )
+        )
+    }
+
+    @Test
     fun `transforming an unknown message fails`() {
         val json = """{
+            |   "requestId" : "7749774d-9bbc-4445-8b11-c801d615ea12",
             |   "messageName" : "NonSensicalRequest"
             |}""".trimMargin()
 
         assertThat(
             { WorkbenchAdapterImpl.transformIngress(json) },
-            throws(isA<IllegalArgumentException>(has(Exception::message, equalTo("Unknown message name"))))
+            throws(
+                isA<IngressFormatException>(
+                    has(
+                        Exception::message,
+                        equalTo("java.lang.IllegalArgumentException: Unknown message name")
+                    )
+                )
+            )
         )
     }
 
     @Test
     fun `transforming an invalid CreateContractRequest fails`() {
         val json = """{
+        |  "requestId" : "7749774d-9bbc-4445-8b11-c801d615ea12",
         |  "messageName": "CreateContractRequest",
         |  "hocus" : "pocus"
         |}""".trimMargin()
@@ -54,7 +102,7 @@ class WorkbenchAdapterTests {
                 isA<IngressFormatException>(
                     has(
                         Exception::message,
-                        equalTo("Schema violation 'class com.r3.logicapps.workbench.WorkbenchSchema\$FlowInvocationRequestSchema': #: 4 schema violations found")
+                        equalTo("3 schema violations found: #: required key [workflowName] not found, #: required key [parameters] not found, #: required key [messageSchemaVersion] not found")
                     )
                 )
             )
@@ -138,6 +186,7 @@ class WorkbenchAdapterTests {
     @Test
     fun `transforming an invalid CreateContractActionRequest fails`() {
         val json = """{
+        |  "requestId" : "7749774d-9bbc-4445-8b11-c801d615ea12",
         |  "messageName": "CreateContractActionRequest",
         |  "hocus" : "pocus"
         |}""".trimMargin()
@@ -148,7 +197,7 @@ class WorkbenchAdapterTests {
                 isA<IngressFormatException>(
                     has(
                         Exception::message,
-                        equalTo("Schema violation 'class com.r3.logicapps.workbench.WorkbenchSchema\$FlowUpdateRequestSchema': #: 5 schema violations found")
+                        equalTo("4 schema violations found: #: required key [workflowFunctionName] not found, #: required key [contractLedgerIdentifier] not found, #: required key [parameters] not found, #: required key [messageSchemaVersion] not found")
                     )
                 )
             )
@@ -187,6 +236,7 @@ class WorkbenchAdapterTests {
     @Test
     fun `transforming an invalid ReadContractRequest fails`() {
         val json = """{
+        |  "requestId" : "7749774d-9bbc-4445-8b11-c801d615ea12",
         |  "messageName": "ReadContractRequest",
         |  "hocus" : "pocus"
         |}""".trimMargin()
@@ -197,7 +247,7 @@ class WorkbenchAdapterTests {
                 isA<IngressFormatException>(
                     has(
                         Exception::message,
-                        equalTo("Schema violation 'class com.r3.logicapps.workbench.WorkbenchSchema\$FlowStateRequestSchema': #: 3 schema violations found")
+                        equalTo("2 schema violations found: #: required key [contractLedgerIdentifier] not found, #: required key [messageSchemaVersion] not found")
                     )
                 )
             )
