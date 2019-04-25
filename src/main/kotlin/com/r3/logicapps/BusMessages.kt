@@ -43,7 +43,7 @@ sealed class BusRequest : Correlatable {
     ) : BusRequest(), Identifiable
 }
 
-sealed class BusResponse : Correlatable {
+sealed class BusResponse {
     /**
      * A response to invoking a flow that mirrors the ingress type
      *
@@ -65,7 +65,7 @@ sealed class BusResponse : Correlatable {
         val fromName: CordaX500Name,
         val toNames: List<CordaX500Name>,
         val transactionHash: SecureHash
-    ) : BusResponse(), Identifiable, WithIngressType, WithOutput
+    ) : BusResponse(), Correlatable, Identifiable, WithIngressType, WithOutput
 
     /**
      * "ContractMessage": A response to a state query
@@ -80,7 +80,7 @@ sealed class BusResponse : Correlatable {
         override val linearId: UniqueIdentifier,
         override val fields: Map<String, String>,
         val isNewContract: Boolean
-    ) : BusResponse(), Identifiable, WithOutput
+    ) : BusResponse(), Correlatable, Identifiable, WithOutput
 
     sealed class Error : BusResponse() {
         abstract val cause: Throwable
@@ -88,13 +88,22 @@ sealed class BusResponse : Correlatable {
         /**
          * An unexpected error that occurs irrespective of the validity of user input
          *
-         * @param requestId A simple correlation ID, generated in the ingress message
          * @param cause The exception that was thrown during the processing of the [BusRequest].
          */
         data class GenericError(
-            override val requestId: String,
             override val cause: Throwable
         ) : Error()
+
+        /**
+         * An unexpected error that occurs irrespective of the validity of user input
+         *
+         * @param cause The exception that was thrown during the processing of the [BusRequest].
+         * @param requestId A simple correlation ID, generated in the ingress message
+         */
+        data class CorrelatableError(
+            override val cause: Throwable,
+            override val requestId: String
+        ) : Error(), Correlatable
 
         /**
          * An error returned when the invocation of the flow failed in a predictable way, i.e. due to inappropriate user inputs
@@ -109,7 +118,7 @@ sealed class BusResponse : Correlatable {
             override val requestId: String,
             override val cause: Throwable,
             val linearId: UniqueIdentifier?
-        ) : Error(), WithIngressType
+        ) : Error(), WithIngressType, Correlatable
 
     }
 
@@ -119,7 +128,7 @@ sealed class BusResponse : Correlatable {
      *
      * For legacy reasons, both messages have to be sent.
      */
-    sealed class Confirmation : BusResponse(), Identifiable, WithIngressType {
+    sealed class Confirmation : BusResponse(), Correlatable, Identifiable, WithIngressType {
         data class Submitted(
             override val requestId: String,
             override val linearId: UniqueIdentifier,
@@ -145,7 +154,7 @@ sealed class BusResponse : Correlatable {
         val fromName: CordaX500Name,
         val toName: CordaX500Name,
         val transactionHash: SecureHash
-    ) : BusResponse(), Identifiable, Parameterised
+    ) : BusResponse(), Identifiable, Parameterised, Correlatable
 }
 
 /**
