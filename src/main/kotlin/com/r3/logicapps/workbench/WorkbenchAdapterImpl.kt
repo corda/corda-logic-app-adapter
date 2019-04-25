@@ -42,8 +42,10 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
     private const val FAKE_TRANSACTION_SEQUENCE = 1
 
     private val jsonWriter = ObjectMapper().setDefaultPrettyPrinter(DefaultPrettyPrinter().apply {
-        indentArraysWith(PlatformIndependentIndenter())
-        indentObjectsWith(PlatformIndependentIndenter())
+        PlatformIndependentIndenter().let {
+            indentArraysWith(it)
+            indentObjectsWith(it)
+        }
     }).writerWithDefaultPrettyPrinter()
 
     @Throws(IngressFormatException::class)
