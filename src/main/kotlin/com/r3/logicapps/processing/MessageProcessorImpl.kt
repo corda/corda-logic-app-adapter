@@ -85,6 +85,7 @@ open class MessageProcessorImpl(
                 )
             )
         } catch (exception: Throwable) {
+            client.acknowledge(messageLockTokenId)
             listOf(FlowError(ingressType, requestId, exception, linearId))
         }
     }
