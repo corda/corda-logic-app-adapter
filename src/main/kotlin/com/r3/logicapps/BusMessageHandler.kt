@@ -31,26 +31,27 @@ class BusMessageHandler(
         try {
             handleRequest(busRequest, message.lockToken)
         } catch (exception: IngressFormatException) {
-            handleError(exception)
+            handleError(exception, message.lockToken)
         }
 
         return CompletableFuture.completedFuture(null)
     }
 
-    private fun handleRequest(request: BusRequest, token: UUID) {
-        messageProcessor.invoke(request, busClient, token).forEach {
+    private fun handleRequest(request: BusRequest, messageLockTokenId: UUID) {
+        messageProcessor.invoke(request, busClient, messageLockTokenId).forEach {
             val response = WorkbenchAdapterImpl.transformEgress(it)
             log.info("Sending reply: $response")
             busClient.send(response)
         }
     }
 
-    private fun handleError(exception: IngressFormatException) {
+    private fun handleError(exception: IngressFormatException, messageLockTokenId: UUID) {
         log.warn("Ingress message couldn't be deserialised", exception.message)
         val error = when (exception) {
             is CorrelatableIngressFormatException -> CorrelatableError(exception, exception.requestId)
             else                                  -> GenericError(exception)
         }
+        busClient.acknowledge(messageLockTokenId)
         busClient.send(WorkbenchAdapterImpl.transformEgress(error))
     }
 
