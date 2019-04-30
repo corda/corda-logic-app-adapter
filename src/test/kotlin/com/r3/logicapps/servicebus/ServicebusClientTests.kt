@@ -31,23 +31,40 @@ class ServicebusClientTests : TestBase() {
         val threadA = thread {
             val msg = "{ping: pong}"
             val count = AtomicInteger(0)
-            val client = ServicebusClientImpl(SERVICE_BUS, inboundQueue = FROM_CORDA_QUEUE, outboundQueue = TO_CORDA_QUEUE)
+            val connectionService = ServicebusConnectionService(SERVICE_BUS, inboundQueue = FROM_CORDA_QUEUE, outboundQueue = TO_CORDA_QUEUE)
+            connectionService.start()
+            val client = ServicebusClientImpl(connectionService)
             client.start()
-            client.registerReceivedMessageHandler(MyMessageHandler("ClientA", client, count) { e -> fail(e?.message) })
-            //start the ping-pong
-            client.send(msg)
+            val statusSubscriber = connectionService.change.subscribe({ ready ->
+                if (ready) {
+                    client.registerReceivedMessageHandler(MyMessageHandler("ClientA", client, count) { e -> fail(e?.message) })
+                    //start the ping-pong
+                    client.send(msg)
+                }
+            }, { fail("Error in connection service state change") })
+
             while (count.get() < 10) {}
+            statusSubscriber.unsubscribe()
             client.close()
+            connectionService.stop()
         }
 
         val threadB = thread {
             val count = AtomicInteger(0)
-            val client = ServicebusClientImpl(SERVICE_BUS, inboundQueue = TO_CORDA_QUEUE, outboundQueue = FROM_CORDA_QUEUE)
+            val connectionService = ServicebusConnectionService(SERVICE_BUS, inboundQueue = TO_CORDA_QUEUE, outboundQueue = FROM_CORDA_QUEUE)
+            connectionService.start()
+            val client = ServicebusClientImpl(connectionService)
             client.start()
-            client.registerReceivedMessageHandler(MyMessageHandler("ClientB", client, count) { e -> fail(e?.message) })
+            val statusSubscriber = connectionService.change.subscribe({ ready ->
+                if (ready) {
+                    client.registerReceivedMessageHandler(MyMessageHandler("ClientB", client, count) { e -> fail(e?.message) })
+                }
+            }, { fail("Error in connection service state change") })
             //start the ping-pong
             while (count.get() < 10) {}
+            statusSubscriber.unsubscribe()
             client.close()
+            connectionService.stop()
         }
 
         threadA.join()
@@ -106,35 +123,45 @@ class ServicebusClientTests : TestBase() {
                 "        }"
         //TODO: update once implementation of message processor is finished
         val expected = "{\n" +
-                "  \"messageName\" : \"CreateContractRequest\",\n" +
-                "  \"requestId\" : \"81a87eb0-b5aa-4d53-a39f-a6ed0742d90d\",\n" +
-                "  \"additionalInformation\" : {\n" +
-                "    \"errorCode\" : 1426288842,\n" +
-                "    \"errorMessage\" : \"Unable to find 'net.corda.workbench.refrigeratedTransportation.flow.CreateFlow' on the class path\"\n" +
-                "  },\n" +
-                "  \"status\" : \"Failure\",\n" +
-                "  \"messageSchemaVersion\" : \"1.0.0\"\n" +
+                "\t\"messageName\" : \"CreateContractRequest\",\n" +
+                "\t\"requestId\" : \"81a87eb0-b5aa-4d53-a39f-a6ed0742d90d\",\n" +
+                "\t\"additionalInformation\" : {\n" +
+                "\t\t\"errorCode\" : 1426288842,\n" +
+                "\t\t\"errorMessage\" : \"Unable to find 'net.corda.workbench.refrigeratedTransportation.flow.CreateFlow' on the class path\"\n" +
+                "\t},\n" +
+                "\t\"status\" : \"Failure\",\n" +
+                "\t\"messageSchemaVersion\" : \"1.0.0\"\n" +
                 "}"
         val latch = CountDownLatch(1)
-        val client = ServicebusClientImpl(SERVICE_BUS, FROM_CORDA_QUEUE, TO_CORDA_QUEUE)
+        val connectionService = ServicebusConnectionService(SERVICE_BUS, FROM_CORDA_QUEUE, TO_CORDA_QUEUE)
+        connectionService.start()
+        val client = ServicebusClientImpl(connectionService)
         client.start()
-        client.registerReceivedMessageHandler(object : IMessageHandler {
-            override fun onMessageAsync(message: IMessage?): CompletableFuture<Void> {
-                println("Received from Corda: ${String(message!!.body, UTF_8)}")
-                if (expected == String(message!!.body, UTF_8))
-                    latch.countDown()
-                return CompletableFuture.completedFuture(null)
-            }
+        val subscriber = connectionService.change.subscribe {
+            if (it) {
+                client.registerReceivedMessageHandler(object : IMessageHandler {
+                    override fun onMessageAsync(message: IMessage?): CompletableFuture<Void> {
+                        println("Received from Corda: ${String(message!!.body, UTF_8)}")
+                        if (expected == String(message!!.body, UTF_8))
+                            latch.countDown()
+                        return CompletableFuture.completedFuture(null)
+                    }
 
-            override fun notifyException(exception: Throwable?, phase: ExceptionPhase?) {
-                println(exception)
-            }
+                    override fun notifyException(exception: Throwable?, phase: ExceptionPhase?) {
+                        println(exception)
+                    }
 
-        })
-        client.send(message)
+                })
+                client.send(message)
+            }
+        }
+
         startNode(providedName = partyA.name, customOverrides = mapOf("cordappSignerKeyFingerprintBlacklist" to emptyList<String>(),
             "devMode" to true)).getOrThrow()
         latch.await()
+        subscriber.unsubscribe()
+        client.close()
+        connectionService.stop()
     }
 
     class MyMessageHandler(val id: String, val client: ServicebusClient, val count: AtomicInteger, val errorHandler: (e: Throwable?) -> Any?) : IMessageHandler {

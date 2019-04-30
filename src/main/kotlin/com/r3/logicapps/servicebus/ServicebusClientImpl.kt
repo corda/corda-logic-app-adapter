@@ -1,12 +1,9 @@
 package com.r3.logicapps.servicebus
 
 import com.microsoft.azure.servicebus.*
-import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder
-import com.microsoft.azure.servicebus.primitives.IllegalConnectionStringFormatException
-import com.microsoft.azure.servicebus.primitives.RetryExponential
 import com.microsoft.azure.servicebus.primitives.ServiceBusException
 import net.corda.core.utilities.contextLogger
-import java.lang.IllegalArgumentException
+import rx.Subscription
 import java.time.Duration
 import java.util.UUID
 import java.util.concurrent.ExecutorService
@@ -16,25 +13,17 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * The [threadPool] parameter should be left as default (1 thread) as async message processing is not currently supported
  */
-class ServicebusClientImpl(private val connectionString: String,
-                           private val inboundQueue: String,
-                           private val outboundQueue: String,
+class ServicebusClientImpl(private val busConnectionService: ServicebusConnectionService,
                            private val threadPool: ExecutorService = Executors.newFixedThreadPool(1)) : ServicebusClient {
 
     private companion object {
         val log = contextLogger()
-        val clientMode = ReceiveMode.PEEKLOCK
-        const val MAX_RETRY_COUNT = Integer.MAX_VALUE
-        const val RETRY_POLICY_NAME = "exponential retry policy"
         val MESSAGE_LOCK_RENEW_TIMEOUT: Duration = Duration.ofSeconds(60)
     }
 
     private val started = AtomicBoolean(false)
 
-    // TODO: Bogdan - perhaps this should be configurable
-    // Seems like this policy is used by both senders and receivers to retry failed operations before throwing exceptions.
-    private val exponentialRetry = RetryExponential(Duration.ofSeconds(5), Duration.ofMinutes(3), MAX_RETRY_COUNT, RETRY_POLICY_NAME)
-
+    private var statusSubscriber: Subscription? = null
     private var sender: QueueClient? = null
     private var receiver: QueueClient? = null
 
@@ -69,60 +58,40 @@ class ServicebusClientImpl(private val connectionString: String,
 
     override fun start() {
         require(!started.get()) { "Service bus client can't be started twice" }
-        sender = connect(connectionString, outboundQueue)
-        receiver = connect(connectionString, inboundQueue)
+        statusSubscriber = busConnectionService.change.subscribe({ ready ->
+            if (ready) {
+                sender = busConnectionService.senderClient!!
+                receiver = busConnectionService.receiverClient!!
+            } else {
+                // Currently no action is required as the client will be shutdown gracefully at this point
+            }
+        }, { log.error("Error in connection service state change", it) }
+        )
+
         started.set(true)
     }
 
     override fun close() {
         require(started.get()) {"Service bus client can't be stopped twice"}
         try {
-            sender!!.close()
+            sender?.close()
         } catch (e: ServiceBusException) {
             log.error("Could not close sender client", e)
         } finally {
             sender = null
         }
         try {
-            receiver!!.close()
+            receiver?.close()
         } catch (e: ServiceBusException) {
             log.error("Could not close receiver client", e)
         } finally {
             receiver = null
         }
 
+        statusSubscriber?.unsubscribe()
+        statusSubscriber = null
+
         started.set(false)
-    }
-
-    private fun connect(connectionString: String, queueName: String): QueueClient {
-        var reconnectInterval = 1000L
-        while (true) {
-            try {
-                return QueueClient(ConnectionStringBuilder(connectionString, queueName).apply {
-                    retryPolicy = exponentialRetry
-                }, clientMode)
-            } catch (e: Exception) {
-                when (e) {
-                    is ServiceBusException -> {
-                        // TODO: Bogdan - finish implementation of background retry logic in [ServiceBusConnectionService]
-                        // log.error("Connection to $queueName could not be established. Retrying in $reconnectInterval ms")
-                        log.error("Connection to $queueName could not be established. Shutting down")
-                    }
-                    is IllegalArgumentException, is IllegalConnectionStringFormatException -> {
-                        log.error("Service bus connection details are invalid. connectionString=$connectionString queueName=$queueName. Shutting down")
-                    }
-                }
-                // Retrying to connect in this thread seems to prevent a polite shutdown of the node, so we just kill it for now
-                System.exit(1)
-            }
-            try {
-                Thread.sleep(reconnectInterval)
-            } catch (e: InterruptedException) {
-                log.warn("Service bus reconnection thread was interrupted")
-            }
-
-            reconnectInterval = Math.min(2L * reconnectInterval, 60000)
-        }
     }
 
     private fun handleException(e: Exception, msg: String) {
