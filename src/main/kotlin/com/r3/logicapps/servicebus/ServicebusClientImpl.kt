@@ -24,7 +24,7 @@ class ServicebusClientImpl(private val connectionString: String,
     private companion object {
         val log = contextLogger()
         val clientMode = ReceiveMode.PEEKLOCK
-        const val MAX_RETRY_COUNT = Integer.MAX_VALUE //For the time being use a large number until we figure out what to do in case of failure
+        const val MAX_RETRY_COUNT = Integer.MAX_VALUE
         const val RETRY_POLICY_NAME = "exponential retry policy"
         val MESSAGE_LOCK_RENEW_TIMEOUT: Duration = Duration.ofSeconds(60)
     }
@@ -46,12 +46,8 @@ class ServicebusClientImpl(private val connectionString: String,
         }
         try {
             sender!!.send(serviceBusMessage)
-        } catch (e: ServiceBusException) {
-            // With current retry policy this should rarely be thrown, but if it is, message will be discarded which is ok for now as
-            // the service app only sends messages as replies to incoming bus requests
-            log.error("Message could not be sent to entity", e)
-        } catch (e: InterruptedException) {
-            log.error("Sending thread was interrupted", e)
+        } catch (e: Exception) {
+            handleException(e, "Message could not be sent to entity")
         }
         log.info("Message sent")
     }
@@ -66,7 +62,7 @@ class ServicebusClientImpl(private val connectionString: String,
         try {
             receiver!!.complete(lockTokenId)
         } catch (e: Exception) {
-            log.error("Message could not be acknowledged and removed from the bus", e)
+            handleException(e, "Message could not be acknowledged and removed from the bus")
         }
 
     }
@@ -126,6 +122,27 @@ class ServicebusClientImpl(private val connectionString: String,
             }
 
             reconnectInterval = Math.min(2L * reconnectInterval, 60000)
+        }
+    }
+
+    private fun handleException(e: Exception, msg: String) {
+        when (e) {
+            is ServiceBusException -> {
+                log.error(msg, e)
+                if (!e.isTransient) {
+                    // Non transient error means the service bus will not be available anytime soon
+                    log.error("Non transient error. Node shutting down")
+                    System.exit(1)
+                }
+            }
+
+            is InterruptedException -> {
+                log.warn("Service bus client action thread was interrupted")
+            }
+
+            else -> {
+                log.error("Unknown error", e)
+            }
         }
     }
 }
