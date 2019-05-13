@@ -26,10 +26,9 @@ class BusMessageHandler(
     override fun onMessageAsync(message: IMessage?): CompletableFuture<Void> {
         val payload = String(message!!.body, StandardCharsets.UTF_8)
         log.info("Received message: $payload")
-        val busRequest = WorkbenchAdapterImpl.transformIngress(payload)
 
         try {
-            handleRequest(busRequest, message.lockToken)
+            handleRequest(WorkbenchAdapterImpl.transformIngress(payload), message.lockToken)
         } catch (exception: IngressFormatException) {
             handleError(exception, message.lockToken)
         }
