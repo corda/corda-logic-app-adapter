@@ -50,6 +50,23 @@ class WorkbenchAdapterTests {
     }
 
     @Test
+    fun `transforming an empty message fails`() {
+        val emptyString = ""
+
+        assertThat(
+            { WorkbenchAdapterImpl.transformIngress(emptyString) },
+            throws(
+                isA<IngressFormatException>(
+                    has(
+                        Exception::message,
+                        present(startsWith("No ingress message presented"))
+                    )
+                )
+            )
+        )
+    }
+
+    @Test
     fun `a request ID is made available even though the message is otherwise nonsensical`() {
         val json = """{
             |   "requestId" : "ea3bcdca-cffb-4122-9025-c96c72db1213",

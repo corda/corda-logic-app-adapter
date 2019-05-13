@@ -55,7 +55,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             ObjectMapper().readTree(message)
         } catch (e: JsonParseException) {
             throw IngressFormatException(e)
-        }
+        } ?: throw IngressFormatException("No ingress message presented")
 
         // try to determine the request ID early--even if the message is otherwise invalid--so we can return
         // correlation information to the caller
