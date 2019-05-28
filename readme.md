@@ -36,8 +36,8 @@ The connector will run as a `Corda Service` and as such does not require any con
 
 The colour coding in above figure illustrates the four different classes of components:
 
- 1. _Grey_; External Components that are not to be delivered by R3.
- 2. _Blue_; Key Components that are to be delivered by R3. Likely to be delivered in a single deployment unit but structured as different modules internally.
+ 1. _Grey_; External Components
+ 2. _Blue_; Key Components contained in this repository.
  3. _Red_; External components that are assumed to be deployed independent of any of the connector components.
  4. _Green_; External components that are necessary to serialise and deserialise flow invocation messages in the format dictated by Corda.
 
@@ -126,32 +126,20 @@ This message is sent to invoke a flow that has no input states—a ‘new contra
 ```json
 {
   "messageName": "CreateContractRequest",
-  "requestId": "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
-  "workflowName": "net.corda.workbench.refrigeratedTransportation.flow.CreateFlow",
+  "requestId": "00000000-0000-0000-0000-000000000000",
+  "workflowName": "RefrigeratedTransportation",
   "parameters": [
     {
-      "name": "state",
-      "value": "Created"
-    },
-    {
-      "name": "owner",
-      "value": "O=Alice Ltd., L=Shanghai, C=CN"
-    },
-    {
-      "name": "initiatingCounterparty",
-      "value": "O=Bob Ltd., L=Beijing, C=CN"
-    },
-    {
       "name": "device",
-      "value": "O=Charly GmbH, OU=Device01, L=Berlin, C=DE"
+      "value": "O=Alice, OU=Device 01, L=London, C=GB"
     },
     {
       "name": "supplyChainOwner",
-      "value": "O=Denise SARL, L=Marseille, C=FR"
+      "value": "O=Bob, L=London, C=GB"
     },
     {
       "name": "supplyChainObserver",
-      "value": "O=Denise SARL, L=Marseille, C=FR"
+      "value": "O=Charlie, L=London, C=GB"
     },
     {
       "name": "minHumidity",
@@ -193,9 +181,11 @@ This format is equally modelled after a message format [established earlier](htt
 ```json
 {
   "messageName": "ContractMessage",
-  "requestId": "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
+  "blockId": 999,
+  "blockHash": "B450A0F77BD14239398E5BD57C0FBBA26BB937FD3C19203C1B5937B7D34DA54A",
+  "requestId": "00000000-0000-0000-0000-000000000000",
   "additionalInformation": {},
-  "contractLedgerIdentifier": "f1a27656-3b1a-4469-8e37-04d9e2764bf6",
+  "contractLedgerIdentifier": "767fd6e0-79cf-4b5e-a9e1-d32e140647c7",
   "contractProperties": [
     {
       "name": "state",
@@ -203,9 +193,82 @@ This format is equally modelled after a message format [established earlier](htt
     },
     {
       "name": "owner",
-      "value": "O=Alice Ltd., L=Shanghai, C=CN"
+      "value": "O=Alice, L=London, C=GB"
+    },
+    {
+      "name": "initiatingCounterparty",
+      "value": "O=Alice, L=London, C=GB"
+    },
+    {
+      "name": "counterparty",
+      "value": "O=Alice, L=London, C=GB"
+    },
+    {
+      "name": "previousCounterparty",
+      "value": "null"
+    },
+    {
+      "name": "device",
+      "value": "OU=Device 01, O=Alice, L=London, C=GB"
+    },
+    {
+      "name": "supplyChainOwner",
+      "value": "O=Bob, L=London, C=GB"
+    },
+    {
+      "name": "supplyChainObserver",
+      "value": "O=Charlie, L=London, C=GB"
+    },
+    {
+      "name": "minHumidity",
+      "value": "12"
+    },
+    {
+      "name": "maxHumidity",
+      "value": "45"
+    },
+    {
+      "name": "minTemperature",
+      "value": "-20"
+    },
+    {
+      "name": "maxTemperature",
+      "value": "-7"
+    },
+    {
+      "name": "complianceSensorType",
+      "value": "null"
+    },
+    {
+      "name": "complianceSensorReading",
+      "value": "null"
+    },
+    {
+      "name": "complianceStatus",
+      "value": "true"
+    },
+    {
+      "name": "complianceDetail",
+      "value": "null"
+    },
+    {
+      "name": "lastSensorUpdateTimestamp",
+      "value": "null"
     }
   ],
+  "modifyingTransactions": [
+    {
+      "from": "O=Alice, L=London, C=GB",
+      "to": [
+        "OU=Device 01, O=Alice, L=London, C=GB",
+        "O=Bob, L=London, C=GB"
+      ],
+      "transactionId": 999,
+      "transactionHash": "B450A0F77BD14239398E5BD57C0FBBA26BB937FD3C19203C1B5937B7D34DA54A"
+    }
+  ],
+  "contractId": 1,
+  "connectionId": 1,
   "messageSchemaVersion": "1.0.0",
   "isNewContract": true
 }
@@ -261,17 +324,17 @@ Note that there are certain requirements on the constructor parameters for this 
 
 ```json
 {
-    "messageName": "CreateContractActionRequest",
-    "requestId": "5a2b34a6-5fa0-4400-b1f5-686a7c212d52",
-    "contractLedgerIdentifier": "f2ef3c6f-4e1a-4375-bb3c-f622c29ec3b6",
-    "workflowFunctionName": "net.corda.workbench.refrigeratedTransportation.flow.CreateFlow",
-    "parameters": [
-        {
-            "name": "newCounterparty",
-            "value": "NorthwindTraders"
-        }
-    ],
-    "messageSchemaVersion": "1.0.0"
+  "messageName": "CreateContractActionRequest",
+  "requestId": "3dc1e227-d0da-4756-bf24-553256ef38db",
+  "contractLedgerIdentifier": "767fd6e0-79cf-4b5e-a9e1-d32e140647c7",
+  "workflowFunctionName": "TransferResponsibility",
+  "parameters": [
+    {
+      "name": "newCounterparty",
+      "value": "O=Charlie, L=London, C=GB"
+    }
+  ],
+  "messageSchemaVersion": "1.0.0"
 }
 ```
 
@@ -297,10 +360,10 @@ The format—including the message name—is a proposal.
 
 ```json
 {
-    "messageName": "ReadContractRequest",
-    "requestId": "9c2e532f-15bb-4eb8-ae58-34722c5776f4",
-    "contractLedgerIdentifier": "3aa6120b-b809-4cdc-9a19-81546482b313",
-    "messageSchemaVersion": "1.0.0"
+  "messageName": "ReadContractRequest",
+  "requestId": "9c2e532f-15bb-4eb8-ae58-34722c5776f4",
+  "contractLedgerIdentifier": "767fd6e0-79cf-4b5e-a9e1-d32e140647c7",
+  "messageSchemaVersion": "1.0.0"
 }
 ```
 
@@ -331,14 +394,14 @@ Caveats
 All flow logic to be invoked using this connector need to implement `FlowLogic<SignedTransaction>`.
 To be startable by the Logic App Service, all flow logic needs to be annotated by `@StartableByService`.
 
-To support the query requirements stated, only transactions that evolve single states linearly (sharing a common linearId, i.e. `LinearStates`) are supported in the adapter.
+To support the query requirements, only transactions that evolve single linear states are supported in the adapter.
 All flows invoked must have up to one linear state as input and up to one linear state as output and must not take any other inputs or outputs.
 Flows that take a linear state as input need to specify `linearState` as constructor parameter. 
 
 ### Serialisation/Deserialisation
 
 The same limitations that apply to the interactive shell apply to inputs to the Logic App connector.
-Specifically, around the serialisation rules and types of flow that are supported. 
+Specifically, around the serialisation rules (specifically the lack of support for polymorphism) and types of flow that are supported. 
 
 In addition to the limitation of having to be `LinearStates`, any output states used have to be JSON serializable.   
 Some types may not be JSON serializable using the underlying Jackson serializer.
@@ -351,3 +414,12 @@ This introduces a problematic ‘at-least-once delivered’ behaviour for the Me
 While this only applies in an edge case—i.e. in a scenario where the Message Processor crashes during flow invocation—this should be targeted in a future release by holding state for correlation IDs received in persistent storage and allowing to query the node for whether the flow has been invoked properly.
 
 The transaction observer is not durable, i.e. messages will not be listened to while the listener is shut down. 
+
+### Uniqueness of attributes
+
+The workbench format uses integers to denote some unique properties (i.e. `contractId`, `transactionId`).
+This assumes enumerability of attributes.
+Some of those attributes, e.g. `transactionHash`, are _not_ enumerable in Corda.
+To make these attributes conform to numeric output, the input domain is mapped to a numeric hash.
+This domain is comparably small and bears the risk of hash collisions.
+For that reason, equality in `contractId`, `transactionId` or caller `id` is only an indication but _not_ a guarantee equality of the underlying states.
