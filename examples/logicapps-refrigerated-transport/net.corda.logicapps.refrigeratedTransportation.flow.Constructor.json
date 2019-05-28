@@ -1,7 +1,7 @@
 {
   "messageName": "CreateContractRequest",
   "requestId": "4b2c9336-6d16-48b1-99fc-dbafc82cbc1e",
-  "workflowName": "Constructor",
+  "workflowName": "RefrigeratedTransportation",
   "parameters": [
     {
       "name": "device",
