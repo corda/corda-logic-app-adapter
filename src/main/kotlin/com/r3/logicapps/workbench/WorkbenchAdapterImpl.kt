@@ -28,6 +28,7 @@ import com.r3.logicapps.workbench.WorkbenchSchema.FlowInvocationRequestSchema
 import com.r3.logicapps.workbench.WorkbenchSchema.FlowStateRequestSchema
 import com.r3.logicapps.workbench.WorkbenchSchema.FlowUpdateRequestSchema
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.crypto.SecureHash
 import org.everit.json.schema.ValidationException
 import org.json.JSONObject
 import kotlin.math.absoluteValue
@@ -123,7 +124,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             put("messageName", "ContractMessage")
             // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
             put("blockId", FAKE_BLOCK_ID)
-            put("blockHash", flowOutput.transactionHash.toString())
+            put("blockHash", flowOutput.transactionHash.toPrefixedString())
             put("requestId", flowOutput.requestId)
             putObject("additionalInformation")
             put("contractLedgerIdentifier", flowOutput.linearId.toString())
@@ -145,7 +146,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
                     }
                     // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
                     put("transactionId", FAKE_TRANSACTION_ID)
-                    put("transactionHash", flowOutput.transactionHash.toString())
+                    put("transactionHash", flowOutput.transactionHash.toPrefixedString())
                 }
             }
             // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
@@ -329,4 +330,5 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
     private fun String.numericId(): Int = hashCode().absoluteValue
 
     private fun ObjectNode.toPrettyString(): String = jsonWriter.writeValueAsString(this)
+    private fun SecureHash.toPrefixedString(): String = "0x${toString()}"
 }
