@@ -8,6 +8,7 @@
 	},
 	"additionalInformation" : { },
 	"contractId" : 1426306713,
+	"functionName" : "NonSenseFlow",
 	"parameters" : [
 		{
 			"name" : "one",

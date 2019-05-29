@@ -245,6 +245,8 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
 
             flowOutput.flowClass.qualifiedName?.let { put("contractId", it.numericId()) }
 
+            flowOutput.flowClass.simpleName?.let { put("functionName", it) }
+
             putArray("parameters").apply {
                 flowOutput.parameters.forEach { k, v ->
                     addObject().apply {
