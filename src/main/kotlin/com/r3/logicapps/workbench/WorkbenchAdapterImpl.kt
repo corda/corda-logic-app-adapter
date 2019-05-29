@@ -129,7 +129,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             putObject("additionalInformation")
             put("contractLedgerIdentifier", flowOutput.linearId.toString())
             putArray("contractProperties").apply {
-                flowOutput.fields.forEach { k, v ->
+                flowOutput.fields.forEach { (k, v) ->
                     addObject().apply {
                         put("name", k)
                         put("value", v)
@@ -252,7 +252,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             flowOutput.flowClass.simpleName?.let { put("functionName", it) }
 
             putArray("parameters").apply {
-                flowOutput.parameters.forEach { k, v ->
+                flowOutput.parameters.forEach { (k, v) ->
                     addObject().apply {
                         put("name", k)
                         put("value", v)
