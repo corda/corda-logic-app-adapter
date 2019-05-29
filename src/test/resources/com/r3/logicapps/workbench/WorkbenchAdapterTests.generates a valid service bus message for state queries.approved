@@ -5,10 +5,12 @@
 	"contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
 	"contractProperties" : [
 		{
+			"workflowPropertyId" : 1,
 			"name" : "lorem",
 			"value" : "ipsum"
 		},
 		{
+			"workflowPropertyId" : 2,
 			"name" : "dolor",
 			"value" : "sit amet"
 		}

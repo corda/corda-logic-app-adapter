@@ -166,8 +166,9 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             putObject("additionalInformation")
             put("contractLedgerIdentifier", flowOutput.linearId.toString())
             putArray("contractProperties").apply {
-                flowOutput.fields.forEach { k, v ->
+                flowOutput.fields.toList().forEachIndexed { i, (k, v) ->
                     addObject().apply {
+                        put("workflowPropertyId", i + 1)
                         put("name", k)
                         put("value", v)
                     }
