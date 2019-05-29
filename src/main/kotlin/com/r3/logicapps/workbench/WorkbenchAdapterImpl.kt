@@ -243,7 +243,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
 
             flowOutput.flowClass.qualifiedName?.let { put("contractId", it.numericId()) }
 
-            putArray("contractProperties").apply {
+            putArray("parameters").apply {
                 flowOutput.parameters.forEach { k, v ->
                     addObject().apply {
                         put("name", k)

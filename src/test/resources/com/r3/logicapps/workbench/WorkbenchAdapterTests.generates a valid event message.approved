@@ -8,7 +8,7 @@
 	},
 	"additionalInformation" : { },
 	"contractId" : 1426306713,
-	"contractProperties" : [
+	"parameters" : [
 		{
 			"name" : "one",
 			"value" : "eins"
