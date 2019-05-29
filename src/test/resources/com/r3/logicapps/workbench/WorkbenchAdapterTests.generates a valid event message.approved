@@ -8,6 +8,7 @@
 	},
 	"additionalInformation" : { },
 	"contractId" : 1426306713,
+	"contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
 	"functionName" : "NonSenseFlow",
 	"parameters" : [
 		{
