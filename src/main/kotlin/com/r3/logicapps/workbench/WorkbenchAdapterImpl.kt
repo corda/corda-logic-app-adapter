@@ -183,11 +183,13 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
 
     private fun transformFlowErrorResponse(error: FlowError): ServicebusMessage {
         val node = JsonNodeFactory.instance.objectNode().apply {
+            put("requestId", error.requestId)
+            // TODO moritzplatt 2019-05-29 -- define proper value
+            put("connectionId", FAKE_CONNECTION_ID)
             put("messageName", error.ingressType.toWorkbenchName())
             error.linearId?.let {
                 put("contractLedgerIdentifier", it.toString())
             }
-            put("requestId", error.requestId)
             put(error)
         }
         return node.toPrettyString()
