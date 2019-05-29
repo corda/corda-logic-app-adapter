@@ -20,25 +20,22 @@ class ServiceDrivenMessageProcessor(appServiceHub: AppServiceHub) : MessageProce
         val handle = appServiceHub.startFlow(flowLogic)
         // At this point a flow handle exists which means the flow has been checkpointed. It's safe to ACK the message
         serviceBusClient.acknowledge(messageLockTokenId)
-        try {
-            // TODO moritzplatt 2019-04-11 -- allow for configuring a timeout
-            val transaction = handle.returnValue.getOrThrow() as? SignedTransaction
-                ?: throw IllegalArgumentException("Only flows returning `SignedTransaction` are supported")
 
-            val from = appServiceHub.myInfo.legalIdentities.first()
-            val to = transaction.coreTransaction.outputStates.firstOrNull()?.let {
-                it.participants - from
-            } ?: emptyList()
+        // TODO moritzplatt 2019-04-11 -- allow for configuring a timeout
+        val transaction = handle.returnValue.getOrThrow() as? SignedTransaction
+            ?: throw IllegalArgumentException("Only flows returning `SignedTransaction` are supported")
 
-            val fromName = from.name
-            val toNames = to.mapNotNull { it.nameOrNull() }
+        val from = appServiceHub.myInfo.legalIdentities.first()
+        val to = transaction.coreTransaction.outputStates.firstOrNull()?.let {
+            it.participants - from
+        } ?: emptyList()
 
-            val transactionHash = transaction.tx.id
+        val fromName = from.name
+        val toNames = to.mapNotNull { it.nameOrNull() }
 
-            transaction.coreTransaction.outputStates.toFlowInvocationResult(fromName, toNames, transactionHash)
-        } catch (exception: Throwable) {
-            FlowInvocationResult(exception = exception, hash = null)
-        }
+        val transactionHash = transaction.tx.id
+
+        transaction.coreTransaction.outputStates.toFlowInvocationResult(fromName, toNames, transactionHash)
     },
     retrieveStateDelegate = { linearId ->
         val unconsumed = LinearStateQueryCriteria(

@@ -47,7 +47,6 @@ class ServiceDrivenMessageProcessorTests {
                 "participants[1]" to "O=Member 1, L=London, C=GB",
                 "participants[2]" to "O=Member 2, L=London, C=GB"
             ),
-            exception = null,
             fromName = CordaX500Name.parse("O=Member 1, L=London, C=GB"),
             toNames = listOf(CordaX500Name.parse("O=Member 2, L=London, C=GB")),
             hash = SecureHash.allOnesHash

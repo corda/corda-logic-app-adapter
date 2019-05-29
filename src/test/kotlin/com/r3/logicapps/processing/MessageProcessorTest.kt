@@ -49,9 +49,9 @@ class MessageProcessorTest : TestBase() {
             startFlowDelegate = { _, _, _ ->
                 FlowInvocationResult(
                     linearId = linearId,
-                    hash = Companion.zeroHash,
                     fromName = CordaX500Name.parse("O=Member 1, L=London, C=GB"),
-                    toNames = emptyList()
+                    toNames = emptyList(),
+                    hash = Companion.zeroHash
                 )
             },
             retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
@@ -90,9 +90,9 @@ class MessageProcessorTest : TestBase() {
             startFlowDelegate = { _, _, _ ->
                 FlowInvocationResult(
                     linearId = linearId,
-                    hash = Companion.zeroHash,
                     fromName = CordaX500Name.parse("O=Member 1, L=London, C=GB"),
-                    toNames = emptyList()
+                    toNames = emptyList(),
+                    hash = Companion.zeroHash
                 )
             },
             retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
@@ -135,9 +135,9 @@ class MessageProcessorTest : TestBase() {
             startFlowDelegate = { _, _, _ ->
                 FlowInvocationResult(
                     linearId = linearId,
-                    hash = Companion.zeroHash,
                     fromName = CordaX500Name.parse("O=Member 1, L=London, C=GB"),
-                    toNames = emptyList()
+                    toNames = emptyList(),
+                    hash = Companion.zeroHash
                 )
             },
             retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
@@ -180,9 +180,9 @@ class MessageProcessorTest : TestBase() {
             startFlowDelegate = { _, _, _ ->
                 FlowInvocationResult(
                     linearId = linearId,
-                    hash = Companion.zeroHash,
                     fromName = CordaX500Name.parse("O=Member 1, L=London, C=GB"),
-                    toNames = emptyList()
+                    toNames = emptyList(),
+                    hash = Companion.zeroHash
                 )
             },
             retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
@@ -224,9 +224,9 @@ class MessageProcessorTest : TestBase() {
             startFlowDelegate = { _, _ , _ ->
                 FlowInvocationResult(
                     linearId = linearId,
-                    hash = Companion.zeroHash,
                     fromName = CordaX500Name.parse("O=Member 1, L=London, C=GB"),
-                    toNames = emptyList()
+                    toNames = emptyList(),
+                    hash = Companion.zeroHash
                 )
             },
             retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
@@ -259,12 +259,12 @@ class MessageProcessorTest : TestBase() {
             startFlowDelegate = { _, _, _ ->
                 FlowInvocationResult(
                     linearId = linearId,
-                    hash = Companion.zeroHash,
                     fromName = CordaX500Name.parse("O=Member 1, L=London, C=GB"),
                     toNames = listOf(
                         CordaX500Name.parse("O=Member 2, L=Madrid, C=ES"),
                         CordaX500Name.parse("O=Member 3, L=Bilbao, C=ES")
-                    )
+                    ),
+                    hash = Companion.zeroHash
                 )
             },
             retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
