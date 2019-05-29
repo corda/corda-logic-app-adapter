@@ -221,6 +221,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
 
             // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
             put("contractId", FAKE_CONTRACT_ID)
+            put("contractLedgerIdentifier", confirmation.linearId.toString())
             // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
             put("connectionId", FAKE_CONNECTION_ID)
 
