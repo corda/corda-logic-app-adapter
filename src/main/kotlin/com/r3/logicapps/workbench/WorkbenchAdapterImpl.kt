@@ -322,9 +322,9 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
     private fun JsonNode.messageName(): String? = (get("messageName") as? TextNode)?.textValue()
 
     private fun KClass<*>.toWorkbenchName() = when (this) {
-        InvokeFlowWithoutInputStates::class -> "CreateContractRequest"
-        InvokeFlowWithInputStates::class    -> "CreateContractActionRequest"
-        QueryFlowState::class               -> "ReadContractRequest"
+        InvokeFlowWithoutInputStates::class -> "CreateContractUpdate"
+        InvokeFlowWithInputStates::class    -> "CreateContractActionUpdate"
+        QueryFlowState::class               -> "ReadContractUpdate"
         else                                -> throw IllegalStateException("Unknown bus request type ${this.simpleName}")
     }
 
