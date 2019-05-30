@@ -28,7 +28,7 @@ class BusMessageHandler(
         log.info("Received message: $payload")
 
         try {
-            handleRequest(WorkbenchAdapterImpl.transformIngress(payload), message.lockToken)
+            handleRequest(WorkbenchAdapterImpl().transformIngress(payload), message.lockToken)
         } catch (exception: IngressFormatException) {
             handleError(exception, message.lockToken)
         }
@@ -38,7 +38,7 @@ class BusMessageHandler(
 
     private fun handleRequest(request: BusRequest, messageLockTokenId: UUID) {
         messageProcessor.invoke(request, busClient, messageLockTokenId).forEach {
-            val response = WorkbenchAdapterImpl.transformEgress(it)
+            val response = WorkbenchAdapterImpl().transformEgress(it)
             log.info("Sending reply: $response")
             busClient.send(response)
         }
@@ -51,7 +51,7 @@ class BusMessageHandler(
             else                                  -> GenericError(exception)
         }
         busClient.acknowledge(messageLockTokenId)
-        busClient.send(WorkbenchAdapterImpl.transformEgress(error))
+        busClient.send(WorkbenchAdapterImpl().transformEgress(error))
     }
 
     override fun notifyException(exception: Throwable?, phase: ExceptionPhase?) {

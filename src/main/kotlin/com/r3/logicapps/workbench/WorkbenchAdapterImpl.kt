@@ -39,9 +39,9 @@ import kotlin.math.absoluteValue
 import kotlin.reflect.KClass
 import kotlin.text.Charsets.UTF_8
 
-object WorkbenchAdapterImpl : WorkbenchAdapter {
+class WorkbenchAdapterImpl : WorkbenchAdapter {
 
-    private const val CONNECTION_ID = 1
+    private val CONNECTION_ID = 1
 
     private val jsonWriter = ObjectMapper().setDefaultPrettyPrinter(DefaultPrettyPrinter().apply {
         PlatformIndependentIndenter().let {
@@ -329,12 +329,10 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
     private fun String.toPositiveBigInteger(): BigInteger = toByteArray(UTF_8).toPositiveBigInteger()
     private fun ByteArray.toPositiveBigInteger(): BigInteger = BigInteger(ByteArray(1) + this)
 
-    private fun UUID.toByteArray(): ByteArray {
-        val bb = ByteBuffer.wrap(ByteArray(16))
-        bb.putLong(mostSignificantBits)
-        bb.putLong(leastSignificantBits)
-        return bb.array()
-    }
+    private fun UUID.toByteArray(): ByteArray = ByteBuffer.wrap(ByteArray(16)).apply {
+        putLong(mostSignificantBits)
+        putLong(leastSignificantBits)
+    }.array()
 
     private fun ObjectNode.toPrettyString(): String = jsonWriter.writeValueAsString(this)
     private fun SecureHash.toPrefixedString(): String = "0x${toString()}"
