@@ -241,12 +241,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
 
             putObject("additionalInformation")
 
-            flowOutput.flowClass.qualifiedName?.let {
-                put(
-                    "contractId",
-                    flowOutput.linearId.id.toByteArray().toPositiveBigInteger()
-                )
-            }
+            put("contractId", flowOutput.linearId.id.toByteArray().toPositiveBigInteger())
             put("contractLedgerIdentifier", flowOutput.linearId.toString())
 
             flowOutput.flowClass.simpleName?.let { put("functionName", it) }
