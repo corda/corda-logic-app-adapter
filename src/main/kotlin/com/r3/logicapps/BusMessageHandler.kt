@@ -9,7 +9,7 @@ import com.r3.logicapps.processing.MessageProcessor
 import com.r3.logicapps.servicebus.ServicebusClient
 import com.r3.logicapps.workbench.CorrelatableIngressFormatException
 import com.r3.logicapps.workbench.IngressFormatException
-import com.r3.logicapps.workbench.WorkbenchAdapterImpl
+import com.r3.logicapps.workbench.WorkbenchAdapter
 import net.corda.core.utilities.contextLogger
 import java.nio.charset.StandardCharsets
 import java.util.UUID
@@ -17,7 +17,8 @@ import java.util.concurrent.CompletableFuture
 
 class BusMessageHandler(
     private val busClient: ServicebusClient,
-    private val messageProcessor: MessageProcessor
+    private val messageProcessor: MessageProcessor,
+    private val workbenchAdapter: WorkbenchAdapter
 ) : IMessageHandler {
     companion object {
         val log = contextLogger()
@@ -28,7 +29,7 @@ class BusMessageHandler(
         log.info("Received message: $payload")
 
         try {
-            handleRequest(WorkbenchAdapterImpl().transformIngress(payload), message.lockToken)
+            handleRequest(workbenchAdapter.transformIngress(payload), message.lockToken)
         } catch (exception: IngressFormatException) {
             handleError(exception, message.lockToken)
         }
@@ -38,7 +39,7 @@ class BusMessageHandler(
 
     private fun handleRequest(request: BusRequest, messageLockTokenId: UUID) {
         messageProcessor.invoke(request, busClient, messageLockTokenId).forEach {
-            val response = WorkbenchAdapterImpl().transformEgress(it)
+            val response = workbenchAdapter.transformEgress(it)
             log.info("Sending reply: $response")
             busClient.send(response)
         }
@@ -51,7 +52,7 @@ class BusMessageHandler(
             else                                  -> GenericError(exception)
         }
         busClient.acknowledge(messageLockTokenId)
-        busClient.send(WorkbenchAdapterImpl().transformEgress(error))
+        busClient.send(workbenchAdapter.transformEgress(error))
     }
 
     override fun notifyException(exception: Throwable?, phase: ExceptionPhase?) {
