@@ -15,6 +15,7 @@ import com.r3.logicapps.servicebus.ServicebusClient
 import io.github.classgraph.ClassGraph
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.FlowLogic
+import net.corda.core.identity.CordaX500Name
 import net.corda.core.internal.pooledScan
 import net.corda.core.node.services.IdentityService
 import java.util.UUID
@@ -22,20 +23,30 @@ import java.util.UUID
 open class MessageProcessorImpl(
     private val startFlowDelegate: (FlowLogic<*>, ServicebusClient, UUID) -> FlowInvocationResult,
     private val retrieveStateDelegate: (UniqueIdentifier) -> StateQueryResult,
-    private val identityService: IdentityService? = null
+    private val identityService: IdentityService? = null,
+    private val owner: CordaX500Name
 ) : MessageProcessor {
     override fun invoke(message: BusRequest, client: ServicebusClient, messageLockTokenId: UUID): List<BusResponse> =
         when (message) {
             is InvokeFlowWithoutInputStates ->
-                processInvocationMessage(message.requestId, null, message, true, client, messageLockTokenId)
+                processInvocationMessage(
+                    caller = owner,
+                    requestId = message.requestId,
+                    linearId = null,
+                    invocable = message,
+                    isNew = true,
+                    client = client,
+                    messageLockTokenId = messageLockTokenId
+                )
             is InvokeFlowWithInputStates    ->
                 processInvocationMessage(
-                    message.requestId,
-                    message.linearId,
-                    message,
-                    false,
-                    client,
-                    messageLockTokenId
+                    caller = owner,
+                    requestId = message.requestId,
+                    linearId = message.linearId,
+                    invocable = message,
+                    isNew = false,
+                    client = client,
+                    messageLockTokenId = messageLockTokenId
                 )
             is QueryFlowState               -> {
                 // Message can be safely ACKd
@@ -45,6 +56,7 @@ open class MessageProcessorImpl(
         }
 
     private fun processInvocationMessage(
+        caller: CordaX500Name,
         requestId: String,
         linearId: UniqueIdentifier?,
         invocable: Invocable,
@@ -59,7 +71,6 @@ open class MessageProcessorImpl(
             val flowLogic = deriveFlowLogic(invocable.workflowName, invocable.parameters + linearIdParameter)
             val result = startFlowDelegate(flowLogic, client, messageLockTokenId)
 
-            val caller = result.fromName ?: error("Unable to retrieve invoking party after flow invocation")
             val lid = result.linearId ?: linearId ?: error("Unable to derive linear ID after flow invocation")
             val transactionHash = result.hash ?: error("Unable to derive transaction hash after flow invocation")
 

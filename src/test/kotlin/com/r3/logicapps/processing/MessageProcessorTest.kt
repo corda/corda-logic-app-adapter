@@ -10,6 +10,7 @@ import com.r3.logicapps.stubs.ServiceBusClientStub
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.SecureHash.Companion
 import net.corda.core.identity.CordaX500Name
+import net.corda.testing.core.ALICE_NAME
 import org.junit.Test
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -26,7 +27,8 @@ class MessageProcessorTest : TestBase() {
 
         val messageProcessor = MessageProcessorImpl(
             startFlowDelegate = { _, _, _ -> FlowInvocationResult(linearId = linearId, hash = null) },
-            retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
+            retrieveStateDelegate = { StateQueryResult(isNewContract = false) },
+            owner = ALICE_NAME
         )
         val (busResponse) = messageProcessor.invoke(
             InvokeFlowWithoutInputStates(requestId, "com.nowhere.SimpleFlow", emptyMap()),
@@ -53,7 +55,8 @@ class MessageProcessorTest : TestBase() {
                     hash = Companion.zeroHash
                 )
             },
-            retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
+            retrieveStateDelegate = { StateQueryResult(isNewContract = false) },
+            owner = ALICE_NAME
         )
 
         val (state, output, commit, submit) = messageProcessor.invoke(
@@ -72,7 +75,7 @@ class MessageProcessorTest : TestBase() {
             ?: error("Response of type ${submit::class.simpleName}, expected Submitted")
 
         assertThat(s.requestId, equalTo(requestId))
-        assertThat(s.caller.toString(), equalTo("O=Member 1, L=London, C=GB"))
+        assertThat(s.caller.toString(), equalTo("O=Alice Corp, L=Madrid, C=ES"))
         assertThat(cr.requestId, equalTo(requestId))
         assertThat(sr.requestId, equalTo(requestId))
 
@@ -97,7 +100,8 @@ class MessageProcessorTest : TestBase() {
                     hash = Companion.zeroHash
                 )
             },
-            retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
+            retrieveStateDelegate = { StateQueryResult(isNewContract = false) },
+            owner = ALICE_NAME
         )
 
         val (state, output, commit, submit) = messageProcessor.invoke(
@@ -142,7 +146,8 @@ class MessageProcessorTest : TestBase() {
                     hash = Companion.zeroHash
                 )
             },
-            retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
+            retrieveStateDelegate = { StateQueryResult(isNewContract = false) },
+            owner = ALICE_NAME
         )
 
         val (state, output, commit, submit) = messageProcessor.invoke(
@@ -186,7 +191,8 @@ class MessageProcessorTest : TestBase() {
                     hash = Companion.zeroHash
                 )
             },
-            retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
+            retrieveStateDelegate = { StateQueryResult(isNewContract = false) },
+            owner = ALICE_NAME
         )
 
         val (state, output, commit, submit) = messageProcessor.invoke(
@@ -230,7 +236,8 @@ class MessageProcessorTest : TestBase() {
                     hash = Companion.zeroHash
                 )
             },
-            retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
+            retrieveStateDelegate = { StateQueryResult(isNewContract = false) },
+            owner = ALICE_NAME
         )
 
         val busResponses = messageProcessor.invoke(
@@ -268,7 +275,8 @@ class MessageProcessorTest : TestBase() {
                     hash = Companion.zeroHash
                 )
             },
-            retrieveStateDelegate = { StateQueryResult(isNewContract = false) }
+            retrieveStateDelegate = { StateQueryResult(isNewContract = false) },
+            owner = ALICE_NAME
         )
 
         val (invocation, busResponse, commit, submit) = messageProcessor.invoke(
