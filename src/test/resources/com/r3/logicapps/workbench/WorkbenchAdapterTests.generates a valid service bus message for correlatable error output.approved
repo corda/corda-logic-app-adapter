@@ -1,6 +1,8 @@
 {
 	"requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
 	"additionalInformation" : {
+		"ledgerType" : "corda",
+		"platformVersion" : 1,
 		"errorCode" : 1537725078,
 		"errorMessage" : "Boooom!"
 	},

@@ -39,7 +39,7 @@ class LogicAppService(
         val inboundQueue: String = if (config.exists("inboundQueue")) { uncheckedCast(config.get("inboundQueue")) } else { "" }
         val outboundQueue: String = if (config.exists("outboundQueue")) { uncheckedCast(config.get("outboundQueue")) } else { "" }
 
-        val workbenchAdapter = WorkbenchAdapterImpl()
+        val workbenchAdapter = WorkbenchAdapterImpl(appServiceHub.myInfo.platformVersion)
 
         serviceBusConnectionService = ServicebusConnectionService(connectionString, inboundQueue, outboundQueue)
         serviceBusConnectionService.start()

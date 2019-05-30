@@ -5,6 +5,8 @@
 	"messageName" : "CreateContractUpdate",
 	"contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
 	"additionalInformation" : {
+		"ledgerType" : "corda",
+		"platformVersion" : 1,
 		"errorCode" : 543349448,
 		"errorMessage" : "Boooom!"
 	},

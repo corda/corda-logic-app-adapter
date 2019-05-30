@@ -7,7 +7,10 @@
 		"id" : 127332906451628815787102979315720227276380402378716642566555458,
 		"ledgerIdentifier" : "O=Member 1, L=London, C=GB"
 	},
-	"additionalInformation" : { },
+	"additionalInformation" : {
+		"ledgerType" : "corda",
+		"platformVersion" : 1
+	},
 	"contractId" : 52773038365920193388397547613219494433,
 	"contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
 	"functionName" : "NonSenseFlow",

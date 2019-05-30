@@ -37,7 +37,7 @@ class WorkbenchAdapterTests {
         val nonJson = "arrrrghh!!!"
 
         assertThat(
-            { WorkbenchAdapterImpl().transformIngress(nonJson) },
+            { WorkbenchAdapterImpl(1).transformIngress(nonJson) },
             throws(
                 isA<IngressFormatException>(
                     has(
@@ -54,7 +54,7 @@ class WorkbenchAdapterTests {
         val emptyString = ""
 
         assertThat(
-            { WorkbenchAdapterImpl().transformIngress(emptyString) },
+            { WorkbenchAdapterImpl(1).transformIngress(emptyString) },
             throws(
                 isA<IngressFormatException>(
                     has(
@@ -74,7 +74,7 @@ class WorkbenchAdapterTests {
             |}""".trimMargin()
 
         assertThat(
-            { WorkbenchAdapterImpl().transformIngress(json) },
+            { WorkbenchAdapterImpl(1).transformIngress(json) },
             throws(
                 isA<CorrelatableIngressFormatException>(
                     has(
@@ -94,7 +94,7 @@ class WorkbenchAdapterTests {
             |}""".trimMargin()
 
         assertThat(
-            { WorkbenchAdapterImpl().transformIngress(json) },
+            { WorkbenchAdapterImpl(1).transformIngress(json) },
             throws(
                 isA<IngressFormatException>(
                     has(
@@ -115,7 +115,7 @@ class WorkbenchAdapterTests {
         |}""".trimMargin()
 
         assertThat(
-            { WorkbenchAdapterImpl().transformIngress(json) },
+            { WorkbenchAdapterImpl(1).transformIngress(json) },
             throws(
                 isA<IngressFormatException>(
                     has(
@@ -178,7 +178,7 @@ class WorkbenchAdapterTests {
         |  "messageSchemaVersion": "1.0.0"
         |}""".trimMargin()
 
-        val actual = WorkbenchAdapterImpl().transformIngress(json)
+        val actual = WorkbenchAdapterImpl(1).transformIngress(json)
 
         val expected = InvokeFlowWithoutInputStates(
             requestId = "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
@@ -210,7 +210,7 @@ class WorkbenchAdapterTests {
         |}""".trimMargin()
 
         assertThat(
-            { WorkbenchAdapterImpl().transformIngress(json) },
+            { WorkbenchAdapterImpl(1).transformIngress(json) },
             throws(
                 isA<IngressFormatException>(
                     has(
@@ -238,7 +238,7 @@ class WorkbenchAdapterTests {
         |    "messageSchemaVersion": "1.0.0"
         |}""".trimMargin()
 
-        val actual = WorkbenchAdapterImpl().transformIngress(json)
+        val actual = WorkbenchAdapterImpl(1).transformIngress(json)
 
         val expected = InvokeFlowWithInputStates(
             requestId = "5a2b34a6-5fa0-4400-b1f5-686a7c212d52",
@@ -260,7 +260,7 @@ class WorkbenchAdapterTests {
         |}""".trimMargin()
 
         assertThat(
-            { WorkbenchAdapterImpl().transformIngress(json) },
+            { WorkbenchAdapterImpl(1).transformIngress(json) },
             throws(
                 isA<IngressFormatException>(
                     has(
@@ -281,7 +281,7 @@ class WorkbenchAdapterTests {
         |    "messageSchemaVersion": "1.0.0"
         |}""".trimMargin()
 
-        val actual = WorkbenchAdapterImpl().transformIngress(json)
+        val actual = WorkbenchAdapterImpl(1).transformIngress(json)
 
         val expected = QueryFlowState(
             requestId = "9c2e532f-15bb-4eb8-ae58-34722c5776f4",
@@ -294,7 +294,7 @@ class WorkbenchAdapterTests {
 
     @Test
     fun `generates a valid service bus message for a flow output`() {
-        val actual = WorkbenchAdapterImpl().transformEgress(
+        val actual = WorkbenchAdapterImpl(1).transformEgress(
             FlowOutput(
                 InvokeFlowWithoutInputStates::class,
                 "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
@@ -318,7 +318,7 @@ class WorkbenchAdapterTests {
 
     @Test
     fun `generates a valid service bus message for flow error output`() {
-        val actual = WorkbenchAdapterImpl().transformEgress(
+        val actual = WorkbenchAdapterImpl(1).transformEgress(
             FlowError(
                 ingressType = InvokeFlowWithoutInputStates::class,
                 requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
@@ -332,7 +332,7 @@ class WorkbenchAdapterTests {
 
     @Test
     fun `generates a valid service bus message for generic error output`() {
-        val actual = WorkbenchAdapterImpl().transformEgress(
+        val actual = WorkbenchAdapterImpl(1).transformEgress(
             GenericError(IllegalStateException("Whaam!"))
         )
 
@@ -341,7 +341,7 @@ class WorkbenchAdapterTests {
 
     @Test
     fun `generates a valid service bus message for correlatable error output`() {
-        val actual = WorkbenchAdapterImpl().transformEgress(
+        val actual = WorkbenchAdapterImpl(1).transformEgress(
             CorrelatableError(
                 cause = IllegalStateException("Boooom!"),
                 requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9"
@@ -353,7 +353,7 @@ class WorkbenchAdapterTests {
 
     @Test
     fun `generates a valid service bus message for state queries`() {
-        val actual = WorkbenchAdapterImpl().transformEgress(
+        val actual = WorkbenchAdapterImpl(1).transformEgress(
             StateOutput(
                 requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
                 linearId = UniqueIdentifier.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21"),
@@ -370,7 +370,7 @@ class WorkbenchAdapterTests {
 
     @Test
     fun `generated a valid submitted message`() {
-        val actual = WorkbenchAdapterImpl().transformEgress(
+        val actual = WorkbenchAdapterImpl(1).transformEgress(
             Submitted(
                 ingressType = InvokeFlowWithoutInputStates::class,
                 requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
@@ -383,7 +383,7 @@ class WorkbenchAdapterTests {
 
     @Test
     fun `generates a valid committed message`() {
-        val actual = WorkbenchAdapterImpl().transformEgress(
+        val actual = WorkbenchAdapterImpl(1).transformEgress(
             Committed(
                 ingressType = InvokeFlowWithoutInputStates::class,
                 requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
@@ -396,7 +396,7 @@ class WorkbenchAdapterTests {
 
     @Test
     fun `generates a valid event message`() {
-        val actual = WorkbenchAdapterImpl().transformEgress(
+        val actual = WorkbenchAdapterImpl(1).transformEgress(
             InvocationState(
                 requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
                 linearId = UniqueIdentifier.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21"),

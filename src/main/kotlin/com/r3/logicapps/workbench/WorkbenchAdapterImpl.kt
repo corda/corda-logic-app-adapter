@@ -39,7 +39,7 @@ import kotlin.math.absoluteValue
 import kotlin.reflect.KClass
 import kotlin.text.Charsets.UTF_8
 
-class WorkbenchAdapterImpl : WorkbenchAdapter {
+class WorkbenchAdapterImpl(private val platformVersion: Int) : WorkbenchAdapter {
 
     private val CONNECTION_ID = 1
 
@@ -123,10 +123,10 @@ class WorkbenchAdapterImpl : WorkbenchAdapter {
     private fun transformFlowOutputResponse(flowOutput: FlowOutput): ServicebusMessage {
         val node = JsonNodeFactory.instance.objectNode().apply {
             put("messageName", "ContractMessage")
-            set("blockId", NullNode.instance)
+            put("blockId", flowOutput.transactionHash.bytes.toPositiveBigInteger())
             put("blockHash", flowOutput.transactionHash.toPrefixedString())
             put("requestId", flowOutput.requestId)
-            putObject("additionalInformation")
+            putAdditionalInformation()
             put("contractLedgerIdentifier", flowOutput.linearId.toString())
             putArray("contractProperties").apply {
                 flowOutput.fields.toList().forEach { (k, v) ->
@@ -159,7 +159,7 @@ class WorkbenchAdapterImpl : WorkbenchAdapter {
         val node = JsonNodeFactory.instance.objectNode().apply {
             put("messageName", "ContractMessage")
             put("requestId", flowOutput.requestId)
-            putObject("additionalInformation")
+            putAdditionalInformation()
             put("contractLedgerIdentifier", flowOutput.linearId.toString())
             putArray("contractProperties").apply {
                 flowOutput.fields.forEach { (k, v) ->
@@ -175,8 +175,9 @@ class WorkbenchAdapterImpl : WorkbenchAdapter {
         return node.toPrettyString()
     }
 
-    private fun transformFlowErrorResponse(error: FlowError): ServicebusMessage {
-        val node = JsonNodeFactory.instance.objectNode().apply {
+    private fun transformFlowErrorResponse(error: FlowError): ServicebusMessage = JsonNodeFactory
+        .instance.objectNode()
+        .apply {
             put("requestId", error.requestId)
             error.linearId?.let { put("contractId", it.id.toByteArray().toPositiveBigInteger()) }
             put("connectionId", CONNECTION_ID)
@@ -185,9 +186,7 @@ class WorkbenchAdapterImpl : WorkbenchAdapter {
                 put("contractLedgerIdentifier", it.toString())
             }
             put(error)
-        }
-        return node.toPrettyString()
-    }
+        }.toPrettyString()
 
     private fun transformCorrelatableErrorResponse(error: CorrelatableError): ServicebusMessage =
         JsonNodeFactory.instance.objectNode().apply {
@@ -202,6 +201,7 @@ class WorkbenchAdapterImpl : WorkbenchAdapter {
 
     private fun ObjectNode.put(error: Error) {
         putObject("additionalInformation").apply {
+            ledgerInformation()
             put("errorCode", error.cause.errorCode().absoluteValue)
             put("errorMessage", error.cause.message ?: "")
         }
@@ -209,10 +209,21 @@ class WorkbenchAdapterImpl : WorkbenchAdapter {
         put("messageSchemaVersion", "1.0.0")
     }
 
+    private fun ObjectNode.putAdditionalInformation() {
+        putObject("additionalInformation").apply {
+            ledgerInformation()
+        }
+    }
+
+    private fun ObjectNode.ledgerInformation() {
+        put("ledgerType", "corda")
+        put("platformVersion", platformVersion)
+    }
+
     private fun transformConfirmationResponse(confirmation: Confirmation): ServicebusMessage {
         val node = JsonNodeFactory.instance.objectNode().apply {
             put("messageName", confirmation.ingressType.toWorkbenchName())
-            putObject("additionalInformation")
+            putAdditionalInformation()
             put("requestId", confirmation.requestId)
 
             put("contractId", confirmation.linearId.id.toByteArray().toPositiveBigInteger())
@@ -238,7 +249,7 @@ class WorkbenchAdapterImpl : WorkbenchAdapter {
                 put("ledgerIdentifier", flowOutput.caller.toString())
             }
 
-            putObject("additionalInformation")
+            putAdditionalInformation()
 
             put("contractId", flowOutput.linearId.id.toByteArray().toPositiveBigInteger())
             put("contractLedgerIdentifier", flowOutput.linearId.toString())

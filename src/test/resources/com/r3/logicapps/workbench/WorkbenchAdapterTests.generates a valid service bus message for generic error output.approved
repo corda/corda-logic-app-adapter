@@ -1,5 +1,7 @@
 {
 	"additionalInformation" : {
+		"ledgerType" : "corda",
+		"platformVersion" : 1,
 		"errorCode" : 112405697,
 		"errorMessage" : "Whaam!"
 	},
