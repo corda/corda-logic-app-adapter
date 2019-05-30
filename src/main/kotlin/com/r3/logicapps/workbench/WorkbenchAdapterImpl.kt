@@ -258,7 +258,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             putObject("transaction").apply {
                 put("transactionId", flowOutput.transactionHash.bytes.toPositiveBigInteger())
                 put("transactionHash", flowOutput.transactionHash.toPrefixedString())
-                put("from", flowOutput.fromName.toString())
+                put("from", flowOutput.caller.toString())
                 put("to", flowOutput.linearId.toString())
             }
 

@@ -1,10 +1,15 @@
 package com.r3.logicapps.processing
 
 import com.r3.logicapps.BusRequest
+import com.r3.logicapps.BusRequest.InvokeFlowWithInputStates
+import com.r3.logicapps.BusRequest.InvokeFlowWithoutInputStates
 import com.r3.logicapps.BusRequest.QueryFlowState
 import com.r3.logicapps.BusResponse
+import com.r3.logicapps.BusResponse.Confirmation
 import com.r3.logicapps.BusResponse.Error.FlowError
+import com.r3.logicapps.BusResponse.FlowOutput
 import com.r3.logicapps.BusResponse.InvocationState
+import com.r3.logicapps.BusResponse.StateOutput
 import com.r3.logicapps.Invocable
 import com.r3.logicapps.servicebus.ServicebusClient
 import io.github.classgraph.ClassGraph
@@ -19,17 +24,25 @@ open class MessageProcessorImpl(
     private val retrieveStateDelegate: (UniqueIdentifier) -> StateQueryResult,
     private val identityService: IdentityService? = null
 ) : MessageProcessor {
-    override fun invoke(message: BusRequest, client: ServicebusClient, messageLockTokenId: UUID): List<BusResponse> = when (message) {
-        is BusRequest.InvokeFlowWithoutInputStates ->
-            processInvocationMessage(message.requestId, null, message, true, client, messageLockTokenId)
-        is BusRequest.InvokeFlowWithInputStates    ->
-            processInvocationMessage(message.requestId, message.linearId, message, false, client, messageLockTokenId)
-        is BusRequest.QueryFlowState               -> {
-            // Message can be safely ACKd
-            client.acknowledge(messageLockTokenId)
-            listOf(processQueryMessage(message.requestId, message.linearId))
+    override fun invoke(message: BusRequest, client: ServicebusClient, messageLockTokenId: UUID): List<BusResponse> =
+        when (message) {
+            is InvokeFlowWithoutInputStates ->
+                processInvocationMessage(message.requestId, null, message, true, client, messageLockTokenId)
+            is InvokeFlowWithInputStates    ->
+                processInvocationMessage(
+                    message.requestId,
+                    message.linearId,
+                    message,
+                    false,
+                    client,
+                    messageLockTokenId
+                )
+            is QueryFlowState               -> {
+                // Message can be safely ACKd
+                client.acknowledge(messageLockTokenId)
+                listOf(processQueryMessage(message.requestId, message.linearId))
+            }
         }
-    }
 
     private fun processInvocationMessage(
         requestId: String,
@@ -45,40 +58,36 @@ open class MessageProcessorImpl(
             val linearIdParameter = linearId?.let { mapOf("linearId" to linearId.toString()) } ?: emptyMap()
             val flowLogic = deriveFlowLogic(invocable.workflowName, invocable.parameters + linearIdParameter)
             val result = startFlowDelegate(flowLogic, client, messageLockTokenId)
-            val lid = result.linearId ?: linearId ?: error("Unable to derive linear ID after flow invocation")
 
-            val fromName = result.fromName ?: error("Unable to retrieve invoking party after flow invocation")
+            val caller = result.fromName ?: error("Unable to retrieve invoking party after flow invocation")
+            val lid = result.linearId ?: linearId ?: error("Unable to derive linear ID after flow invocation")
             val transactionHash = result.hash ?: error("Unable to derive transaction hash after flow invocation")
 
             listOf(
-                *result.toNames.map { to ->
-                    InvocationState(
-                        requestId = requestId,
-                        linearId = lid,
-                        parameters = invocable.parameters,
-                        caller = fromName,
-                        flowClass = flowLogic::class,
-                        fromName = fromName,
-                        toName = to,
-                        transactionHash = transactionHash
-                    )
-                }.toTypedArray(),
-                BusResponse.FlowOutput(
+                InvocationState(
+                    requestId = requestId,
+                    linearId = lid,
+                    parameters = invocable.parameters,
+                    caller = caller,
+                    flowClass = flowLogic::class,
+                    transactionHash = transactionHash
+                ),
+                FlowOutput(
                     ingressType = ingressType,
                     requestId = requestId,
                     linearId = lid,
                     fields = result.fields,
                     isNewContract = isNew,
-                    fromName = fromName,
+                    fromName = caller,
                     toNames = result.toNames,
                     transactionHash = transactionHash
                 ),
-                BusResponse.Confirmation.Committed(
+                Confirmation.Committed(
                     requestId = requestId,
                     linearId = lid,
                     ingressType = ingressType
                 ),
-                BusResponse.Confirmation.Submitted(
+                Confirmation.Submitted(
                     requestId = requestId,
                     linearId = lid,
                     ingressType = ingressType
@@ -92,7 +101,7 @@ open class MessageProcessorImpl(
 
     private fun processQueryMessage(requestId: String, linearId: UniqueIdentifier): BusResponse = try {
         retrieveStateDelegate(linearId).let { result ->
-            BusResponse.StateOutput(
+            StateOutput(
                 requestId = requestId,
                 linearId = linearId,
                 fields = result.fields,
