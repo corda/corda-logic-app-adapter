@@ -3,7 +3,7 @@
 	"additionalInformation" : {
 		"ledgerType" : "corda",
 		"platformVersion" : 1,
-		"errorCode" : 1537725078,
+		"errorCode" : 864829291,
 		"errorMessage" : "Boooom!"
 	},
 	"status" : "Failure",

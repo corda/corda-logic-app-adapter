@@ -2,7 +2,7 @@
 	"additionalInformation" : {
 		"ledgerType" : "corda",
 		"platformVersion" : 1,
-		"errorCode" : 112405697,
+		"errorCode" : 785301484,
 		"errorMessage" : "Whaam!"
 	},
 	"status" : "Failure",
