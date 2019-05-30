@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
+import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.r3.logicapps.BusRequest
@@ -31,16 +32,16 @@ import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.SecureHash
 import org.everit.json.schema.ValidationException
 import org.json.JSONObject
+import java.math.BigInteger
+import java.nio.ByteBuffer
+import java.util.UUID
 import kotlin.math.absoluteValue
 import kotlin.reflect.KClass
+import kotlin.text.Charsets.UTF_8
 
 object WorkbenchAdapterImpl : WorkbenchAdapter {
 
-    private const val FAKE_BLOCK_ID = 999
-    private const val FAKE_TRANSACTION_ID = 999
-    private const val FAKE_CONTRACT_ID = 1
-    private const val FAKE_CONNECTION_ID = 1
-    private const val FAKE_TRANSACTION_SEQUENCE = 1
+    private const val CONNECTION_ID = 1
 
     private val jsonWriter = ObjectMapper().setDefaultPrettyPrinter(DefaultPrettyPrinter().apply {
         PlatformIndependentIndenter().let {
@@ -122,15 +123,15 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
     private fun transformFlowOutputResponse(flowOutput: FlowOutput): ServicebusMessage {
         val node = JsonNodeFactory.instance.objectNode().apply {
             put("messageName", "ContractMessage")
-            // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
-            put("blockId", FAKE_BLOCK_ID)
+            set("blockId", NullNode.instance)
             put("blockHash", flowOutput.transactionHash.toPrefixedString())
             put("requestId", flowOutput.requestId)
             putObject("additionalInformation")
             put("contractLedgerIdentifier", flowOutput.linearId.toString())
             putArray("contractProperties").apply {
-                flowOutput.fields.forEach { (k, v) ->
+                flowOutput.fields.toList().forEachIndexed { i, (k, v) ->
                     addObject().apply {
+                        put("workflowPropertyId", NullNode.instance)
                         put("name", k)
                         put("value", v)
                     }
@@ -139,20 +140,15 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             putArray("modifyingTransactions").apply {
                 addObject().apply {
                     put("from", flowOutput.fromName.toString())
-                    putArray("to").apply {
-                        flowOutput.toNames.forEach {
-                            add(it.toString())
-                        }
-                    }
-                    // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
-                    put("transactionId", FAKE_TRANSACTION_ID)
+                    put("to", flowOutput.linearId.toString())
+
+                    put("transactionId", flowOutput.transactionHash.bytes.toPositiveBigInteger())
                     put("transactionHash", flowOutput.transactionHash.toPrefixedString())
                 }
             }
-            // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
-            put("contractId", FAKE_CONTRACT_ID)
-            // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
-            put("connectionId", FAKE_CONNECTION_ID)
+
+            put("contractId", flowOutput.linearId.id.toByteArray().toPositiveBigInteger())
+            put("connectionId", CONNECTION_ID)
             put("messageSchemaVersion", "1.0.0")
             put("isNewContract", flowOutput.isNewContract)
         }
@@ -168,14 +164,13 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             putArray("contractProperties").apply {
                 flowOutput.fields.toList().forEachIndexed { i, (k, v) ->
                     addObject().apply {
-                        put("workflowPropertyId", i + 1)
+                        set("workflowPropertyId", NullNode.instance)
                         put("name", k)
                         put("value", v)
                     }
                 }
             }
             put("messageSchemaVersion", "1.0.0")
-            put("isNewContract", flowOutput.isNewContract)
         }
         return node.toPrettyString()
 
@@ -184,8 +179,8 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
     private fun transformFlowErrorResponse(error: FlowError): ServicebusMessage {
         val node = JsonNodeFactory.instance.objectNode().apply {
             put("requestId", error.requestId)
-            // TODO moritzplatt 2019-05-29 -- define proper value
-            put("connectionId", FAKE_CONNECTION_ID)
+            error.linearId?.let { put("contractId", it.id.toByteArray().toPositiveBigInteger()) }
+            put("connectionId", CONNECTION_ID)
             put("messageName", error.ingressType.toWorkbenchName())
             error.linearId?.let {
                 put("contractLedgerIdentifier", it.toString())
@@ -221,11 +216,9 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             putObject("additionalInformation")
             put("requestId", confirmation.requestId)
 
-            // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
-            put("contractId", FAKE_CONTRACT_ID)
+            put("contractId", confirmation.linearId.id.toByteArray().toPositiveBigInteger())
             put("contractLedgerIdentifier", confirmation.linearId.toString())
-            // TODO moritzplatt 2019-04-12 -- need to agree on appropriate content for this field
-            put("connectionId", FAKE_CONNECTION_ID)
+            put("connectionId", CONNECTION_ID)
 
             put("messageSchemaVersion", "1.0.0")
             put("status", confirmation.toWorkbenchName())
@@ -235,18 +228,25 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
 
     private fun transformInvocationStateResponse(flowOutput: InvocationState): ServicebusMessage {
         val node = JsonNodeFactory.instance.objectNode().apply {
+            put("messageName", "EventMessage")
             put("eventName", "ContractFunctionInvocation")
+
             put("requestId", flowOutput.requestId)
 
             putObject("caller").apply {
                 put("type", "User")
-                put("id", flowOutput.caller.toString().numericId())
+                put("id", flowOutput.caller.toString().toPositiveBigInteger())
                 put("ledgerIdentifier", flowOutput.caller.toString())
             }
 
             putObject("additionalInformation")
 
-            flowOutput.flowClass.qualifiedName?.let { put("contractId", it.numericId()) }
+            flowOutput.flowClass.qualifiedName?.let {
+                put(
+                    "contractId",
+                    flowOutput.linearId.id.toByteArray().toPositiveBigInteger()
+                )
+            }
             put("contractLedgerIdentifier", flowOutput.linearId.toString())
 
             flowOutput.flowClass.simpleName?.let { put("functionName", it) }
@@ -261,16 +261,15 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             }
 
             putObject("transaction").apply {
-                put("transactionId", flowOutput.transactionHash.toString().numericId())
-                put("transactionHash", flowOutput.transactionHash.toString())
+                put("transactionId", flowOutput.transactionHash.bytes.toPositiveBigInteger())
+                put("transactionHash", flowOutput.transactionHash.toPrefixedString())
                 put("from", flowOutput.fromName.toString())
-                put("to", flowOutput.toName.toString())
+                put("to", flowOutput.linearId.toString())
             }
 
-            put("inTransactionSequenceNumber", FAKE_TRANSACTION_SEQUENCE)
-            put("connectionId", FAKE_CONNECTION_ID)
+            set("inTransactionSequenceNumber", NullNode.instance)
+            put("connectionId", CONNECTION_ID)
             put("messageSchemaVersion", "1.0.0")
-            put("messageName", "EventMessage")
         }
         return node.toPrettyString()
     }
@@ -333,8 +332,15 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
         is Committed -> "Committed"
     }
 
-    @Deprecated("This is based on a non-cryptographic hash of low entropy. Replace with an function that guarantees uniqueness.")
-    private fun String.numericId(): Int = hashCode().absoluteValue
+    private fun String.toPositiveBigInteger(): BigInteger = toByteArray(UTF_8).toPositiveBigInteger()
+    private fun ByteArray.toPositiveBigInteger(): BigInteger = BigInteger(ByteArray(1) + this)
+
+    private fun UUID.toByteArray(): ByteArray {
+        val bb = ByteBuffer.wrap(ByteArray(16))
+        bb.putLong(mostSignificantBits)
+        bb.putLong(leastSignificantBits)
+        return bb.array()
+    }
 
     private fun ObjectNode.toPrettyString(): String = jsonWriter.writeValueAsString(this)
     private fun SecureHash.toPrefixedString(): String = "0x${toString()}"

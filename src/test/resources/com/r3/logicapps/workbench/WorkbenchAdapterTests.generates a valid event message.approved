@@ -1,40 +1,37 @@
 {
+	"messageName" : "EventMessage",
 	"eventName" : "ContractFunctionInvocation",
 	"requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
 	"caller" : {
 		"type" : "User",
-		"id" : BIGINT,
+		"id" : 127332906451628815787102979315720227276380402378716642566555458,
 		"ledgerIdentifier" : "O=Member 1, L=London, C=GB"
 	},
 	"additionalInformation" : { },
-	"contractId" : BIGINT_VERSION_OF_LINEAR_ID,
-	"contractLedgerIdentifier" : LINEAR_ID,
+	"contractId" : 52773038365920193388397547613219494433,
+	"contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
 	"functionName" : "NonSenseFlow",
-	"contractProperties" : [
+	"parameters" : [
 		{
-		    "workflowPropertyId" : null,
 			"name" : "one",
 			"value" : "eins"
 		},
 		{
-		    "workflowPropertyId" : null,
 			"name" : "two",
 			"value" : "zwei"
 		},
 		{
-		    "workflowPropertyId" : null,
 			"name" : "three",
 			"value" : "drei"
 		}
 	],
 	"transaction" : {
-		"transactionId" : BIGINT_VERSION_OF_HASH,
-		"transactionHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
+		"transactionId" : 115792089237316195423570985008687907853269984665640564039457584007913129639935,
+		"transactionHash" : "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
 		"from" : "O=Member 1, L=London, C=GB",
-		"to" : LINEAR_ID
+		"to" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21"
 	},
 	"inTransactionSequenceNumber" : null,
 	"connectionId" : 1,
-	"messageSchemaVersion" : "1.0.0",
-	"messageName" : "EventMessage"
+	"messageSchemaVersion" : "1.0.0"
 }

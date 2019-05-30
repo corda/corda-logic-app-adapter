@@ -409,7 +409,7 @@ class WorkbenchAdapterTests {
                 flowClass = NonSenseFlow::class,
                 fromName = CordaX500Name.parse("O=Member 1, L=London, C=GB"),
                 toName = CordaX500Name.parse("O=Member 2, L=Berlin, C=DE"),
-                transactionHash = SecureHash.zeroHash
+                transactionHash = SecureHash.allOnesHash
             )
         )
 
