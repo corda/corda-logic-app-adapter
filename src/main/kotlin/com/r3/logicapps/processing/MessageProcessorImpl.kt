@@ -26,11 +26,11 @@ open class MessageProcessorImpl(
     private val identityService: IdentityService? = null,
     private val owner: CordaX500Name
 ) : MessageProcessor {
+
     override fun invoke(message: BusRequest, client: ServicebusClient, messageLockTokenId: UUID): List<BusResponse> =
         when (message) {
             is InvokeFlowWithoutInputStates ->
                 processInvocationMessage(
-                    caller = owner,
                     requestId = message.requestId,
                     linearId = null,
                     invocable = message,
@@ -40,7 +40,6 @@ open class MessageProcessorImpl(
                 )
             is InvokeFlowWithInputStates    ->
                 processInvocationMessage(
-                    caller = owner,
                     requestId = message.requestId,
                     linearId = message.linearId,
                     invocable = message,
@@ -56,7 +55,6 @@ open class MessageProcessorImpl(
         }
 
     private fun processInvocationMessage(
-        caller: CordaX500Name,
         requestId: String,
         linearId: UniqueIdentifier?,
         invocable: Invocable,
@@ -79,7 +77,7 @@ open class MessageProcessorImpl(
                     requestId = requestId,
                     linearId = lid,
                     parameters = invocable.parameters,
-                    caller = caller,
+                    caller = owner,
                     flowClass = flowLogic::class,
                     transactionHash = transactionHash
                 ),
@@ -89,7 +87,7 @@ open class MessageProcessorImpl(
                     linearId = lid,
                     fields = result.fields,
                     isNewContract = isNew,
-                    fromName = caller,
+                    fromName = owner,
                     toNames = result.toNames,
                     transactionHash = transactionHash
                 ),
@@ -123,8 +121,8 @@ open class MessageProcessorImpl(
         FlowError(
             ingressType = QueryFlowState::class,
             requestId = requestId,
-            linearId = linearId,
-            cause = exception
+            cause = exception,
+            linearId = linearId
         )
     }
 

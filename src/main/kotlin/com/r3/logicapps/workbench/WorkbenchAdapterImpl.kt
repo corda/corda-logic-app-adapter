@@ -129,9 +129,9 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             putObject("additionalInformation")
             put("contractLedgerIdentifier", flowOutput.linearId.toString())
             putArray("contractProperties").apply {
-                flowOutput.fields.toList().forEachIndexed { i, (k, v) ->
+                flowOutput.fields.toList().forEach { (k, v) ->
                     addObject().apply {
-                        put("workflowPropertyId", NullNode.instance)
+                        set("workflowPropertyId", NullNode.instance)
                         put("name", k)
                         put("value", v)
                     }
@@ -162,7 +162,7 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             putObject("additionalInformation")
             put("contractLedgerIdentifier", flowOutput.linearId.toString())
             putArray("contractProperties").apply {
-                flowOutput.fields.toList().forEachIndexed { i, (k, v) ->
+                flowOutput.fields.forEach { (k, v) ->
                     addObject().apply {
                         set("workflowPropertyId", NullNode.instance)
                         put("name", k)
@@ -173,7 +173,6 @@ object WorkbenchAdapterImpl : WorkbenchAdapter {
             put("messageSchemaVersion", "1.0.0")
         }
         return node.toPrettyString()
-
     }
 
     private fun transformFlowErrorResponse(error: FlowError): ServicebusMessage {

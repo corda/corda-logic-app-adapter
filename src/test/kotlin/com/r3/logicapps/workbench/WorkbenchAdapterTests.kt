@@ -322,8 +322,8 @@ class WorkbenchAdapterTests {
             FlowError(
                 ingressType = InvokeFlowWithoutInputStates::class,
                 requestId = "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-                linearId = UniqueIdentifier.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21"),
-                cause = IllegalStateException("Boooom!")
+                cause = IllegalStateException("Boooom!"),
+                linearId = UniqueIdentifier.fromString("27b3b7ad-10ce-4bd4-a72c-1bf215709a21")
             )
         )
 
