@@ -1,5 +1,5 @@
 {
-	"messageName" : "CreateContractRequest",
+	"messageName" : "CreateContractUpdate",
 	"additionalInformation" : { },
 	"requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
 	"contractId" : 1,

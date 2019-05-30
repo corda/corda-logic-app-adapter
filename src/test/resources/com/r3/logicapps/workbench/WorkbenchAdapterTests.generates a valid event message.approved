@@ -3,34 +3,37 @@
 	"requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
 	"caller" : {
 		"type" : "User",
-		"id" : 388261153,
+		"id" : BIGINT,
 		"ledgerIdentifier" : "O=Member 1, L=London, C=GB"
 	},
 	"additionalInformation" : { },
-	"contractId" : 1426306713,
-	"contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
+	"contractId" : BIGINT_VERSION_OF_LINEAR_ID,
+	"contractLedgerIdentifier" : LINEAR_ID,
 	"functionName" : "NonSenseFlow",
-	"parameters" : [
+	"contractProperties" : [
 		{
+		    "workflowPropertyId" : null,
 			"name" : "one",
 			"value" : "eins"
 		},
 		{
+		    "workflowPropertyId" : null,
 			"name" : "two",
 			"value" : "zwei"
 		},
 		{
+		    "workflowPropertyId" : null,
 			"name" : "three",
 			"value" : "drei"
 		}
 	],
 	"transaction" : {
-		"transactionId" : 1348943872,
-		"transactionHash" : "0000000000000000000000000000000000000000000000000000000000000000",
+		"transactionId" : BIGINT_VERSION_OF_HASH,
+		"transactionHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
 		"from" : "O=Member 1, L=London, C=GB",
-		"to" : "O=Member 2, L=Berlin, C=DE"
+		"to" : LINEAR_ID
 	},
-	"inTransactionSequenceNumber" : 1,
+	"inTransactionSequenceNumber" : null,
 	"connectionId" : 1,
 	"messageSchemaVersion" : "1.0.0",
 	"messageName" : "EventMessage"

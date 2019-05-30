@@ -1,16 +1,18 @@
 {
 	"messageName" : "ContractMessage",
-	"blockId" : 999,
+	"blockId" : null,
 	"blockHash" : "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
 	"requestId" : "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
 	"additionalInformation" : { },
-	"contractLedgerIdentifier" : "f1a27656-3b1a-4469-8e37-04d9e2764bf6",
+	"contractLedgerIdentifier" : LINEAR_ID,
 	"contractProperties" : [
 		{
+		    "workflowPropertyId" : null,
 			"name" : "state",
 			"value" : "Created"
 		},
 		{
+		    "workflowPropertyId" : null,
 			"name" : "owner",
 			"value" : "O=Alice Ltd., L=Shanghai, C=CN"
 		}
@@ -18,15 +20,12 @@
 	"modifyingTransactions" : [
 		{
 			"from" : "O=Member 1, L=London, C=GB",
-			"to" : [
-				"O=Member 2, L=Manchester, C=GB",
-				"O=Member 3, L=Bristol, C=GB"
-			],
-			"transactionId" : 999,
+			"to" : LINEAR_ID,
+			"transactionId" : BIGINT_VERSION_OF_HASH,
 			"transactionHash" : "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
 		}
 	],
-	"contractId" : 1,
+	"contractId" : BIGINT_VERSION_OF_LINEAR_ID,
 	"connectionId" : 1,
 	"messageSchemaVersion" : "1.0.0",
 	"isNewContract" : false

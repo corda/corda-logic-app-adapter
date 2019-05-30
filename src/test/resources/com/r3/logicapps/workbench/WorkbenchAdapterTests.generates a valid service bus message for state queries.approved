@@ -15,6 +15,5 @@
 			"value" : "sit amet"
 		}
 	],
-	"messageSchemaVersion" : "1.0.0",
-	"isNewContract" : false
+	"messageSchemaVersion" : "1.0.0"
 }

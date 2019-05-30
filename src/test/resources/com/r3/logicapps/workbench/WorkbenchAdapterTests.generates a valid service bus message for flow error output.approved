@@ -1,8 +1,8 @@
 {
 	"requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
 	"connectionId" : 1,
-	"messageName" : "CreateContractRequest",
-	"contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
+	"messageName" : "CreateContractUpdate",
+	"contractLedgerIdentifier" : "LINEAR_ID",
 	"additionalInformation" : {
 		"errorCode" : 543349448,
 		"errorMessage" : "Boooom!"

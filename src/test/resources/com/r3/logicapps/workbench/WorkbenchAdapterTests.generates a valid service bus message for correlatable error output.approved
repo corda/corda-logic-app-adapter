@@ -1,9 +1,12 @@
 {
+    "messageName"
 	"requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
+	"contractId" : BINGINT_VERSION_OF_LINEAR_ID,
 	"additionalInformation" : {
 		"errorCode" : 1537725078,
 		"errorMessage" : "Boooom!"
 	},
 	"status" : "Failure",
+	"connectionId": 1,
 	"messageSchemaVersion" : "1.0.0"
 }
