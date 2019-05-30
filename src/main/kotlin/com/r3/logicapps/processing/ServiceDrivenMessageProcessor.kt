@@ -60,7 +60,8 @@ class ServiceDrivenMessageProcessor(appServiceHub: AppServiceHub) : MessageProce
             isNewContract = consumedStateAndRefs.isEmpty()
         )
     },
-    identityService = appServiceHub.identityService
+    identityService = appServiceHub.identityService,
+    owner = appServiceHub.myInfo.legalIdentities.first().name
 )
 
 fun List<ContractState>.toFlowInvocationResult(

@@ -1,9 +1,12 @@
 {
 	"requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
+	"contractId" : 52773038365920193388397547613219494433,
 	"connectionId" : 1,
-	"messageName" : "CreateContractRequest",
+	"messageName" : "CreateContractUpdate",
 	"contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
 	"additionalInformation" : {
+		"ledgerType" : "corda",
+		"platformVersion" : 1,
 		"errorCode" : 543349448,
 		"errorMessage" : "Boooom!"
 	},

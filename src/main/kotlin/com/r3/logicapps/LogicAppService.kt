@@ -5,6 +5,7 @@ import com.r3.logicapps.processing.ServiceDrivenMessageProcessor
 import com.r3.logicapps.servicebus.ServicebusClient
 import com.r3.logicapps.servicebus.ServicebusClientImpl
 import com.r3.logicapps.servicebus.ServicebusConnectionService
+import com.r3.logicapps.workbench.WorkbenchAdapterImpl
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
@@ -38,6 +39,8 @@ class LogicAppService(
         val inboundQueue: String = if (config.exists("inboundQueue")) { uncheckedCast(config.get("inboundQueue")) } else { "" }
         val outboundQueue: String = if (config.exists("outboundQueue")) { uncheckedCast(config.get("outboundQueue")) } else { "" }
 
+        val workbenchAdapter = WorkbenchAdapterImpl(appServiceHub.myInfo.platformVersion)
+
         serviceBusConnectionService = ServicebusConnectionService(connectionString, inboundQueue, outboundQueue)
         serviceBusConnectionService.start()
 
@@ -46,7 +49,13 @@ class LogicAppService(
 
         statusSubscriber = serviceBusConnectionService.change.subscribe({ ready ->
             if (ready) {
-                serviceBusClient.registerReceivedMessageHandler(BusMessageHandler(serviceBusClient, messageProcessor))
+                serviceBusClient.registerReceivedMessageHandler(
+                    BusMessageHandler(
+                        serviceBusClient,
+                        messageProcessor,
+                        workbenchAdapter
+                    )
+                )
             }
         }, { log.error("Error in connection service state change", it) })
 

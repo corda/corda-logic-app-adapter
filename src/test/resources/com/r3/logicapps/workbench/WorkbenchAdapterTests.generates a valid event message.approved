@@ -1,13 +1,17 @@
 {
+	"messageName" : "EventMessage",
 	"eventName" : "ContractFunctionInvocation",
 	"requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
 	"caller" : {
 		"type" : "User",
-		"id" : 388261153,
+		"id" : 127332906451628815787102979315720227276380402378716642566555458,
 		"ledgerIdentifier" : "O=Member 1, L=London, C=GB"
 	},
-	"additionalInformation" : { },
-	"contractId" : 1426306713,
+	"additionalInformation" : {
+		"ledgerType" : "corda",
+		"platformVersion" : 1
+	},
+	"contractId" : 52773038365920193388397547613219494433,
 	"contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
 	"functionName" : "NonSenseFlow",
 	"parameters" : [
@@ -25,13 +29,12 @@
 		}
 	],
 	"transaction" : {
-		"transactionId" : 1348943872,
-		"transactionHash" : "0000000000000000000000000000000000000000000000000000000000000000",
+		"transactionId" : 115792089237316195423570985008687907853269984665640564039457584007913129639935,
+		"transactionHash" : "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
 		"from" : "O=Member 1, L=London, C=GB",
-		"to" : "O=Member 2, L=Berlin, C=DE"
+		"to" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21"
 	},
-	"inTransactionSequenceNumber" : 1,
+	"inTransactionSequenceNumber" : null,
 	"connectionId" : 1,
-	"messageSchemaVersion" : "1.0.0",
-	"messageName" : "EventMessage"
+	"messageSchemaVersion" : "1.0.0"
 }

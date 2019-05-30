@@ -1,20 +1,22 @@
 {
 	"messageName" : "ContractMessage",
 	"requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-	"additionalInformation" : { },
+	"additionalInformation" : {
+		"ledgerType" : "corda",
+		"platformVersion" : 1
+	},
 	"contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
 	"contractProperties" : [
 		{
-			"workflowPropertyId" : 1,
+			"workflowPropertyId" : null,
 			"name" : "lorem",
 			"value" : "ipsum"
 		},
 		{
-			"workflowPropertyId" : 2,
+			"workflowPropertyId" : null,
 			"name" : "dolor",
 			"value" : "sit amet"
 		}
 	],
-	"messageSchemaVersion" : "1.0.0",
-	"isNewContract" : false
+	"messageSchemaVersion" : "1.0.0"
 }

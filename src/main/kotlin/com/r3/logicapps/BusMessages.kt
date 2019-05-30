@@ -151,8 +151,6 @@ sealed class BusResponse {
         override val parameters: Map<String, String>,
         val caller: CordaX500Name,
         val flowClass: KClass<*>,
-        val fromName: CordaX500Name,
-        val toName: CordaX500Name,
         val transactionHash: SecureHash
     ) : BusResponse(), Identifiable, Parameterised, Correlatable
 }
