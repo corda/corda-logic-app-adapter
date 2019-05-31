@@ -329,4 +329,4 @@ The transaction observer is not durable, i.e. messages will not be listened to w
 The workbench format uses numbers to denote some unique properties (i.e. `contractId`, `transactionId`).
 This assumes enumerability of attributes. 
 Since the adapter is not designed to maintain state, these numeric attributes are directly derived from the underlying data.
-This means that numbers can get very large (e.g. 128 bit Integers for UUID data).
+This means that numbers can get very large, exceeding the ‘interoperability’ range outlined in RFC 7159.
