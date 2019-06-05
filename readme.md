@@ -326,7 +326,19 @@ The transaction observer is not durable, i.e. messages will not be listened to w
 
 ### Numeric Attributes
 
-The workbench format uses numbers to denote some unique properties (i.e. `contractId`, `transactionId`).
-This assumes enumerability of attributes. 
-Since the adapter is not designed to maintain state, these numeric attributes are directly derived from the underlying data.
-This means that numbers can get very large, exceeding the ‘interoperability’ range outlined in RFC 7159.
+The workbench format uses 64 bit Integers to denote some unique properties (i.e. `contractId`, `transactionId`).
+This assumes enumerability of attributes.
+The adapter is not designed to maintain state so these attributes can't reasonably be enumerated (i.e. the total number of invoked flows is not trackable).
+For this reason, numeric attributes representing unique IDs are directly derived from the underlying data.
+
+| Parameter                | Value                                                                                            |
+|--------------------------|--------------------------------------------------------------------------------------------------|
+| Contract ID              | The 64 leftmost bits of the SHA256 hash of the underlying linear state's linear ID.              |
+| Block ID, Transaction ID | The 64 leftmost bits, of the underlying state's transaction hash (SHA 256).                      |
+| Caller ID                | The 64 leftmost bits of the SHA-256 hash of the primary X509 name of the node invoking the flow. |
+
+All numbers are emitted as unsigned 64 Bit Integers (i.e. 0..18446744073709551615).
+While using truncated message digests has been discussed (i.e. NIST 800-107), it is unclear (to the author) whether this approach still provides the guarantees of a cryptographic hash function.
+Users should not rely on the output in the same way they would rely on the output of a cryptographic hash function.
+Furthermore, the small range makes of output values makes collisions [more likely](https://preshing.com/20110504/hash-collision-probabilities#small-collision-probabilities).
+This suggests users should employ their own methods of de-duplication if necessary. 

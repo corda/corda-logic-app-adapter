@@ -123,7 +123,7 @@ class WorkbenchAdapterImpl(private val platformVersion: Int) : WorkbenchAdapter 
     private fun transformFlowOutputResponse(flowOutput: FlowOutput): ServicebusMessage {
         val node = JsonNodeFactory.instance.objectNode().apply {
             put("messageName", "ContractMessage")
-            put("blockId", flowOutput.transactionHash.bytes.toPositiveBigInteger())
+            put("blockId", flowOutput.transactionHash.truncateToLong())
             put("blockHash", flowOutput.transactionHash.toPrefixedString())
             put("requestId", flowOutput.requestId)
             putAdditionalInformation()
@@ -142,12 +142,12 @@ class WorkbenchAdapterImpl(private val platformVersion: Int) : WorkbenchAdapter 
                     put("from", flowOutput.fromName.toString())
                     put("to", flowOutput.linearId.toString())
 
-                    put("transactionId", flowOutput.transactionHash.bytes.toPositiveBigInteger())
+                    put("transactionId", flowOutput.transactionHash.truncateToLong())
                     put("transactionHash", flowOutput.transactionHash.toPrefixedString())
                 }
             }
 
-            put("contractId", flowOutput.linearId.id.toByteArray().toPositiveBigInteger())
+            put("contractId", flowOutput.linearId.id.intHash())
             put("connectionId", CONNECTION_ID)
             put("messageSchemaVersion", "1.0.0")
             put("isNewContract", flowOutput.isNewContract)
@@ -179,7 +179,7 @@ class WorkbenchAdapterImpl(private val platformVersion: Int) : WorkbenchAdapter 
         .instance.objectNode()
         .apply {
             put("requestId", error.requestId)
-            error.linearId?.let { put("contractId", it.id.toByteArray().toPositiveBigInteger()) }
+            error.linearId?.let { put("contractId", it.id.intHash()) }
             put("connectionId", CONNECTION_ID)
             put("messageName", error.ingressType.toWorkbenchName())
             error.linearId?.let {
@@ -226,7 +226,7 @@ class WorkbenchAdapterImpl(private val platformVersion: Int) : WorkbenchAdapter 
             putAdditionalInformation()
             put("requestId", confirmation.requestId)
 
-            put("contractId", confirmation.linearId.id.toByteArray().toPositiveBigInteger())
+            put("contractId", confirmation.linearId.id.intHash())
             put("contractLedgerIdentifier", confirmation.linearId.toString())
             put("connectionId", CONNECTION_ID)
 
@@ -245,13 +245,13 @@ class WorkbenchAdapterImpl(private val platformVersion: Int) : WorkbenchAdapter 
 
             putObject("caller").apply {
                 put("type", "User")
-                put("id", flowOutput.caller.toString().toPositiveBigInteger())
+                put("id", flowOutput.caller.toString().intHash())
                 put("ledgerIdentifier", flowOutput.caller.toString())
             }
 
             putAdditionalInformation()
 
-            put("contractId", flowOutput.linearId.id.toByteArray().toPositiveBigInteger())
+            put("contractId", flowOutput.linearId.id.intHash())
             put("contractLedgerIdentifier", flowOutput.linearId.toString())
 
             flowOutput.flowClass.simpleName?.let { put("functionName", it) }
@@ -266,7 +266,7 @@ class WorkbenchAdapterImpl(private val platformVersion: Int) : WorkbenchAdapter 
             }
 
             putObject("transaction").apply {
-                put("transactionId", flowOutput.transactionHash.bytes.toPositiveBigInteger())
+                put("transactionId", flowOutput.transactionHash.truncateToLong())
                 put("transactionHash", flowOutput.transactionHash.toPrefixedString())
                 put("from", flowOutput.caller.toString())
                 put("to", flowOutput.linearId.toString())
@@ -337,13 +337,17 @@ class WorkbenchAdapterImpl(private val platformVersion: Int) : WorkbenchAdapter 
         is Committed -> "Committed"
     }
 
-    private fun String.toPositiveBigInteger(): BigInteger = toByteArray(UTF_8).toPositiveBigInteger()
-    private fun ByteArray.toPositiveBigInteger(): BigInteger = BigInteger(ByteArray(1) + this)
+    private fun String.intHash(): BigInteger = SecureHash.sha256(toByteArray(UTF_8)).bytes.truncate().toInt()
 
-    private fun UUID.toByteArray(): ByteArray = ByteBuffer.wrap(ByteArray(16)).apply {
+    private fun UUID.intHash(): BigInteger = SecureHash.sha256(ByteBuffer.wrap(ByteArray(16)).apply {
         putLong(mostSignificantBits)
         putLong(leastSignificantBits)
-    }.array()
+    }.array()).bytes.truncate().toInt()
+
+    private fun ByteArray.toInt(): BigInteger = BigInteger(1, this)
+
+    private fun SecureHash.truncateToLong(): BigInteger = bytes.truncate().toInt()
+    private fun ByteArray.truncate(): ByteArray = copyOfRange(0, 8)
 
     private fun ObjectNode.toPrettyString(): String = jsonWriter.writeValueAsString(this)
     private fun SecureHash.toPrefixedString(): String = "0x${toString()}"
