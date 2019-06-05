@@ -331,11 +331,11 @@ This assumes enumerability of attributes.
 The adapter is not designed to maintain state so these attributes can't reasonably be enumerated (i.e. the total number of invoked flows is not trackable).
 For this reason, numeric attributes representing unique IDs are directly derived from the underlying data.
 
-| Parameter                | Value                                                                                            |
-|--------------------------|--------------------------------------------------------------------------------------------------|
-| Contract ID              | The 64 leftmost bits of the SHA256 hash of the underlying linear state's linear ID.              |
-| Block ID, Transaction ID | The 64 leftmost bits, of the underlying state's transaction hash (SHA 256).                      |
-| Caller ID                | The 64 leftmost bits of the SHA-256 hash of the primary X509 name of the node invoking the flow. |
+| Parameter                | Value                                                                                                            |
+|--------------------------|------------------------------------------------------------------------------------------------------------------|
+| Contract ID              | The 64 leftmost bits of the SHA256 hash of the underlying linear state's linear ID.                              |
+| Block ID, Transaction ID | The 64 leftmost bits of the underlying state's transaction hash (SHA 256).                                       |
+| Caller ID                | The 64 leftmost bits of the SHA-256 hash of the X509 name of the primary identity of the node invoking the flow. |
 
 All numbers are emitted as unsigned 64 Bit Integers (i.e. 0..18446744073709551615).
 While using truncated message digests has been discussed (i.e. NIST 800-107), it is unclear (to the author) whether this approach still provides the guarantees of a cryptographic hash function.
