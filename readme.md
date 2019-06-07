@@ -48,21 +48,9 @@ This invokes a flow without an input state.
 ```json
 {
   "messageName": "CreateContractRequest",
-  "requestId": "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
-  "workflowName": "net.corda.workbench.refrigeratedTransportation.flow.CreateFlow",
+  "requestId": "4b2c9336-6d16-48b1-99fc-dbafc82cbc1e",
+  "workflowName": "RefrigeratedTransportation",
   "parameters": [
-    {
-      "name": "state",
-      "value": "Created"
-    },
-    {
-      "name": "owner",
-      "value": "O=Alice Ltd., L=Shanghai, C=CN"
-    },
-    {
-      "name": "initiatingCounterparty",
-      "value": "O=Bob Ltd., L=Beijing, C=CN"
-    },
     {
       "name": "device",
       "value": "O=Charly GmbH, OU=Device01, L=Berlin, C=DE"
@@ -102,17 +90,25 @@ Invoke a flow identified by a linear state ID.
 
 ```json
 {
-    "messageName": "CreateContractActionRequest",
-    "requestId": "5a2b34a6-5fa0-4400-b1f5-686a7c212d52",
-    "contractLedgerIdentifier": "f2ef3c6f-4e1a-4375-bb3c-f622c29ec3b6",
-    "workflowFunctionName": "net.corda.workbench.refrigeratedTransportation.flow.CreateFlow",
-    "parameters": [
-        {
-            "name": "newCounterparty",
-            "value": "NorthwindTraders"
-        }
-    ],
-    "messageSchemaVersion": "1.0.0"
+  "messageName": "CreateContractActionRequest",
+  "requestId": "eca2ce04-6bae-4383-b144-71c3208b6082",
+  "contractLedgerIdentifier": "{{ The linear ID of the input state. }}",
+  "workflowFunctionName": "IngestTelemetry",
+  "parameters": [
+    {
+      "name": "humidity",
+      "value": "95"
+    },
+    {
+      "name": "temperature",
+      "value": "32"
+    },
+    {
+      "name": "timestamp",
+      "value": "1555337003"
+    }
+  ],
+  "messageSchemaVersion": "1.0.0"
 }
 ```
 
@@ -135,89 +131,26 @@ Read an unconsumed linear state as identified by its linear ID.
 
 Two messages are sent as response to a successful flow invocation.
 
-##### Create Contract Update
+##### Create Contract Update (Submitted)
 
-```json
-{
-	"messageName" : "CreateContractUpdate",
-	"additionalInformation" : {
-		"ledgerType" : "corda",
-		"platformVersion" : 1
-	},
-	"requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-	"contractId" : 52773038365920193388397547613219494433,
-	"contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
-	"connectionId" : 1,
-	"messageSchemaVersion" : "1.0.0",
-	"status" : "Submitted"
-}
-```
+Message Examples:
 
-##### Create Contract Update
+ - [WorkbenchAdapterEgressTests.generates%20a%20valid%20committed%20message.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates%20a%20valid%20committed%20message.approved)
 
-```json
-{
-	"messageName" : "CreateContractUpdate",
-	"additionalInformation" : {
-		"ledgerType" : "corda",
-		"platformVersion" : 1
-	},
-	"requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-	"contractId" : 52773038365920193388397547613219494433,
-	"contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
-	"connectionId" : 1,
-	"messageSchemaVersion" : "1.0.0",
-	"status" : "Committed"
-}
-```
+##### Create Contract Update (Committed)
+
+Message Examples:
+
+ - [WorkbenchAdapterEgressTests.generates%20a%20valid%20committed%20message.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates%20a%20valid%20committed%20message.approved)
 
 ### Event Message
 
 This message is sent in response to a flow invocation.
 It contains the parameters passed to the flow constructor.
 
-```json
-{
-	"messageName" : "EventMessage",
-	"eventName" : "ContractFunctionInvocation",
-	"requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-	"caller" : {
-		"type" : "User",
-		"id" : 127332906451628815787102979315720227276380402378716642566555458,
-		"ledgerIdentifier" : "O=Member 1, L=London, C=GB"
-	},
-	"additionalInformation" : {
-		"ledgerType" : "corda",
-		"platformVersion" : 1
-	},
-	"contractId" : 52773038365920193388397547613219494433,
-	"contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
-	"functionName" : "NonSenseFlow",
-	"parameters" : [
-		{
-			"name" : "one",
-			"value" : "eins"
-		},
-		{
-			"name" : "two",
-			"value" : "zwei"
-		},
-		{
-			"name" : "three",
-			"value" : "drei"
-		}
-	],
-	"transaction" : {
-		"transactionId" : 115792089237316195423570985008687907853269984665640564039457584007913129639935,
-		"transactionHash" : "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
-		"from" : "O=Member 1, L=London, C=GB",
-		"to" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21"
-	},
-	"inTransactionSequenceNumber" : null,
-	"connectionId" : 1,
-	"messageSchemaVersion" : "1.0.0"
-}
-```
+Message Examples:
+
+ - [WorkbenchAdapterEgressTests.generates%20a%20valid%20event%20message.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates%20a%20valid%20event%20message.approved)
 
 ### Contract Message
 
@@ -226,65 +159,21 @@ It contains the parameters of the output state of the transaction.
 
 This is also returned in response to a "Read Contract Request".
 
-```json
-{
-	"messageName" : "ContractMessage",
-	"blockId" : 115792089237316195423570985008687907853269984665640564039457584007913129639935,
-	"blockHash" : "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
-	"requestId" : "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
-	"additionalInformation" : {
-		"ledgerType" : "corda",
-		"platformVersion" : 1
-	},
-	"contractLedgerIdentifier" : "f1a27656-3b1a-4469-8e37-04d9e2764bf6",
-	"contractProperties" : [
-		{
-			"workflowPropertyId" : null,
-			"name" : "state",
-			"value" : "Created"
-		},
-		{
-			"workflowPropertyId" : null,
-			"name" : "owner",
-			"value" : "O=Alice Ltd., L=Shanghai, C=CN"
-		}
-	],
-	"modifyingTransactions" : [
-		{
-			"from" : "O=Member 1, L=London, C=GB",
-			"to" : "f1a27656-3b1a-4469-8e37-04d9e2764bf6",
-			"transactionId" : 115792089237316195423570985008687907853269984665640564039457584007913129639935,
-			"transactionHash" : "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
-		}
-	],
-	"contractId" : 321187499231493945288328467852968741878,
-	"connectionId" : 1,
-	"messageSchemaVersion" : "1.0.0",
-	"isNewContract" : false
-}
-```
+Message Examples:
+
+ - [WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20state%20queries.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20state%20queries.approved)
+ - [WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20a%20flow%20output.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20a%20flow%20output.approved)
 
 ### Error
 
 Any errors are returned with the message name of the message that caused them.
 
-```json
-{
-	"requestId" : "7d4ce6d9-554c-4bd0-acc8-b04cdef298f9",
-	"contractId" : 52773038365920193388397547613219494433,
-	"connectionId" : 1,
-	"messageName" : "CreateContractUpdate",
-	"contractLedgerIdentifier" : "27b3b7ad-10ce-4bd4-a72c-1bf215709a21",
-	"additionalInformation" : {
-		"ledgerType" : "corda",
-		"platformVersion" : 1,
-		"errorCode" : 129546339,
-		"errorMessage" : "Boooom!"
-	},
-	"status" : "Failure",
-	"messageSchemaVersion" : "1.0.0"
-}
-```
+Message Examples:
+
+ - [WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20correlatable%20error%20output.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20correlatable%20error%20output.approved)
+ - [WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20flow%20error%20output.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20flow%20error%20output.approved)
+ - [WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20generic%20error%20output.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20generic%20error%20output.approved)
+ 
 
 Caveats
 -------
