@@ -1,5 +1,5 @@
 group "com.r3"
-version "0.0.4-SNAPSHOT"
+version "1.0.0"
 
 buildscript {
     ext {
