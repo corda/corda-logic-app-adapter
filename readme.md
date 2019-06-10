@@ -135,13 +135,13 @@ Two messages are sent as response to a successful flow invocation.
 
 Message Examples:
 
- - [WorkbenchAdapterEgressTests.generates%20a%20valid%20committed%20message.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates%20a%20valid%20committed%20message.approved)
+ - [WorkbenchAdapterEgressTests.generates a valid committed message.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates a valid committed message.approved)
 
 ##### Create Contract Update (Committed)
 
 Message Examples:
 
- - [WorkbenchAdapterEgressTests.generates%20a%20valid%20committed%20message.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates%20a%20valid%20committed%20message.approved)
+ - [WorkbenchAdapterEgressTests.generates a valid committed message.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates a valid committed message.approved)
 
 ### Event Message
 
@@ -150,7 +150,7 @@ It contains the parameters passed to the flow constructor.
 
 Message Examples:
 
- - [WorkbenchAdapterEgressTests.generates%20a%20valid%20event%20message.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates%20a%20valid%20event%20message.approved)
+ - [WorkbenchAdapterEgressTests.generates a valid event message.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates a valid event message.approved)
 
 ### Contract Message
 
@@ -161,8 +161,8 @@ This is also returned in response to a "Read Contract Request".
 
 Message Examples:
 
- - [WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20state%20queries.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20state%20queries.approved)
- - [WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20a%20flow%20output.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20a%20flow%20output.approved)
+ - [WorkbenchAdapterEgressTests.generates a valid service bus message for state queries.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates a valid service bus message for state queries.approved)
+ - [WorkbenchAdapterEgressTests.generates a valid service bus message for a flow output.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates a valid service bus message for a flow output.approved)
 
 ### Error
 
@@ -170,9 +170,9 @@ Any errors are returned with the message name of the message that caused them.
 
 Message Examples:
 
- - [WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20correlatable%20error%20output.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20correlatable%20error%20output.approved)
- - [WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20flow%20error%20output.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20flow%20error%20output.approved)
- - [WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20generic%20error%20output.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates%20a%20valid%20service%20bus%20message%20for%20generic%20error%20output.approved)
+ - [WorkbenchAdapterEgressTests.generates a valid service bus message for correlatable error output.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates a valid service bus message for correlatable error output.approved)
+ - [WorkbenchAdapterEgressTests.generates a valid service bus message for flow error output.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates a valid service bus message for flow error output.approved)
+ - [WorkbenchAdapterEgressTests.generates a valid service bus message for generic error output.approved](src/test/resources/com/r3/logicapps/workbench/WorkbenchAdapterEgressTests.generates a valid service bus message for generic error output.approved)
  
 
 Caveats
