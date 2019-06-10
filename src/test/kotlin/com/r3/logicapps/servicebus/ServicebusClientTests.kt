@@ -6,6 +6,7 @@ import com.microsoft.azure.servicebus.IMessageHandler
 import com.r3.logicapps.TestBase
 import junit.framework.TestCase.fail
 import net.corda.core.utilities.getOrThrow
+import org.junit.Ignore
 import org.junit.Test
 import java.nio.charset.StandardCharsets.UTF_8
 import java.util.concurrent.CompletableFuture
@@ -19,14 +20,18 @@ class ServicebusClientTests : TestBase() {
     private val partyB = "PartyB".toIdentity()
 
     companion object {
-        const val SERVICE_BUS = "Endpoint=sb://bogdan-logicapp-bus.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=eAIZ5rfIoZQCEeZ9GGcxvjO6m20hCKs9wbzAykAtcSU="
-        const val FROM_CORDA_QUEUE = "e2e-from-corda"
-        const val TO_CORDA_QUEUE = "e2e-to-corda"
+        // A service bus connection string allowing the user to write to the bus
+        val SERVICE_BUS: String = TODO()
+
+        // The name of the queue on which Corda puts messages
+        val FROM_CORDA_QUEUE: String = TODO()
+
+        // The name of the queue from which Corda reads messages
+        val TO_CORDA_QUEUE: String = TODO()
     }
 
-
-    // TODO: this test seems broken as the last message is not consumed before the test finishes
     @Test(timeout = 10000)
+    @Ignore("This test requires access to a service bus")
     fun `test send-receive`() {
         val threadA = thread {
             val msg = "{ping: pong}"
