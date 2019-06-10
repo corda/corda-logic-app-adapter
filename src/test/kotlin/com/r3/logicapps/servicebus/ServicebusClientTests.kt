@@ -77,6 +77,7 @@ class ServicebusClientTests : TestBase() {
     }
 
     @Test(timeout = 120000)
+    @Ignore("This test requires access to a service bus")
     fun `node consumes and replies`() = withDriver {
         val message = "{\n" +
                 "          \"messageName\": \"CreateContractRequest\",\n" +
