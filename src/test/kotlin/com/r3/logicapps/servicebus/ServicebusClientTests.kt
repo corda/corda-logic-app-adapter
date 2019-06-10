@@ -14,6 +14,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 
+@Ignore("Tests requires access to a service bus")
 class ServicebusClientTests : TestBase() {
 
     private val partyA = "PartyA".toIdentity()
@@ -31,24 +32,33 @@ class ServicebusClientTests : TestBase() {
     }
 
     @Test(timeout = 10000)
-    @Ignore("This test requires access to a service bus")
     fun `test send-receive`() {
         val threadA = thread {
             val msg = "{ping: pong}"
             val count = AtomicInteger(0)
-            val connectionService = ServicebusConnectionService(SERVICE_BUS, inboundQueue = FROM_CORDA_QUEUE, outboundQueue = TO_CORDA_QUEUE)
+            val connectionService = ServicebusConnectionService(
+                SERVICE_BUS,
+                inboundQueue = FROM_CORDA_QUEUE,
+                outboundQueue = TO_CORDA_QUEUE
+            )
             connectionService.start()
             val client = ServicebusClientImpl(connectionService)
             client.start()
             val statusSubscriber = connectionService.change.subscribe({ ready ->
                 if (ready) {
-                    client.registerReceivedMessageHandler(MyMessageHandler("ClientA", client, count) { e -> fail(e?.message) })
+                    client.registerReceivedMessageHandler(
+                        MyMessageHandler(
+                            "ClientA",
+                            client,
+                            count
+                        ) { e -> fail(e?.message) })
                     //start the ping-pong
                     client.send(msg)
                 }
             }, { fail("Error in connection service state change") })
 
-            while (count.get() < 10) {}
+            while (count.get() < 10) {
+            }
             statusSubscriber.unsubscribe()
             client.close()
             connectionService.stop()
@@ -56,17 +66,27 @@ class ServicebusClientTests : TestBase() {
 
         val threadB = thread {
             val count = AtomicInteger(0)
-            val connectionService = ServicebusConnectionService(SERVICE_BUS, inboundQueue = TO_CORDA_QUEUE, outboundQueue = FROM_CORDA_QUEUE)
+            val connectionService = ServicebusConnectionService(
+                SERVICE_BUS,
+                inboundQueue = TO_CORDA_QUEUE,
+                outboundQueue = FROM_CORDA_QUEUE
+            )
             connectionService.start()
             val client = ServicebusClientImpl(connectionService)
             client.start()
             val statusSubscriber = connectionService.change.subscribe({ ready ->
                 if (ready) {
-                    client.registerReceivedMessageHandler(MyMessageHandler("ClientB", client, count) { e -> fail(e?.message) })
+                    client.registerReceivedMessageHandler(
+                        MyMessageHandler(
+                            "ClientB",
+                            client,
+                            count
+                        ) { e -> fail(e?.message) })
                 }
             }, { fail("Error in connection service state change") })
             //start the ping-pong
-            while (count.get() < 10) {}
+            while (count.get() < 10) {
+            }
             statusSubscriber.unsubscribe()
             client.close()
             connectionService.stop()
@@ -77,7 +97,7 @@ class ServicebusClientTests : TestBase() {
     }
 
     @Test(timeout = 120000)
-    @Ignore("This test requires access to a service bus")
+
     fun `node consumes and replies`() = withDriver {
         val message = "{\n" +
                 "          \"messageName\": \"CreateContractRequest\",\n" +
@@ -162,17 +182,26 @@ class ServicebusClientTests : TestBase() {
             }
         }
 
-        startNode(providedName = partyA.name, customOverrides = mapOf("cordappSignerKeyFingerprintBlacklist" to emptyList<String>(),
-            "devMode" to true)).getOrThrow()
+        startNode(
+            providedName = partyA.name, customOverrides = mapOf(
+                "cordappSignerKeyFingerprintBlacklist" to emptyList<String>(),
+                "devMode" to true
+            )
+        ).getOrThrow()
         latch.await()
         subscriber.unsubscribe()
         client.close()
         connectionService.stop()
     }
 
-    class MyMessageHandler(val id: String, val client: ServicebusClient, val count: AtomicInteger, val errorHandler: (e: Throwable?) -> Any?) : IMessageHandler {
+    class MyMessageHandler(
+        val id: String,
+        val client: ServicebusClient,
+        val count: AtomicInteger,
+        val errorHandler: (e: Throwable?) -> Any?
+    ) : IMessageHandler {
         override fun onMessageAsync(message: IMessage?): CompletableFuture<Void> {
-            println("Client $id received message. Current count is ${count.get()}" )
+            println("Client $id received message. Current count is ${count.get()}")
             count.set(count.get() + 1)
             if (count.get() <= 10) {
                 println("Client $id sending message with count ${count.get()}")
