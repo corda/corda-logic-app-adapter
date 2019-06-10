@@ -124,7 +124,7 @@ class WorkbenchAdapterImpl(private val platformVersion: Int) : WorkbenchAdapter 
         val node = JsonNodeFactory.instance.objectNode().apply {
             put("messageName", "ContractMessage")
             put("blockId", flowOutput.transactionHash.truncateToLong())
-            put("blockHash", flowOutput.transactionHash.toPrefixedString())
+            put("blockhash", flowOutput.transactionHash.toPrefixedString())
             put("requestId", flowOutput.requestId)
             putAdditionalInformation()
             put("contractLedgerIdentifier", flowOutput.linearId.toString())

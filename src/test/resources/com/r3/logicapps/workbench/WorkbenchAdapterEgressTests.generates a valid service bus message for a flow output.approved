@@ -1,7 +1,7 @@
 {
 	"messageName" : "ContractMessage",
 	"blockId" : 18446744073709551615,
-	"blockHash" : "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+	"blockhash" : "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
 	"requestId" : "81a87eb0-b5aa-4d53-a39f-a6ed0742d90d",
 	"additionalInformation" : {
 		"ledgerType" : "corda",
