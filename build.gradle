@@ -118,3 +118,8 @@ task installQuasar(type: Copy) {
         rename 'quasar-core(.*).jar', 'quasar.jar'
     }
 }
+
+test {
+    maxHeapSize = "1024m"
+    jvmArgs "-XX:+UseG1GC"
+}
