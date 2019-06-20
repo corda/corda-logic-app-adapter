@@ -32,9 +32,9 @@ class BusMessageHandler(
             handleRequest(workbenchAdapter.transformIngress(payload), message.lockToken)
         } catch (exception: IngressFormatException) {
             handleError(exception, message.lockToken)
+        } finally {
+            return CompletableFuture.completedFuture(null)
         }
-
-        return CompletableFuture.completedFuture(null)
     }
 
     private fun handleRequest(request: BusRequest, messageLockTokenId: UUID) {
