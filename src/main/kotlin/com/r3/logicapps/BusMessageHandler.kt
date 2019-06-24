@@ -30,11 +30,17 @@ class BusMessageHandler(
 
         try {
             handleRequest(workbenchAdapter.transformIngress(payload), message.lockToken)
-        } catch (exception: IngressFormatException) {
-            handleError(exception, message.lockToken)
+        } catch (exception: Exception) {
+            when (exception) {
+                is IngressFormatException -> handleIngressError(exception, message.lockToken)
+                else                      -> log.warn(
+                    "Unexpected exception caught when processing message $payload",
+                    exception
+                )
+            }
+        } finally {
+            return CompletableFuture.completedFuture(null)
         }
-
-        return CompletableFuture.completedFuture(null)
     }
 
     private fun handleRequest(request: BusRequest, messageLockTokenId: UUID) {
@@ -45,7 +51,7 @@ class BusMessageHandler(
         }
     }
 
-    private fun handleError(exception: IngressFormatException, messageLockTokenId: UUID) {
+    private fun handleIngressError(exception: IngressFormatException, messageLockTokenId: UUID) {
         log.warn("Ingress message couldn't be deserialised", exception.message)
         val error = when (exception) {
             is CorrelatableIngressFormatException -> CorrelatableError(exception, exception.requestId)
