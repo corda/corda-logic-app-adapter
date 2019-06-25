@@ -13,12 +13,15 @@ import net.corda.core.node.services.Vault.StateStatus.UNCONSUMED
 import net.corda.core.node.services.queryBy
 import net.corda.core.node.services.vault.QueryCriteria.LinearStateQueryCriteria
 import net.corda.core.transactions.SignedTransaction
+import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.getOrThrow
 
 class ServiceDrivenMessageProcessor(appServiceHub: AppServiceHub) : MessageProcessorImpl(
+
     startFlowDelegate = { flowLogic, serviceBusClient, messageLockTokenId ->
         val handle = appServiceHub.startFlow(flowLogic)
         // At this point a flow handle exists which means the flow has been checkpointed. It's safe to ACK the message
+        log.info("Acknowledging message with lockTokenId $messageLockTokenId")
         serviceBusClient.acknowledge(messageLockTokenId)
 
         // TODO moritzplatt 2019-04-11 -- allow for configuring a timeout
@@ -62,7 +65,11 @@ class ServiceDrivenMessageProcessor(appServiceHub: AppServiceHub) : MessageProce
     },
     identityService = appServiceHub.identityService,
     owner = appServiceHub.myInfo.legalIdentities.first().name
-)
+) {
+    private companion object {
+        val log = contextLogger()
+    }
+}
 
 fun List<ContractState>.toFlowInvocationResult(
     fromName: CordaX500Name,
