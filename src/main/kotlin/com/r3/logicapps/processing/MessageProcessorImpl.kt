@@ -18,6 +18,7 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.internal.pooledScan
 import net.corda.core.node.services.IdentityService
+import net.corda.core.utilities.contextLogger
 import java.util.UUID
 
 open class MessageProcessorImpl(
@@ -49,6 +50,7 @@ open class MessageProcessorImpl(
                 )
             is QueryFlowState               -> {
                 // Message can be safely ACKd
+                log.info("Acknowledging message with lockTokenId $messageLockTokenId")
                 client.acknowledge(messageLockTokenId)
                 listOf(processQueryMessage(message.requestId, message.linearId))
             }
@@ -103,6 +105,7 @@ open class MessageProcessorImpl(
                 )
             )
         } catch (exception: Throwable) {
+            log.info("Acknowledging message with lockTokenId $messageLockTokenId")
             client.acknowledge(messageLockTokenId)
             listOf(FlowError(ingressType, requestId, exception, linearId))
         }
@@ -145,8 +148,9 @@ open class MessageProcessorImpl(
             ?: error("Unable to instantiate $flowName with provided arguments")
     }
 
-    companion object {
-        private val flowClassList: List<String> by lazy {
+    private companion object {
+        val log = contextLogger()
+        val flowClassList: List<String> by lazy {
             val scanResult = ClassGraph().enableAllInfo().pooledScan()
             val flowClasses = scanResult.getSubclasses(FlowLogic::class.java.name).map { it.name }
             flowClasses
