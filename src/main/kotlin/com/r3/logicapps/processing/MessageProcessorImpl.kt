@@ -75,7 +75,7 @@ open class MessageProcessorImpl(
             log.debug("Exception during flow logic creation", exception)
             log.debug("Acknowledging message with lockTokenId $messageLockTokenId")
             client.acknowledge(messageLockTokenId)
-            listOf(FlowError(ingressType, requestId, exception, linearId))
+            return listOf(FlowError(ingressType, requestId, exception, linearId))
         }
 
         return try {
