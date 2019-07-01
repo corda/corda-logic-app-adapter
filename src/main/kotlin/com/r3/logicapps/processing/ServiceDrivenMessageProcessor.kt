@@ -21,7 +21,7 @@ class ServiceDrivenMessageProcessor(appServiceHub: AppServiceHub) : MessageProce
     startFlowDelegate = { flowLogic, serviceBusClient, messageLockTokenId ->
         val handle = appServiceHub.startFlow(flowLogic)
         // At this point a flow handle exists which means the flow has been checkpointed. It's safe to ACK the message
-        log.info("Acknowledging message with lockTokenId $messageLockTokenId")
+        log.debug("Acknowledging message with lockTokenId $messageLockTokenId")
         serviceBusClient.acknowledge(messageLockTokenId)
 
         // TODO moritzplatt 2019-04-11 -- allow for configuring a timeout

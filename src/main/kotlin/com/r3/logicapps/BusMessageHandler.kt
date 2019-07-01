@@ -57,7 +57,7 @@ class BusMessageHandler(
             is CorrelatableIngressFormatException -> CorrelatableError(exception, exception.requestId)
             else                                  -> GenericError(exception)
         }
-        log.info("Acknowledging message with lockTokenId $messageLockTokenId")
+        log.debug("Acknowledging message with lockTokenId $messageLockTokenId")
         busClient.acknowledge(messageLockTokenId)
         busClient.send(workbenchAdapter.transformEgress(error))
     }

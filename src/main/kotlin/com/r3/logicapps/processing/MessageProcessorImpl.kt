@@ -50,7 +50,7 @@ open class MessageProcessorImpl(
                 )
             is QueryFlowState               -> {
                 // Message can be safely ACKd
-                log.info("Acknowledging message with lockTokenId $messageLockTokenId")
+                log.debug("Acknowledging message with lockTokenId $messageLockTokenId")
                 client.acknowledge(messageLockTokenId)
                 listOf(processQueryMessage(message.requestId, message.linearId))
             }
@@ -65,11 +65,21 @@ open class MessageProcessorImpl(
         messageLockTokenId: UUID
     ): List<BusResponse> {
         val ingressType = invocable::class
+        var flowLogic: FlowLogic<*>? = null
+        try {
+            val linearIdParameter = linearId?.let { mapOf("linearId" to linearId.toString()) } ?: emptyMap()
+            flowLogic = deriveFlowLogic(invocable.workflowName, invocable.parameters + linearIdParameter)
+        } catch (exception: Throwable) {
+            // Catch exception thrown by flow logic creation and ACK the message to avoid double ACK. In case of flow invocation errors, they
+            // can appear after the handle is created, at which point the message is already ACKd.
+            log.debug("Exception during flow logic creation", exception)
+            log.debug("Acknowledging message with lockTokenId $messageLockTokenId")
+            client.acknowledge(messageLockTokenId)
+            listOf(FlowError(ingressType, requestId, exception, linearId))
+        }
 
         return try {
-            val linearIdParameter = linearId?.let { mapOf("linearId" to linearId.toString()) } ?: emptyMap()
-            val flowLogic = deriveFlowLogic(invocable.workflowName, invocable.parameters + linearIdParameter)
-            val result = startFlowDelegate(flowLogic, client, messageLockTokenId)
+            val result = startFlowDelegate(flowLogic!!, client, messageLockTokenId)
 
             val lid = result.linearId ?: linearId ?: error("Unable to derive linear ID after flow invocation")
             val transactionHash = result.hash ?: error("Unable to derive transaction hash after flow invocation")
@@ -105,8 +115,7 @@ open class MessageProcessorImpl(
                 )
             )
         } catch (exception: Throwable) {
-            log.info("Acknowledging message with lockTokenId $messageLockTokenId")
-            client.acknowledge(messageLockTokenId)
+            log.debug("Exception during flow invocation", exception)
             listOf(FlowError(ingressType, requestId, exception, linearId))
         }
     }
